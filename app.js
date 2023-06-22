@@ -13,6 +13,11 @@ const dbConnection = require('./config/dbConnection'),
     loadHelmet = require(`./loaders/helmets`),
     loadExpressSession = require(`./loaders/expressSession`);
 
+
+dbConnection(mongoose);
+
+require("./model/apps/outhState");
+
 loadHelmet(app, helmet);
 loadExpressSession(app, expressSession, MongoStore);
 
@@ -20,9 +25,11 @@ loadExpressSession(app, expressSession, MongoStore);
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-dbConnection(mongoose)
+
 
 app.use(cors());
+
+
 
 const allRoutes = require("./routes/all");
 app.use(allRoutes)
