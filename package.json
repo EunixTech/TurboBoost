@@ -1,0 +1,27 @@
+{
+  "name": "turboboost",
+  "version": "1.0.0",
+  "description": "TurboBoost is an advanced performance optimization tool designed to enhance website loading times and improve overall user experience. It employs a range of techniques and optimizations, including smart caching, image optimization, code minification, and integration with content delivery networks (CDNs). TurboBoost is compatible with popular content management systems (CMS) such as WordPress, Joomla, Shopify, and Magento.  and  TurboBoost is compatible with custom website",
+  "main": "app.js",
+  "scripts": {
+    "dev": "nodemon app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/themanmohan/TurboBoost.git"
+  },
+  "author": "Eunix",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/themanmohan/TurboBoost/issues"
+  },
+  "homepage": "https://github.com/themanmohan/TurboBoost#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.1.4",
+    "express": "^4.18.2",
+    "mongoose": "^7.3.1",
+    "winston": "^3.9.0"
+  }
+}
