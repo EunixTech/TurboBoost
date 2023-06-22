@@ -24,6 +24,9 @@ dbConnection(mongoose)
 
 app.use(cors());
 
+const allRoutes = require("./routes/all");
+app.use(allRoutes)
+
 
 app.use((err, req, res, next) => {
     console.log(err)
