@@ -1,4 +1,7 @@
 const { getSlug } = require("../../utils/mongoose"),
+    mongoose = require("mongoose"),
+    crypto = require("crypto"),
+    Axios =require("axios"),
     OauthState = mongoose.model("outhState"),
     {
         sendSuccessJSONResponse,
@@ -10,7 +13,8 @@ const { getSlug } = require("../../utils/mongoose"),
         AUTH_JWT_SECRET_KEY,
         SHOPIFY_API_KEY,
         SHOPIFY_API_SECRET,
-        SHOPIFY_API_REDIRECT
+        SHOPIFY_API_REDIRECT,
+        SHOPIFY_API_SCOPES
     } = process.env;
 
 exports.appInstallations = async (req, res, next) => {
@@ -23,6 +27,9 @@ exports.appInstallations = async (req, res, next) => {
             host = queryData.host,
             timestamp = queryData.timestamp;
 
+
+            console.log(req.query)
+
         if (!shop || !hmac || !host || !timestamp) {
             return sendFailureJSONResponse(res, { message: "Unauthorized access" }, 401);
         }
@@ -31,7 +38,7 @@ exports.appInstallations = async (req, res, next) => {
             message = '';
 
         for (let x of keys) {
-            message += `${x}=${queryData[x]}` //remove hmac from query string and forming new query string from hmac check
+            message += `&${x}=${queryData[x]}` //remove hmac from query string and forming new query string from hmac check
         }
         message = message.slice(1, message.length)
 
@@ -44,7 +51,7 @@ exports.appInstallations = async (req, res, next) => {
 
         // creating OuthState for security checking
         OauthState.create({
-            unique_key: getSlug(),
+            unique_key: "jahdga",
             data: {
                 login: true,
                 hmac: hmac,
@@ -59,10 +66,12 @@ exports.appInstallations = async (req, res, next) => {
                 return sendFailureJSONResponse(res, { message: "Something went wrong" });
             }
         }).catch((err) => {
+            console.log(err)
             return sendFailureJSONResponse(res, { message: "Something went wrong" });
         })
 
     } catch (err) {
+        console.log(err)
         return sendFailureJSONResponse(res, { message: "Something went wrong" });
     }
 }
@@ -79,50 +88,57 @@ exports.authCallback = async (req, res, next) => {
             timestamp,
             host,
             hmac
-        }
-            = req.query;
+        }= req.query;
+
         if (!shop || !hmac || !host || !timestamp || !user_token || !code) {
-            res.status(401).json({ error: "unauthorized access" })
-            return
+            return sendFailureJSONResponse(res, { message: "unauthorized access" }, 401);
         }
+        
         const message = `code=${code}&host=${host}&shop=${shop}&state=${user_token}&timestamp=${timestamp}`
 
         const generatedHash = crypto.createHmac('SHA256', SHOPIFY_API_SECRET).update(message, 'utf8').digest('hex');
-        if (generatedHash != hmac) { //Security checks for hmac
-            res.status(401).json({ error: "unauthorized access" })
-            return
-        }
-        var regexp1 = new RegExp(/^[a-zA-Z0-9][a-zA-Z0-9\-]*.myshopify.com/); // Security checks for shop
-        if (!regexp1.test(shop)) {
-            res.status(401).json({ error: "Invalid shop" })
-            return
+
+        if (generatedHash != hmac) {
+            return sendFailureJSONResponse(res, { message: "unauthorized access" }, 401);
         }
 
-        const oauthState = await OauthState.findOne({ key: user_token });
-        if (!oauthState) {
-            res.redirect(`${process.env.FRONTEND_URL}/login`);
-            return;
-        }
-        await OauthState.deleteOne({ _id: oauthState._id });
+        const regexp1 = new RegExp(/^[a-zA-Z0-9][a-zA-Z0-9\-]*.myshopify.com/); // Security checks for shop
+        
+        if (!regexp1.test(shop))  return sendFailureJSONResponse(res, { message: "unauthorized access" });
 
-        const config = {
-            method: 'POST',
-            url: `https://${shop}/admin/oauth/access_token`,
-            data: {
-                code: req.query.code,
-                client_id: SHOPIFY_API_KEY,
-                client_secret: SHOPIFY_API_SECRET,
-            },
-        };
-        const response = await Axios(config);
-        const data = response.data;
+        OauthState.findOne({
+            unique_key: user_token
+        }).then(async(foundOauthState)=>{
 
-        console.log(data)
-     
+            if(!foundOauthState) return sendFailureJSONResponse(res, { message: "Something went wrong" });
+            else{
 
-        res.redirect(`${process.env.FRONTEND_URL}/?t=${auth_token}`);
+                await OauthState.deleteOne({ _id: foundOauthState._id });
+
+                const config = {
+                    method: 'POST',
+                    url: `https://${shop}/admin/oauth/access_token`,
+                    data: {
+                        code: req.query.code,
+                        client_id: SHOPIFY_API_KEY,
+                        client_secret: SHOPIFY_API_SECRET,
+                    },
+                };
+                const response = await Axios(config);
+                const data = response.data;
+                console.log(data)
+        
+                return sendSuccessJSONResponse(res, { message: "Succesfull login" }, 401); 
+            }
+
+        }).catch((err)=>{
+            console.log(err)
+            return sendFailureJSONResponse(res, { message: "Something went wrong" });
+        })
+
     } catch (err) {
-        res.status(400).send({ message: `qwajdhgajhgdh` });
+        console.log(err)
+        return sendFailureJSONResponse(res, { message: "Something went wrong" });
     }
 
 }
