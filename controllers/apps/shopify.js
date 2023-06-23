@@ -1,7 +1,9 @@
 const { getSlug } = require("../../utils/mongoose"),
     mongoose = require("mongoose"),
     crypto = require("crypto"),
-    Axios =require("axios"),
+    Axios = require("axios"),
+    User  = mongoose.model("user"),
+    ShopifyService = require("../../services/apps/index"),
     OauthState = mongoose.model("outhState"),
     {
         sendSuccessJSONResponse,
@@ -28,7 +30,7 @@ exports.appInstallations = async (req, res, next) => {
             timestamp = queryData.timestamp;
 
 
-            console.log(req.query)
+        console.log(req.query)
 
         if (!shop || !hmac || !host || !timestamp) {
             return sendFailureJSONResponse(res, { message: "Unauthorized access" }, 401);
@@ -88,12 +90,12 @@ exports.authCallback = async (req, res, next) => {
             timestamp,
             host,
             hmac
-        }= req.query;
+        } = req.query;
 
         if (!shop || !hmac || !host || !timestamp || !user_token || !code) {
             return sendFailureJSONResponse(res, { message: "unauthorized access" }, 401);
         }
-        
+
         const message = `code=${code}&host=${host}&shop=${shop}&state=${user_token}&timestamp=${timestamp}`
 
         const generatedHash = crypto.createHmac('SHA256', SHOPIFY_API_SECRET).update(message, 'utf8').digest('hex');
@@ -103,15 +105,15 @@ exports.authCallback = async (req, res, next) => {
         }
 
         const regexp1 = new RegExp(/^[a-zA-Z0-9][a-zA-Z0-9\-]*.myshopify.com/); // Security checks for shop
-        
-        if (!regexp1.test(shop))  return sendFailureJSONResponse(res, { message: "unauthorized access" });
+
+        if (!regexp1.test(shop)) return sendFailureJSONResponse(res, { message: "unauthorized access" });
 
         OauthState.findOne({
             unique_key: user_token
-        }).then(async(foundOauthState)=>{
+        }).then(async (foundOauthState) => {
 
-            if(!foundOauthState) return sendFailureJSONResponse(res, { message: "Something went wrong" });
-            else{
+            if (!foundOauthState) return sendFailureJSONResponse(res, { message: "Something went wrong" });
+            else {
 
                 await OauthState.deleteOne({ _id: foundOauthState._id });
 
@@ -124,14 +126,36 @@ exports.authCallback = async (req, res, next) => {
                         client_secret: SHOPIFY_API_SECRET,
                     },
                 };
+
                 const response = await Axios(config);
                 const data = response.data;
                 console.log(data)
-        
-                return sendSuccessJSONResponse(res, { message: "Succesfull login" }, 401); 
+
+                console.log("datadatadata----------=-=-=-=-=-=-=-=-=-=", data)
+                let shopData = await ShopifyService.getShopDetails(shop, data.access_token);
+                console.log(shopData)
+                // const email = shopData?.shop?.email
+                // let name = shopData?.shop?.shop_owner
+                // const first_name = name.split(' ')[0]
+                // const last_name = name.split(' ')[1]
+                // const { email, first_name, last_name } = response.data.associated_user;
+                // let scopes = data.scope
+                // let webhook = await this.createUninstallWebHook(shop, data.access_token) //create webhook function
+              
+                User.create({
+                    app_token:{
+                        shopify: data?.access_token
+                    }
+                }).then((newUser)=>{
+                    if(newUser)  return sendSuccessJSONResponse(res, { message: "Succesfull login" });
+                    else return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                }).catch((err)=>{
+                    return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                })
+
             }
 
-        }).catch((err)=>{
+        }).catch((err) => {
             console.log(err)
             return sendFailureJSONResponse(res, { message: "Something went wrong" });
         })
