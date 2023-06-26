@@ -49,6 +49,8 @@ exports.appInstallations = async (req, res, next) => {
 
         const generatedHash = crypto.createHmac('SHA256', SHOPIFY_API_SECRET).update(message, 'utf8').digest('hex');
 
+        console.log(generatedHash)
+        console.log(hmac)
         if (generatedHash != hmac) return sendFailureJSONResponse(res, { message: "Unauthorized access" }, 401);
 
         // creating OuthState for security checking
@@ -164,4 +166,26 @@ exports.authCallback = async (req, res, next) => {
         return sendFailureJSONResponse(res, { message: "Something went wrong" });
     }
 
+}
+
+
+exports.fetchAllProduct =async (req,res, next)=>{
+   
+    const config = {
+        method: 'GET',
+        url: 'https://turboboost-dev.myshopify.com/admin/api/2023-04/products.json',
+        headers: {
+            'X-Shopify-Access-Token': 'shpua_51e611a28aaa5e7aaa5d16c3b3108b8c'
+        }
+    };
+
+    try {
+        const response = await Axios(config);
+        const responseData = response.data; // Extract the data from the response object
+
+        return res.json({ data: responseData });
+    } catch (error) {
+        // Handle the error appropriately
+        next(error);
+    }
 }
