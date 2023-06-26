@@ -130,8 +130,7 @@ exports.authCallback = async (req, res, next) => {
                 const response = await Axios(config);
                 const data = response.data;
                 console.log(data)
-
-                console.log("datadatadata----------=-=-=-=-=-=-=-=-=-=", data)
+                
                 let shopData = await ShopifyService.getShopDetails(shop, data.access_token);
                 console.log(shopData)
                 // const email = shopData?.shop?.email
