@@ -9,18 +9,18 @@ const express = require(`express`),
     app = express();
 
 
-const dbConnection = require('./config/dbConnection'),
-    loadHelmet = require(`./loaders/helmets`),
-    loadExpressSession = require(`./loaders/expressSession`);
+// const dbConnection = require('./config/dbConnection'),
+//     loadHelmet = require(`./loaders/helmets`),
+//     loadExpressSession = require(`./loaders/expressSession`);
 
 
 // dbConnection(mongoose);
 
-require("./model/apps/outhState");
-require("./model/users");
+// require("./model/apps/outhState");
+// require("./model/users");
 
-loadHelmet(app, helmet);
-loadExpressSession(app, expressSession, MongoStore);
+// loadHelmet(app, helmet);
+// loadExpressSession(app, expressSession, MongoStore);
 
 // body parser
 app.use(express.json({ limit: '50mb' }));
@@ -32,8 +32,8 @@ app.use(cors());
 
 
 
-const allRoutes = require("./routes/all");
-app.use(allRoutes)
+// const allRoutes = require("./routes/all");
+// app.use(allRoutes)
 
 app.get("/lazy-loading",(req,res)=>{
     const data = fs.readFileSync('./lazy.min.js', 'utf8');
