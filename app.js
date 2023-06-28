@@ -1,5 +1,5 @@
 require(`dotenv`).config({ path: `process.env` });
-
+const fs = require('fs');
 const express = require(`express`),
     cors = require('cors'),
     helmet = require("helmet"),
@@ -14,7 +14,7 @@ const dbConnection = require('./config/dbConnection'),
     loadExpressSession = require(`./loaders/expressSession`);
 
 
-dbConnection(mongoose);
+// dbConnection(mongoose);
 
 require("./model/apps/outhState");
 require("./model/users");
@@ -34,6 +34,12 @@ app.use(cors());
 
 const allRoutes = require("./routes/all");
 app.use(allRoutes)
+
+app.get("/lazy-loading",(req,res)=>{
+    const data = fs.readFileSync('./lazy.min.js', 'utf8');
+    console.log(data)
+    res.json({data})
+})  
 
 
 app.use((err, req, res, next) => {
