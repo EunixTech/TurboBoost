@@ -35,12 +35,6 @@ app.use(cors());
 const allRoutes = require("./routes/all");
 app.use(allRoutes)
 
-// app.get("/lazy-loading",(req,res)=>{
-//     const data = fs.readFileSyc('./lazy.min.js', 'utf8');
-//     console.log(data)
-//     res.json({data})
-// })  
-
 
 app.use((err, req, res, next) => {
     console.log(err)

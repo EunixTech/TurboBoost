@@ -6,5 +6,7 @@ router.get("/auth-callback", controllers.authCallback);
 
 router.get("/fetch-product", controllers.fetchAllProduct);
 
+router.get("/adding-lazy-loading", controllers.addingLazyLoadingScriptClient);
+
 module.exports = router;
     

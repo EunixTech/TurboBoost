@@ -4,6 +4,7 @@ const { getSlug } = require("../../utils/mongoose"),
     Axios = require("axios"),
     User = mongoose.model("user"),
     ShopifyService = require("../../services/apps/index"),
+    {getFetchConfig} = require("../../utils/getFetchConfig"),
     OauthState = mongoose.model("outhState"),
     {
         sendSuccessJSONResponse,
@@ -251,7 +252,6 @@ const updateImageSource = async (req, res, next) => {
     }
 };
 
-
 exports.fetchAllProduct = async (req, res) => {
 
     let data = JSON.stringify({
@@ -301,59 +301,86 @@ exports.fetchAllProduct = async (req, res) => {
 exports.createProductCreateWebHook = async (shop, accessToken) => { // call this on installing shopify app
     let uuid = crypto.randomUUID()
     const registerWebhookOptions = {
-      method: 'POST',
-      url: `https://${shop}/admin/api/2023-04/webhooks.json?access_token=${accessToken}`,
-      data: {
-        webhook: {
-          topic: 'products/create',
-          address: `${serverUrl}app/shopify/auth/uninstallApp/${uuid}`, // address of route of your product create webhook
-          format: 'json',
+        method: 'POST',
+        url: `https://${shop}/admin/api/2023-04/webhooks.json?access_token=${accessToken}`,
+        data: {
+            webhook: {
+                topic: 'products/create',
+                address: `${serverUrl}app/shopify/auth/uninstallApp/${uuid}`, // address of route of your product create webhook
+                format: 'json',
+            },
         },
-      },
     };
-  
+
     try {
-      await Axios(registerWebhookOptions);
-      console.log(`Successfully registered webhook`);
+        await Axios(registerWebhookOptions);
+        console.log(`Successfully registered webhook`);
     } catch (e) {
-      // Needed for UI test cases - if on non development instance then proceed
-      if (serverUrl !== 'http://localhost:8000') {
-        return res.status(400).send({
-          message: `Failed to register webhook: ${e}`,
-          success: false,
-        });
-      }
+        // Needed for UI test cases - if on non development instance then proceed
+        if (serverUrl !== 'http://localhost:8000') {
+            return res.status(400).send({
+                message: `Failed to register webhook: ${e}`,
+                success: false,
+            });
+        }
     }
-  }
+}
 
 
 
 
 exports.productCreateWebhook = async (req, res) => {
     try {
-      const { id, name, api_client_id, shop_id, domain } = req.body;
-      const hmac = req.get('X-Shopify-Hmac-Sha256');
-      let key = SHOPIFY_API_SECRET.trim()
-      const generatedHash = crypto.createHmac('SHA256', key).update(req.rawBody).digest('base64');
-      const headerData = req.headers;
-      console.log(SHOPIFY_API_SECRET.length, key.length, headerData['x-shopify-hmac-sha256'], generatedHash, headerData)
-      if (hmac !== generatedHash) {
-        return res.status(400).send({
-          success: false,
-          message: `Signature does not match`,
-        });
-      }
-      console.log(shop_id, name, id, api_client_id, shop_id, domain, "check1");
-      ///do what you want to perform on product create webhook
-      
-      res.status(200).send("success");
+        const { id, name, api_client_id, shop_id, domain } = req.body;
+        const hmac = req.get('X-Shopify-Hmac-Sha256');
+        let key = SHOPIFY_API_SECRET.trim()
+        const generatedHash = crypto.createHmac('SHA256', key).update(req.rawBody).digest('base64');
+        const headerData = req.headers;
+        console.log(SHOPIFY_API_SECRET.length, key.length, headerData['x-shopify-hmac-sha256'], generatedHash, headerData)
+        if (hmac !== generatedHash) {
+            return res.status(400).send({
+                success: false,
+                message: `Signature does not match`,
+            });
+        }
+        console.log(shop_id, name, id, api_client_id, shop_id, domain, "check1");
+        ///do what you want to perform on product create webhook
+
+        res.status(200).send("success");
     }
     catch (e) {
-      console.log(e)
-      return res.status(500).send({
-        success: false,
-        message: `Signature does not match`,
-      });
+        console.log(e)
+        return res.status(500).send({
+            success: false,
+            message: `Signature does not match`,
+        });
     }
-  
-  }
+
+}
+
+
+exports.addingLazyLoadingScriptClient = async (req, res) => {
+
+    const fetchConfig = getFetchConfig()
+
+    // const config1 = {
+    //     method: 'get',
+    //     url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes.json?role=main`,
+    //     headers: {
+    //         'X-Shopify-Access-Token': 'shpua_832b00f9f277821c02a70c5524402acd'
+    //     }
+    // };
+
+    const responseq = await Axios({
+        ...fetchConfig,
+        url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes.json?role=main`,
+    });
+    const responseDatwa = responseq.data; // Extract the data from the response object
+
+
+    console.log(responseDatwa)
+
+    res.json({
+        data: responseDatwa
+    })
+}
