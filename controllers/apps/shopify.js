@@ -394,8 +394,54 @@ exports.addingLazyLoadingScriptClient = async (req, res) => {
 }
 
 exports.updatingHTMLAttribute = (req,res, next)=>{
-    console.log(`jhabdjha`)
+    let data = JSON.stringify({
+        query: `mutation productImageUpdate($image: ImageInput!, $productId: ID!) {
+                  productImageUpdate(image: $image, productId: $productId) {
+                    image {
+                      id,src
+                    }
+                    userErrors {
+                      field
+                      message
+                    }
+                  }
+                }`,
+        variables: {
+            "image": {
+                "altText": "test",
+                "id": "gid://shopify/ProductImage/41962191454488",
+                "src": "https://www.shutterstock.com/image-vector/example-red-square-grunge-stamp-260nw-327662909.jpg"
+            },
+            "productId": "gid://shopify/Product/8406446014744"
+        }
+    });
+
+    let config = {
+        method: 'post',
+        maxBodyLength: Infinity,
+        url: 'https://turboboost-dev.myshopify.com/admin/api/2023-04/graphql.json',
+        headers: {
+            'X-Shopify-Access-Token': 'shpua_92e1118272f4b9fd9af36af7fd2ec2d2',
+            'Content-Type': 'application/json',
+            'Cookie': '__cf_bm=4SUrq29XCW4.ROWvgNsea_HYs4tpxw1hA1MqN_5016M-1687808384-0-AToLqgA5GmgslUR9bRyWh9X3U1/jWswRf2qbln1Qg7YZhPrH0njI6uY/nijxtVu1dhDjtdJh9Nde5SSbdLgXn4c='
+        },
+        data: data
+    };
+
+    axios.request(config)
+        .then((response) => {
+            console.log(JSON.stringify(response.data));
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+
+}
+
+
+exports.removeUnusedJavascriptCode = (req,res) =>{
+    // console.log()
     res.json({
-        "adsd":"wprkoing"
+        data:`kjhdajdgj`
     })
 }
