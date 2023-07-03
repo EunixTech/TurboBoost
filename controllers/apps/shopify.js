@@ -327,8 +327,6 @@ exports.createProductCreateWebHook = async (shop, accessToken) => { // call this
 }
 
 
-
-
 exports.productCreateWebhook = async (req, res) => {
     try {
         const { id, name, api_client_id, shop_id, domain } = req.body;
@@ -363,24 +361,34 @@ exports.addingLazyLoadingScriptClient = async (req, res) => {
 
     const fetchConfig = getFetchConfig()
 
-    // const config1 = {
-    //     method: 'get',
-    //     url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes.json?role=main`,
-    //     headers: {
-    //         'X-Shopify-Access-Token': 'shpua_832b00f9f277821c02a70c5524402acd'
-    //     }
-    // };
-
-    const responseq = await Axios({
+    Axios({
         ...fetchConfig,
         url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes.json?role=main`,
-    });
-    const responseDatwa = responseq.data; // Extract the data from the response object
+    }).then(async(foundTheme)=>{
 
+        const themeId = foundTheme?.data?.themes[0]?.id;
 
-    console.log(responseDatwa)
+        if(themeId){
 
-    res.json({
-        data: responseDatwa
+            const responseq = await Axios({
+                ...fetchConfig,
+                method: "PUT",
+                url: `https://turboboost-dev.myshopify.com/admin/api/2023-01/themes/${themeId}/assets.json`,
+                data :JSON.stringify({
+                    "asset": {
+                      "key": "sections/main-product.liquid",
+                      "value": "{%- for media in product.media -%}\n <img\n  alt=\"{{ media.alt }}\"\n        data-sizes=\"auto\"\n        data-srcset=\"{{ media.preview_image | img_url: '275x' }} 275w,\n                     {{ media.preview_image | img_url: '320x' }} 320w,\n {{ media.preview_image | img_url: '500x' }} 500w,\n                     {{ media.preview_image | img_url: '640x' }} 640w,\n                     {{ media.preview_image | img_url: '1024x' }} 1024w\"\n        data-src=\"{{ media.preview_image | img_url: '416x' }}\"\n        src=\"{{ media.preview_image | img_url: '275x' }}\"\n        class=\"lazyloadssssss-manmohan\" />\n{%- endfor -%}"
+                    }
+                  })
+                
+            });
+            const responseDatwa = responseq.data; // Extract the data from the response object
+            console.log(responseDatwa)
+        }
+        res.json({
+            themeId
+        })
     })
+
+
 }

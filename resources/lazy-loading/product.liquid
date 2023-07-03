@@ -1,0 +1,13 @@
+{%- for media in product.media -%}
+                <img
+                  alt="{{ media.alt }}"
+                  data-sizes="auto"
+                  data-srcset="{{ media.preview_image | img_url: '275x' }} 275w,
+                               {{ media.preview_image | img_url: '320x' }} 320w, 
+                               {{ media.preview_image | img_url: '500x' }} 500w,
+                      {{ media.preview_image | img_url: '640x'}} 640w,
+                     {{ media.preview_image | img_url: '1024x' }} 1024w"
+                  data-src="{{ media.preview_image | img_url: '416x' }}"
+                  src="{{ media.preview_image | img_url: '275x' }}"
+                  class="lazyload" />
+          {%- endfor -%}
