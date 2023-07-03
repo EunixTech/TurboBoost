@@ -268,7 +268,7 @@ exports.fetchAllProduct = async (req, res) => {
                 }`,
         variables: {
             "image": {
-                "altText": "mahesh dalle",
+                "altText": "test",
                 "id": "gid://shopify/ProductImage/41962191454488",
                 "src": "https://www.shutterstock.com/image-vector/example-red-square-grunge-stamp-260nw-327662909.jpg"
             },
@@ -298,33 +298,33 @@ exports.fetchAllProduct = async (req, res) => {
 
 };
 
-exports.createProductCreateWebHook = async (shop, accessToken) => { // call this on installing shopify app
-    let uuid = crypto.randomUUID()
-    const registerWebhookOptions = {
-        method: 'POST',
-        url: `https://${shop}/admin/api/2023-04/webhooks.json?access_token=${accessToken}`,
-        data: {
-            webhook: {
-                topic: 'products/create',
-                address: `${serverUrl}app/shopify/auth/uninstallApp/${uuid}`, // address of route of your product create webhook
-                format: 'json',
-            },
-        },
-    };
+// exports.createProductCreateWebHook = async (shop, accessToken) => { // call this on installing shopify app
+//     let uuid = crypto.randomUUID()
+//     const registerWebhookOptions = {
+//         method: 'POST',
+//         url: `https://${shop}/admin/api/2023-04/webhooks.json?access_token=${accessToken}`,
+//         data: {
+//             webhook: {
+//                 topic: 'products/create',
+//                 address: `${serverUrl}app/shopify/auth/uninstallApp/${uuid}`, // address of route of your product create webhook
+//                 format: 'json',
+//             },
+//         },
+//     };
 
-    try {
-        await Axios(registerWebhookOptions);
-        console.log(`Successfully registered webhook`);
-    } catch (e) {
-        // Needed for UI test cases - if on non development instance then proceed
-        if (serverUrl !== 'http://localhost:8000') {
-            return res.status(400).send({
-                message: `Failed to register webhook: ${e}`,
-                success: false,
-            });
-        }
-    }
-}
+//     try {
+//         await Axios(registerWebhookOptions);
+//         console.log(`Successfully registered webhook`);
+//     } catch (e) {
+//         // Needed for UI test cases - if on non development instance then proceed
+//         if (serverUrl !== 'http://localhost:8000') {
+//             return res.status(400).send({
+//                 message: `Failed to register webhook: ${e}`,
+//                 success: false,
+//             });
+//         }
+//     }
+// }
 
 
 exports.productCreateWebhook = async (req, res) => {
@@ -391,4 +391,11 @@ exports.addingLazyLoadingScriptClient = async (req, res) => {
     })
 
 
+}
+
+exports.updatingHTMLAttribute = (req,res, next)=>{
+    console.log(`jhabdjha`)
+    res.json({
+        "adsd":"wprkoing"
+    })
 }

@@ -8,5 +8,9 @@ router.get("/fetch-product", controllers.fetchAllProduct);
 
 router.get("/adding-lazy-loading", controllers.addingLazyLoadingScriptClient);
 
+
+router.get("/updating-html-attributes", controllers.updatingHTMLAttribute);
+
+
 module.exports = router;
     
