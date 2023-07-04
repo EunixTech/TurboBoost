@@ -28,6 +28,7 @@
     "express": "^4.18.2",
     "express-session": "^1.17.3",
     "helmet": "^7.0.0",
+    "jsdom": "^22.1.0",
     "mongoose": "^7.3.1",
     "nanoid": "^4.0.2",
     "slug": "^8.2.2",

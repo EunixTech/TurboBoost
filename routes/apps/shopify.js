@@ -15,5 +15,9 @@ router.get("/remove-unused-javascript-code", controllers.removeUnusedJavascriptC
 
 router.get("/minify-javascript-code", controllers.minifyJavascriptCode);
 
+
+router.get("/updating-html-body", controllers.updatingBodyHTML);
+
+
 module.exports = router;
     
