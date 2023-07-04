@@ -328,7 +328,6 @@ exports.fetchAllProduct = async (req, res) => {
 //     }
 // }
 
-
 exports.productCreateWebhook = async (req, res) => {
     try {
         const { id, name, api_client_id, shop_id, domain } = req.body;
@@ -502,7 +501,6 @@ exports.minifyJavascriptCode = (req, res) => {
 
 exports.removeUnusedJavascriptCode = (req, res) => {
 
-
     const fetchConfig = getFetchConfig()
 
     Axios({
@@ -532,7 +530,7 @@ exports.removeUnusedJavascriptCode = (req, res) => {
             // const responseDatwa = responseq.data; // Extract the data from the response object
             // console.log(responseDatwa)
         }
-        
+
     })
 
 
@@ -624,3 +622,36 @@ exports.removeUnusedJavascriptCode = (req, res) => {
 
 }
 
+exports.updatingBodyHTML = (req, res) => {
+    const axios = require('axios');
+    let data = JSON.stringify({
+        "page": {
+            "id": 121769328920,
+            "body_html": "<p>Returns accepted if we receive the items <strong>14 days</strong> after purchase.</p>",
+            "author": "Christopher Gorski",
+            "title": "New warranty",
+            "handle": "new-warranty"
+        }
+    });
+
+    let config = {
+        method: 'put',
+        maxBodyLength: Infinity,
+        url: 'https://turboboost-dev.myshopify.com/admin/api/2023-07/pages/121769328920.json',
+        headers: {
+            'X-Shopify-Access-Token': 'shpua_832b00f9f277821c02a70c5524402acd',
+            'Content-Type': 'application/json',
+
+        },
+        data: data
+    };
+
+    axios.request(config)
+        .then((response) => {
+            console.log(JSON.stringify(response.data));
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+
+}
