@@ -2,9 +2,10 @@ const { getSlug } = require("../../utils/mongoose"),
     mongoose = require("mongoose"),
     crypto = require("crypto"),
     Axios = require("axios"),
+    UglifyJS = require("uglify-es"),
     User = mongoose.model("user"),
     ShopifyService = require("../../services/apps/index"),
-    {getFetchConfig} = require("../../utils/getFetchConfig"),
+    { getFetchConfig } = require("../../utils/getFetchConfig"),
     OauthState = mongoose.model("outhState"),
     {
         sendSuccessJSONResponse,
@@ -364,23 +365,23 @@ exports.addingLazyLoadingScriptClient = async (req, res) => {
     Axios({
         ...fetchConfig,
         url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes.json?role=main`,
-    }).then(async(foundTheme)=>{
+    }).then(async (foundTheme) => {
 
         const themeId = foundTheme?.data?.themes[0]?.id;
 
-        if(themeId){
+        if (themeId) {
 
             const responseq = await Axios({
                 ...fetchConfig,
                 method: "PUT",
                 url: `https://turboboost-dev.myshopify.com/admin/api/2023-01/themes/${themeId}/assets.json`,
-                data :JSON.stringify({
+                data: JSON.stringify({
                     "asset": {
-                      "key": "sections/main-product.liquid",
-                      "value": "{%- for media in product.media -%}\n <img\n  alt=\"{{ media.alt }}\"\n        data-sizes=\"auto\"\n        data-srcset=\"{{ media.preview_image | img_url: '275x' }} 275w,\n                     {{ media.preview_image | img_url: '320x' }} 320w,\n {{ media.preview_image | img_url: '500x' }} 500w,\n                     {{ media.preview_image | img_url: '640x' }} 640w,\n                     {{ media.preview_image | img_url: '1024x' }} 1024w\"\n        data-src=\"{{ media.preview_image | img_url: '416x' }}\"\n        src=\"{{ media.preview_image | img_url: '275x' }}\"\n        class=\"lazyloadssssss-manmohan\" />\n{%- endfor -%}"
+                        "key": "sections/main-product.liquid",
+                        "value": "{%- for media in product.media -%}\n <img\n  alt=\"{{ media.alt }}\"\n        data-sizes=\"auto\"\n        data-srcset=\"{{ media.preview_image | img_url: '275x' }} 275w,\n                     {{ media.preview_image | img_url: '320x' }} 320w,\n {{ media.preview_image | img_url: '500x' }} 500w,\n                     {{ media.preview_image | img_url: '640x' }} 640w,\n                     {{ media.preview_image | img_url: '1024x' }} 1024w\"\n        data-src=\"{{ media.preview_image | img_url: '416x' }}\"\n        src=\"{{ media.preview_image | img_url: '275x' }}\"\n        class=\"lazyloadssssss-manmohan\" />\n{%- endfor -%}"
                     }
-                  })
-                
+                })
+
             });
             const responseDatwa = responseq.data; // Extract the data from the response object
             console.log(responseDatwa)
@@ -393,7 +394,7 @@ exports.addingLazyLoadingScriptClient = async (req, res) => {
 
 }
 
-exports.updatingHTMLAttribute = (req,res, next)=>{
+exports.updatingHTMLAttribute = (req, res, next) => {
     let data = JSON.stringify({
         query: `mutation productImageUpdate($image: ImageInput!, $productId: ID!) {
                   productImageUpdate(image: $image, productId: $productId) {
@@ -439,9 +440,149 @@ exports.updatingHTMLAttribute = (req,res, next)=>{
 }
 
 
-exports.removeUnusedJavascriptCode = (req,res) =>{
-    // console.log()
-    res.json({
-        data:`kjhdajdgj`
-    })
+exports.minifyJavascriptCode = (req, res) => {
+
+    function removeUnusedCodeFromHTML(html) {
+        const scriptRegex = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
+        const scriptTags = html.match(scriptRegex);
+        if (!scriptTags) {
+            console.log("No JavaScript code found in the HTML.");
+            return html;
+        }
+
+        scriptTags.forEach((scriptTag) => {
+            const jsRegex = /<script\b[^<]*>([\s\S]*?)<\/script>/i;
+            const jsMatch = scriptTag.match(jsRegex);
+            if (!jsMatch || !jsMatch[1]) return;
+
+            const jsCode = jsMatch[1];
+            const result = UglifyJS.minify(jsCode, {
+                compress: {
+                    unused: true, // Remove unused code
+                },
+            });
+
+            if (result.error) {
+                console.error(result.error);
+            } else {
+                const updatedJsCode = result.code;
+                html = html.replace(jsCode, updatedJsCode);
+            }
+        });
+
+        return html;
+    }
+
+    const htmlString = `
+      <html>
+        <head>
+          <script>
+            function unusedFunction() {
+              console.log('This function is not used.');
+            }
+            
+            function usedFunction() {
+              console.log('This function is used.');
+            }
+          </script>
+        </head>
+        <body>
+          <h1>Hello, world!</h1>
+        </body>
+      </html>
+      `;
+
+    const updatedHtmlString = removeUnusedCodeFromHTML(htmlString);
+    console.log(updatedHtmlString);
 }
+
+
+exports.removeUnusedJavascriptCode = (req, res) => {
+    // console.log()
+    const esprima = require('esprima');
+    const estraverse = require('estraverse');
+    const escodegen = require('escodegen');
+
+    function removeUnusedCodeFromHTML(html) {
+        const scriptRegex = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
+        const scriptTags = html.match(scriptRegex);
+        if (!scriptTags) {
+            console.log("No JavaScript code found in the HTML.");
+            return html;
+        }
+
+        scriptTags.forEach((scriptTag) => {
+            const jsRegex = /<script\b[^<]*>([\s\S]*?)<\/script>/i;
+            const jsMatch = scriptTag.match(jsRegex);
+            if (!jsMatch || !jsMatch[1]) return;
+
+            const jsCode = jsMatch[1];
+
+            // Parse the JavaScript code
+            const ast = esprima.parseScript(jsCode);
+
+            // Find the function declarations
+            const functionDeclarations = [];
+            estraverse.traverse(ast, {
+                enter(node) {
+                    if (node.type === 'FunctionDeclaration') {
+                        functionDeclarations.push(node);
+                    }
+                }
+            });
+
+            // Find the unused function names
+            const usedFunctionNames = new Set();
+            functionDeclarations.forEach((declaration) => {
+                const funcName = declaration.id.name;
+                const isUsed = new RegExp(`\\b${funcName}\\b`).test(html);
+                if (isUsed) {
+                    usedFunctionNames.add(funcName);
+                }
+            });
+
+            // Remove the unused functions from the AST
+            functionDeclarations.forEach((declaration) => {
+                const funcName = declaration.id.name;
+                if (!usedFunctionNames.has(funcName)) {
+                    estraverse.replace(declaration, {
+                        enter() {
+                            return estraverse.VisitorOption.Remove;
+                        }
+                    });
+                }
+            });
+
+            // Generate the updated JavaScript code
+            const updatedJsCode = escodegen.generate(ast);
+
+            html = html.replace(jsCode, updatedJsCode);
+        });
+
+        return html;
+    }
+
+    const htmlString = `
+<html>
+  <head>
+    <script>
+      function unusedFunction() {
+        console.log('This function is not used.');
+      }
+      
+      function usedFunction() {
+        console.log('This function is used.');
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Hello, world!</h1>
+  </body>
+</html>
+`;
+
+    const updatedHtmlString = removeUnusedCodeFromHTML(htmlString);
+    console.log(updatedHtmlString);
+
+}
+
