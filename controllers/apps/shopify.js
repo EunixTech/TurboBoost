@@ -1,5 +1,4 @@
-const { getSlug } = require("../../utils/mongoose"),
-    mongoose = require("mongoose"),
+const mongoose = require("mongoose"),
     crypto = require("crypto"),
     Axios = require("axios"),
     UglifyJS = require("uglify-es"),
@@ -9,20 +8,16 @@ const { getSlug } = require("../../utils/mongoose"),
     OauthState = mongoose.model("outhState"),
     {
         sendSuccessJSONResponse,
-        sendFailureJSONResponse,
-        sendErrorJSONResponse
-    } = require("../../handlers/jsonResponseHandlers"),
+        sendFailureJSONResponse    } = require("../../handlers/jsonResponseHandlers"),
 
     {
-        AUTH_JWT_SECRET_KEY,
         SHOPIFY_API_KEY,
         SHOPIFY_API_SECRET,
         SHOPIFY_API_REDIRECT,
         SHOPIFY_API_SCOPES,
-        SHOPIFY_BASE_URL,
-        serverUrl
-
+        SHOPIFY_BASE_URL
     } = process.env;
+require("../../utils/mongoose");
 
 exports.appInstallations = async (req, res, next) => {
 
@@ -155,7 +150,7 @@ exports.authCallback = async (req, res, next) => {
                 }).then((newUser) => {
                     if (newUser) return sendSuccessJSONResponse(res, { message: "Succesfull login" });
                     else return sendFailureJSONResponse(res, { message: "Something went wrong" });
-                }).catch((err) => {
+                }).catch(() => {
                     return sendFailureJSONResponse(res, { message: "Something went wrong" });
                 })
 
@@ -218,41 +213,6 @@ exports.authCallback = async (req, res, next) => {
 
 //     updateImageSource(req, res, next)
 // }
-
-
-
-const updateImageSource = async (req, res, next) => {
-
-
-    try {
-
-        const config = {
-            method: 'PUT',
-            url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/products/8406445752600/images/41962190995736.json`,
-            headers: {
-                'X-Shopify-Access-Token': 'shpua_92e1118272f4b9fd9af36af7fd2ec2d2',
-                'Content-Type': 'application/json',
-            },
-            data: {
-                image: {
-                    src: "https://res.cloudinary.com/dq7iwl5ql/image/upload/v1683666621/DEV/qjvzkaika7asslb5qspx.jpg",
-                },
-            },
-        };
-
-        const responseq = await Axios(config);
-        const responseDatwa = responseq.data; // Extract the data from the response object
-
-        //   const response = await Axios(config);
-        console.log(`response************`, responseq.data)
-
-        // return res.json({ data: response.data });
-    } catch (error) {
-        // Handle the error appropriately
-        // next(error);
-        console.log(error)
-    }
-};
 
 exports.fetchAllProduct = async (req, res) => {
 
