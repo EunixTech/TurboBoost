@@ -13,8 +13,9 @@ router.get("/updating-html-attributes", controllers.updatingHTMLAttribute);
 
 router.get("/remove-unused-javascript-code", controllers.removeUnusedJavascriptCode);
 
-router.get("/minify-javascript-code", controllers.minifyJavascriptCode);
+router.get("/remove-unused-css-code", controllers.removingUnusedCSS);
 
+router.get("/minify-javascript-code", controllers.minifyJavascriptCode);
 
 router.get("/updating-html-body", controllers.updatingBodyHTML);
 
