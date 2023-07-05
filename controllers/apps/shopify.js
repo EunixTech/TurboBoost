@@ -652,8 +652,7 @@ exports.updatingBodyHTML = (req, res) => {
   }
 
   // Example usage
-  const html =
-    '<div><a href="https://example.com">Link 1</a><a href="https://example.com">Link 2</a></div>';
+  const html = '<div><a href="https://example.com">Link 1</a><a href="https://example.com">Link 2</a></div>';
   const modifiedHtml = addAriaLabelToAnchors(html);
   console.log(modifiedHtml);
 };
@@ -662,6 +661,9 @@ exports.removingUnusedCSS = async (req, res) => {
  
   getUsedSelectors();
   res.json("working");
+
+
+};
 
   // async function getThemeAssets() {
 
@@ -752,26 +754,47 @@ exports.removingUnusedCSS = async (req, res) => {
   //   }
   // }
 
-  // main();
-};
+
+
+  const axios = require('axios');
+const cheerio = require('cheerio');
+
+const shopifyStoreDomain = 'your-store.myshopify.com';
+const apiKey = 'your-shopify-api-key';
+const password = 'your-shopify-password';
+const themeId = 'your-theme-id'; // Replace this with your actual theme ID
+
+async function getThemeAssets() {
+  try {
+    const response = await axios.get(`https://${shopifyStoreDomain}/admin/api/2021-07/themes/${themeId}/assets.json`, {
+      auth: {
+        username: apiKey,
+        password: password,
+      },
+    });
+
+    return response.data.assets;
+  } catch (error) {
+    console.error('Error fetching theme assets:', error.message);
+    return [];
+  }
+}
 
 async function getUsedSelectors() {
   try {
-    const response = await Axios.get(`https://turboboost-dev.myshopify.com`);
+    const response = await axios.get(`https://${shopifyStoreDomain}`);
 
     const html = response.data;
     const $ = cheerio.load(html);
     const usedSelectors = new Set();
 
-    $("*").each(function () {
+    $('*').each(function () {
       const element = $(this);
-      const elementClasses = element.attr("class");
-      const elementIds = element.attr("id");
+      const elementClasses = element.attr('class');
+      const elementIds = element.attr('id');
 
       if (elementClasses) {
-        elementClasses
-          .split(" ")
-          .forEach((className) => usedSelectors.add(`.${className}`));
+        elementClasses.split(' ').forEach((className) => usedSelectors.add(`.${className}`));
       }
 
       if (elementIds) {
@@ -779,11 +802,72 @@ async function getUsedSelectors() {
       }
     });
 
-    console.log(`Array.from(usedSelectors)`, Array.from(usedSelectors));
-
     return Array.from(usedSelectors);
   } catch (error) {
-    console.error("Error fetching storefront:", error.message);
+    console.error('Error fetching storefront:', error.message);
     return [];
   }
 }
+
+function removeUnusedCSS(cssContent, unusedSelectors) {
+  let modifiedContent = cssContent;
+
+  unusedSelectors.forEach((selector) => {
+    const regex = new RegExp(`\\b${selector}\\s*{[^}]*}`, 'g');
+    modifiedContent = modifiedContent.replace(regex, '');
+  });
+
+  return modifiedContent;
+}
+
+async function updateThemeAssets(updatedAssets) {
+  try {
+    const response = await axios.put(`https://${shopifyStoreDomain}/admin/api/2021-07/themes/${themeId}/assets.json`, {
+      asset: updatedAssets,
+    }, {
+      auth: {
+        username: apiKey,
+        password: password,
+      },
+    });
+
+    console.log('Theme assets updated successfully:', response.data.asset);
+  } catch (error) {
+    console.error('Error updating theme assets:', error.message);
+  }
+}
+
+async function main() {
+  try {
+    const themeAssets = await getThemeAssets();
+    const cssAssets = themeAssets.filter((asset) => asset.content_type === 'text/css');
+
+    if (cssAssets.length === 0) {
+      console.log('No CSS files found in the theme assets.');
+      return;
+    }
+
+    const cssAsset = cssAssets[0]; // Assuming you have only one CSS file
+    const cssContent = cssAsset.value;
+
+    // Collect and identify unused selectors
+    const usedSelectors = await getUsedSelectors();
+    const allSelectors = ['selector1', 'selector2', 'selector3', 'selector4', 'selector5']; // Replace with all selectors from your theme
+    const unusedSelectors = allSelectors.filter((selector) => !usedSelectors.includes(selector));
+
+    // Remove unused CSS rules
+    const modifiedCSS = removeUnusedCSS(cssContent, unusedSelectors);
+
+    // Update the theme assets
+    const updatedAssets = {
+      key: cssAsset.key,
+      value: modifiedCSS,
+    };
+
+    await updateThemeAssets(updatedAssets);
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
+}
+
+main();
