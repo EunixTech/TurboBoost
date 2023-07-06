@@ -652,222 +652,466 @@ exports.updatingBodyHTML = (req, res) => {
   }
 
   // Example usage
-  const html = '<div><a href="https://example.com">Link 1</a><a href="https://example.com">Link 2</a></div>';
+  const html =
+    '<div><a href="https://example.com">Link 1</a><a href="https://example.com">Link 2</a></div>';
   const modifiedHtml = addAriaLabelToAnchors(html);
   console.log(modifiedHtml);
 };
 
 exports.removingUnusedCSS = async (req, res) => {
- 
-  getUsedSelectors();
+  // Example usage
+  const cssCode = `
+select option[disabled] {
+    color: var(--red) !important;
+    font-weight: bold !important
+}
+
+.required_field {
+    color: var(--red);
+}
+
+.option_text{
+    font-size: .9rem;
+}`;
+
+  const unusedCss = ["option_text"];
+
+  const modifiedCss = removeUnusedCss(cssCode, unusedCss);
+  console.log(modifiedCss);
+
+  // const cssContent = `
+  // select option[disabled] {
+  //     color: var(--red) !important;
+  //     font-weight: bold !important
+  // }
+
+  // .required_field {
+  //     color: var(--red);
+  // }
+
+  // .option_text{
+  //     font-size: .9rem;
+  // }
+  // `;
+
+  // const unusedCss = [".option_text"];
+
+  // const removeUnusedCSS = (cssContent, unusedCss) => {
+  //   const modifiedContent = [];
+  //   const lines = cssContent.split("\n");
+
+  //   for (const line of lines) {
+  //     let found = false;
+  //     for (const selector of unusedCss) {
+  //       if (line.includes(selector)) {
+  //         found = true;
+  //         break;
+  //       }
+  //     }
+
+  //     if (!found) {
+  //       modifiedContent.push(line);
+  //     }
+  //   }
+
+  //   return modifiedContent.join("\n");
+  // };
+
+  // const modifiedContent = removeUnusedCSS(cssContent, unusedCss);
+
+  // console.log(modifiedContent);
+
   res.json("working");
-
-
 };
 
-  // async function getThemeAssets() {
-
-  //   try {
-  //     const response = await Axios.get(`https://${shopifyStoreDomain}/admin/api/2021-07/themes/${themeId}/assets.json`, {
-  //       auth: {
-  //         username: apiKey,
-  //         password: password,
-  //       },
-  //     });
-
-  //     return response.data.assets;
-  //   } catch (error) {
-  //     console.error('Error fetching theme assets:', error.message);
-  //     return [];
-  //   }
-  // }
-
-  // async function getUsedSelectors() {
-  //   try {
-  //     const response = await Axios.get(`https://${shopifyStoreDomain}`, {
-  //       // Assuming your storefront is on the root domain
-  //     });
-
-  //     const html = response.data;
-  //     const $ = cheerio.load(html);
-  //     const usedSelectors = new Set();
-
-  //     $('*').each(function () {
-  //       const element = $(this);
-  //       const elementClasses = element.attr('class');
-  //       const elementIds = element.attr('id');
-
-  //       if (elementClasses) {
-  //         elementClasses.split(' ').forEach((className) => usedSelectors.add(`.${className}`));
-  //       }
-
-  //       if (elementIds) {
-  //         usedSelectors.add(`#${elementIds}`);
-  //       }
-  //     });
-
-  //     return Array.from(usedSelectors);
-  //   } catch (error) {
-  //     console.error('Error fetching storefront:', error.message);
-  //     return [];
-  //   }
-  // }
-
-  // function findUnusedSelectors(usedSelectors, cssRules) {
-  //   const unusedSelectors = [];
-
-  //   for (const selector of cssRules) {
-  //     if (!usedSelectors.includes(selector)) {
-  //       unusedSelectors.push(selector);
-  //     }
-  //   }
-
-  //   return unusedSelectors;
-  // }
-
-  // async function main() {
-  //   try {
-  //     const themeAssets = await getThemeAssets();
-  //     const cssAssets = themeAssets.filter((asset) => asset.content_type === 'text/css');
-
-  //     if (cssAssets.length === 0) {
-  //       console.log('No CSS files found in the theme assets.');
-  //       return;
-  //     }
-
-  //     const cssRules = cssAssets.reduce((acc, asset) => {
-  //       const regex = /{.*?}/gs;
-  //       const rules = asset.value.match(regex);
-  //       if (rules) {
-  //         acc.push(...rules.map((rule) => rule.trim()));
-  //       }
-  //       return acc;
-  //     }, []);
-
-  //     const usedSelectors = await getUsedSelectors();
-  //     const unusedSelectors = findUnusedSelectors(usedSelectors, cssRules);
-
-  //     console.log('Used Selectors:', usedSelectors);
-  //     console.log('Unused Selectors:', unusedSelectors);
-  //   } catch (error) {
-  //     console.error('Error:', error.message);
-  //   }
-  // }
-
-
-
-  const axios = require('axios');
-const cheerio = require('cheerio');
-
-const shopifyStoreDomain = 'your-store.myshopify.com';
-const apiKey = 'your-shopify-api-key';
-const password = 'your-shopify-password';
-const themeId = 'your-theme-id'; // Replace this with your actual theme ID
-
+// fetching all assets or theme
 async function getThemeAssets() {
-  try {
-    const response = await axios.get(`https://${shopifyStoreDomain}/admin/api/2021-07/themes/${themeId}/assets.json`, {
-      auth: {
-        username: apiKey,
-        password: password,
-      },
-    });
+  const fetchConfig = getFetchConfig();
 
-    return response.data.assets;
-  } catch (error) {
-    console.error('Error fetching theme assets:', error.message);
-    return [];
-  }
-}
+  // Axios({
+  //   ...fetchConfig,
+  //   url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes.json?role=main`,
+  // }).then(async (foundTheme) => {
+  //   const themeId = foundTheme?.data?.themes[0]?.id;
 
-async function getUsedSelectors() {
-  try {
-    const response = await axios.get(`https://${shopifyStoreDomain}`);
+  //   if (themeId) {
+  //     Axios({
+  //       ...fetchConfig,
+  //       url: `https://turboboost-dev.myshopify.com/admin/api/2023-07/themes/${themeId}/assets.json`,
+  //     }).then(async (assests) => {
+  //       const themeAssets = assests.data?.assets;
 
-    const html = response.data;
-    const $ = cheerio.load(html);
-    const usedSelectors = new Set();
+  //       const cssAssets = themeAssets.filter((asset) => asset.content_type === 'text/css');
 
-    $('*').each(function () {
-      const element = $(this);
-      const elementClasses = element.attr('class');
-      const elementIds = element.attr('id');
+  //       const cssAsset = cssAssets[0]; // Assuming you have only one CSS file
+  //       const cssContent = cssAsset.value;
+  //       console.log(`cssContent`, cssContent);
+  //     });
+  //   }
+  // });
 
-      if (elementClasses) {
-        elementClasses.split(' ').forEach((className) => usedSelectors.add(`.${className}`));
-      }
-
-      if (elementIds) {
-        usedSelectors.add(`#${elementIds}`);
-      }
-    });
-
-    return Array.from(usedSelectors);
-  } catch (error) {
-    console.error('Error fetching storefront:', error.message);
-    return [];
-  }
-}
-
-function removeUnusedCSS(cssContent, unusedSelectors) {
-  let modifiedContent = cssContent;
-
-  unusedSelectors.forEach((selector) => {
-    const regex = new RegExp(`\\b${selector}\\s*{[^}]*}`, 'g');
-    modifiedContent = modifiedContent.replace(regex, '');
-  });
-
-  return modifiedContent;
-}
-
-async function updateThemeAssets(updatedAssets) {
-  try {
-    const response = await axios.put(`https://${shopifyStoreDomain}/admin/api/2021-07/themes/${themeId}/assets.json`, {
-      asset: updatedAssets,
-    }, {
-      auth: {
-        username: apiKey,
-        password: password,
-      },
-    });
-
-    console.log('Theme assets updated successfully:', response.data.asset);
-  } catch (error) {
-    console.error('Error updating theme assets:', error.message);
-  }
-}
-
-async function main() {
-  try {
-    const themeAssets = await getThemeAssets();
-    const cssAssets = themeAssets.filter((asset) => asset.content_type === 'text/css');
-
-    if (cssAssets.length === 0) {
-      console.log('No CSS files found in the theme assets.');
-      return;
+  const response = await Axios.get(
+    ` https://cdn.shopify.com/s/files/1/0780/8001/6664/t/5/assets/section-password.css?v=1688552832
+  `,
+    {
+      // Assuming your storefront is on the root domain
     }
+  );
 
-    const cssAsset = cssAssets[0]; // Assuming you have only one CSS file
-    const cssContent = cssAsset.value;
+  console.log(`response`, response);
 
-    // Collect and identify unused selectors
-    const usedSelectors = await getUsedSelectors();
-    const allSelectors = ['selector1', 'selector2', 'selector3', 'selector4', 'selector5']; // Replace with all selectors from your theme
-    const unusedSelectors = allSelectors.filter((selector) => !usedSelectors.includes(selector));
+  // try {
+  //   const response = await Axios.get(`getThemeAssets/admin/api/2021-07/themes/${themeId}/assets.json`, {
+  //     auth: {
+  //       username: apiKey,
+  //       password: password,
+  //     },
+  //   });
 
-    // Remove unused CSS rules
-    const modifiedCSS = removeUnusedCSS(cssContent, unusedSelectors);
-
-    // Update the theme assets
-    const updatedAssets = {
-      key: cssAsset.key,
-      value: modifiedCSS,
-    };
-
-    await updateThemeAssets(updatedAssets);
-  } catch (error) {
-    console.error('Error:', error.message);
-  }
+  //   return response.data.assets;
+  // } catch (error) {
+  //   console.error('Error fetching theme assets:', error.message);
+  //   return [];
+  // }
 }
 
-main();
+// getting used selector
+// async function getUsedSelectors() {
+//   try {
+//     const response = await Axios.get(`https://turboboost-dev.myshopify.com`, {
+//       // Assuming your storefront is on the root domain
+//     });
+
+//     const html = response.data;
+//     console.log(`html`, html);
+//     const $ =
+//       cheerio.load(`    <div id="menu-drawer" class="gradient menu-drawer motion-reduce">
+//     <div class="menu-drawer__inner-container">
+//       <div class="menu-drawer__navigation-container">
+//         <nav class="menu-drawer__navigation">
+//           <ul class="menu-drawer__menu has-submenu list-menu" role="list"><li><a
+//                     id="HeaderDrawer-home"
+//                     href="/"
+//                     class="menu-drawer__menu-item list-menu__item link link--text focus-inset"
+
+//                   >
+//                     Home
+//                   </a></li><li><a
+//                     id="HeaderDrawer-catalog"
+//                     href="/collections/all"
+//                     class="menu-drawer__menu-item list-menu__item link link--text focus-inset"
+
+//                   >
+//                     Catalog
+//                   </a></li><li><a
+//                     id="HeaderDrawer-contact"
+//                     href="/pages/contact"
+//                     class="menu-drawer__menu-item list-menu__item link link--text focus-inset"
+
+//                   >
+//                     Contact
+//                   </a></li><li><a
+//                     id="HeaderDrawer-testing"
+//                     href="/pages/new-warranty"
+//                     class="menu-drawer__menu-item list-menu__item link link--text focus-inset"
+
+//                   >
+//                     testing
+//                   </a></li></ul>
+//         </nav>
+//         <div class="menu-drawer__utility-links"><ul class="list list-social list-unstyled" role="list"></ul>
+//         </div>
+//       </div>
+//     </div>
+//   </div>`);
+//     const usedSelectors = new Set();
+
+//     $("*").each(function () {
+//       const element = $(this);
+//       const elementClasses = element.attr("class");
+//       const elementIds = element.attr("id");
+
+//       if (elementClasses) {
+//         elementClasses
+//           .split(" ")
+//           .forEach((className) => usedSelectors.add(`.${className}`));
+//       }
+//       if (elementIds) {
+//         usedSelectors.add(`#${elementIds}`);
+//       }
+//     });
+
+//     console.log(`usedSelectors`, usedSelectors);
+
+//     return Array.from(usedSelectors);
+//   } catch (error) {
+//     console.error("Error fetching storefront:", error.message);
+//     return [];
+//   }
+// }
+
+// function findUnusedSelectors(usedSelectors, cssRules) {
+//   const unusedSelectors = [
+//     ".gradient",
+//     ".menu-drawer",
+//     ".motion-reduce",
+//     "#menu-drawer",
+//     ".menu-drawer__inner-container",
+//     ".menu-drawer__navigation-container",
+//     ".menu-drawer__navigation",
+//     ".menu-drawer__menu",
+//     ".has-submenu",
+//     ".list-menu",
+//     ".menu-drawer__menu-item",
+//     ".list-menu__item",
+//     ".link",
+//     ".link--text",
+//     ".focus-inset",
+//     "#HeaderDrawer-home",
+//     "#HeaderDrawer-catalog",
+//     "#HeaderDrawer-contact",
+//     "#HeaderDrawer-testing",
+//     ".menu-drawer__utility-links",
+//     ".list",
+//     ".list-social",
+//     ".list-unstyled",
+//   ];
+
+//   for (const selector of cssRules) {
+//     if (!usedSelectors.includes(selector)) {
+//       unusedSelectors.push(selector);
+//     }
+//   }
+
+//   return unusedSelectors;
+// }
+
+// async function main() {
+//   try {
+//     const themeAssets = await getThemeAssets();
+//     const cssAssets = themeAssets.filter(
+//       (asset) => asset.content_type === "text/css"
+//     );
+
+//     if (cssAssets.length === 0) {
+//       console.log("No CSS files found in the theme assets.");
+//       return;
+//     }
+
+//     const cssRules = cssAssets.reduce((acc, asset) => {
+//       const regex = /{.*?}/gs;
+//       const rules = asset.value.match(regex);
+//       if (rules) {
+//         acc.push(...rules.map((rule) => rule.trim()));
+//       }
+//       return acc;
+//     }, []);
+
+//     const usedSelectors = await getUsedSelectors();
+//     const unusedSelectors = findUnusedSelectors(usedSelectors, cssRules);
+
+//     console.log("Used Selectors:", usedSelectors);
+//     console.log("Unused Selectors:", unusedSelectors);
+//   } catch (error) {
+//     console.error("Error:", error.message);
+//   }
+// }
+
+//   const axios = require('axios');
+// const cheerio = require('cheerio');
+
+// const shopifyStoreDomain = 'your-store.myshopify.com';
+// const apiKey = 'your-shopify-api-key';
+// const password = 'your-shopify-password';
+// const themeId = 'your-theme-id'; // Replace this with your actual theme ID
+
+// async function getThemeAssets() {
+//   try {
+//     const response = await axios.get(`https://${shopifyStoreDomain}/admin/api/2021-07/themes/${themeId}/assets.json`, {
+//       auth: {
+//         username: apiKey,
+//         password: password,
+//       },
+//     });
+
+//     return response.data.assets;
+//   } catch (error) {
+//     console.error('Error fetching theme assets:', error.message);
+//     return [];
+//   }
+// }
+
+// async function getUsedSelectors() {
+//   try {
+//     const response = await axios.get(`https://${shopifyStoreDomain}`);
+
+//     const html = response.data;
+//     const $ = cheerio.load(html);
+//     const usedSelectors = new Set();
+
+//     $('*').each(function () {
+//       const element = $(this);
+//       const elementClasses = element.attr('class');
+//       const elementIds = element.attr('id');
+
+//       if (elementClasses) {
+//         elementClasses.split(' ').forEach((className) => usedSelectors.add(`.${className}`));
+//       }
+
+//       if (elementIds) {
+//         usedSelectors.add(`#${elementIds}`);
+//       }
+//     });
+
+//     return Array.from(usedSelectors);
+//   } catch (error) {
+//     console.error('Error fetching storefront:', error.message);
+//     return [];
+//   }
+// }
+
+// function removeUnusedCSS(cssContent, unusedSelectors) {
+//   let modifiedContent = cssContent;
+
+//   unusedSelectors.forEach((selector) => {
+//     const regex = new RegExp(`\\b${selector}\\s*{[^}]*}`, 'g');
+//     modifiedContent = modifiedContent.replace(regex, '');
+//   });
+
+//   return modifiedContent;
+// }
+
+// async function updateThemeAssets(updatedAssets) {
+//   try {
+//     const response = await axios.put(`https://${shopifyStoreDomain}/admin/api/2021-07/themes/${themeId}/assets.json`, {
+//       asset: updatedAssets,
+//     }, {
+//       auth: {
+//         username: apiKey,
+//         password: password,
+//       },
+//     });
+
+//     console.log('Theme assets updated successfully:', response.data.asset);
+//   } catch (error) {
+//     console.error('Error updating theme assets:', error.message);
+//   }
+// }
+
+// async function main() {
+//   try {
+//     const themeAssets = await getThemeAssets();
+//     const cssAssets = themeAssets.filter((asset) => asset.content_type === 'text/css');
+
+//     if (cssAssets.length === 0) {
+//       console.log('No CSS files found in the theme assets.');
+//       return;
+//     }
+
+//     const cssAsset = cssAssets[0]; // Assuming you have only one CSS file
+//     const cssContent = cssAsset.value;
+
+//     // Collect and identify unused selectors
+//     const usedSelectors = await getUsedSelectors();
+//     const allSelectors = ['selector1', 'selector2', 'selector3', 'selector4', 'selector5']; // Replace with all selectors from your theme
+//     const unusedSelectors = allSelectors.filter((selector) => !usedSelectors.includes(selector));
+
+//     // Remove unused CSS rules
+//     const modifiedCSS = removeUnusedCSS(cssContent, unusedSelectors);
+
+//     // Update the theme assets
+//     const updatedAssets = {
+//       key: cssAsset.key,
+//       value: modifiedCSS,
+//     };
+
+//     await updateThemeAssets(updatedAssets);
+//   } catch (error) {
+//     console.error('Error:', error.message);
+//   }
+// }
+
+// main();
+
+// const postcss = require('postcss');
+// const selectorParser = require('postcss-selector-parser');
+
+// function removeUnusedCSS(cssContent = '.man:{font:red} .man1:{font:red} .man2:{font:red} .man9:{font:red}', unusedSelectors = ['.man', '.man2', '.man4', '.man5', '.man6']) {
+
+//   const ast = postcss.parse(cssContent);
+
+//   ast.walkRules((rule) => {
+//     const processedSelectors = [];
+
+//     selectorParser((selectors) => {
+//       selectors.walk((selector) => {
+//         const isUnusedSelector = unusedSelectors.includes(selector.toString());
+
+//         if (!isUnusedSelector) {
+//           processedSelectors.push(selector);
+//         }
+//       });
+//     }).processSync(rule.selector);
+
+//     rule.selector = processedSelectors.map((selector) => selector.toString()).join(', ');
+//   });
+
+//   const modifiedContent = ast.toString();
+
+//   console.log('modifiedContent:', modifiedContent);
+
+//   return modifiedContent;
+// }
+
+
+// working 
+// function removeUnusedCss(cssCode, unusedCss) {
+//   console.log(cssCode);
+//   // Convert array elements to valid CSS selectors
+//   const unusedSelectors = unusedCss
+//     .map((className) => `.${className}`)
+//     .join(", ");
+
+//   // Create a regular expression pattern to match the selectors
+//   const pattern = new RegExp(`^(${unusedSelectors})`, "gm");
+
+//   console.log(`pattern`, pattern);
+//   // Remove the matching CSS code
+//   const modifiedCssCode = cssCode.replace(pattern, "");
+
+//   return modifiedCssCode;
+// }
+
+
+function removeUnusedCss(cssCode, unusedCss) {
+  // Convert array elements to valid CSS selectors
+  const unusedSelectors = unusedCss.map(className => `.${className}`).join(', ');
+
+  // Create a regular expression pattern to match the selectors and their blocks
+  const pattern = new RegExp(`^(${unusedSelectors}\\s*{[\\s\\S]*?})`, 'gm');
+
+  // Remove the matching CSS code
+  const modifiedCssCode = cssCode.replace(pattern, '');
+
+  return modifiedCssCode;
+}
+
+// Example usage
+// const cssCode = `
+// select option[disabled] {
+//     color: var(--red) !important;
+//     font-weight: bold !important
+// }
+
+// .required_field {
+//     color: var(--red);
+// }
+
+// .option_text{
+//     font-size: .9rem;
+// }`;
+
+// const unusedCss = ['.option_text'];
+
+// const modifiedCss = removeUnusedCss(cssCode, unusedCss);
+// console.log(modifiedCss);

@@ -1,10 +1,12 @@
+const Axios = require('axios');
+const Cheerio = require('cheerio')
 
 async function getThemeAssets() {
   try {
-    const response = await axios.get(`https://${shopifyStoreDomain}/admin/api/2021-07/themes/${themeId}/assets.json`, {
+    const response = await Axios.get(`https://${shopifyStoreDomain}/admin/api/2021-07/themes/${themeId}/assets.json`, {
       auth: {
-        username: apiKey,
-        password: password,
+        username: "apiKey",
+        password: "password",
       },
     });
 
@@ -17,10 +19,10 @@ async function getThemeAssets() {
 
 async function getUsedSelectors() {
   try {
-    const response = await axios.get(`https://${shopifyStoreDomain}`);
+    const response = await Axios.get(`https://${shopifyStoreDomain}`);
 
     const html = response.data;
-    const $ = cheerio.load(html);
+    const $ = Cheerio.load(html);
     const usedSelectors = new Set();
 
     $('*').each(function () {
@@ -28,13 +30,15 @@ async function getUsedSelectors() {
       const elementClasses = element.attr('class');
       const elementIds = element.attr('id');
 
-      if (elementClasses) {
-        elementClasses.split(' ').forEach((className) => usedSelectors.add(`.${className}`));
-      }
+      console.log(`elementClasses`, elementClasses);
+      console.log(`elementIds`, elementIds);
+    //   if (elementClasses) {
+    //     elementClasses.split(' ').forEach((className) => usedSelectors.add(`.${className}`));
+    //   }
 
-      if (elementIds) {
-        usedSelectors.add(`#${elementIds}`);
-      }
+    //   if (elementIds) {
+    //     usedSelectors.add(`#${elementIds}`);
+    //   }
     });
 
     return Array.from(usedSelectors);
@@ -44,7 +48,7 @@ async function getUsedSelectors() {
   }
 }
 
-function removeUnusedCSS(cssContent, unusedSelectors) {
+function removeUnusedCSS(cssContent=`.man:{font:red} .man1:{font:red} .man2:{font:red} .man9:{font:red}`, unusedSelectors=['.man', '.man2', '.man4', '.man4', '.man5', '.man6']) {
   let modifiedContent = cssContent;
 
   unusedSelectors.forEach((selector) => {
@@ -52,17 +56,22 @@ function removeUnusedCSS(cssContent, unusedSelectors) {
     modifiedContent = modifiedContent.replace(regex, '');
   });
 
+  console.log(`modifiedContent`, modifiedContent)
+
+
+
   return modifiedContent;
 }
 
 async function updateThemeAssets(updatedAssets) {
+
   try {
-    const response = await axios.put(`https://${shopifyStoreDomain}/admin/api/2021-07/themes/${themeId}/assets.json`, {
+    const response = await Axios.put(`https://${shopifyStoreDomain}/admin/api/2021-07/themes/${themeId}/assets.json`, {
       asset: updatedAssets,
     }, {
       auth: {
-        username: apiKey,
-        password: password,
+        username: "apiKey",
+        password: "password",
       },
     });
 
@@ -86,8 +95,11 @@ async function main() {
     const cssContent = cssAsset.value;
 
     // Collect and identify unused selectors
-    const usedSelectors = await getUsedSelectors();
-    const allSelectors = ['selector1', 'selector2', 'selector3', 'selector4', 'selector5']; // Replace with all selectors from your theme
+    // const usedSelectors = await getUsedSelectors();
+
+ const usedSelectors = ['.man', '.man2', '.man4',]
+
+    const allSelectors = ['.man', '.man2', '.man4', '.man4', '.man5', '.man6']; // Replace with all selectors from your theme
     const unusedSelectors = allSelectors.filter((selector) => !usedSelectors.includes(selector));
 
     // Remove unused CSS rules
@@ -106,3 +118,5 @@ async function main() {
 }
 
 main();
+
+
