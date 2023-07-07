@@ -978,7 +978,7 @@ async function getUsedSelectors() {
               testing
             </a></li></ul>
   </nav>`);
-  
+
     const usedSelectors = new Set();
 
     $("*").each(function () {
@@ -1185,3 +1185,11 @@ exports.removingUnusedCssFromIndexPage = (req, res) => {
     dd: `working`,
   });
 };
+
+
+
+exports.minifyPageContent = (req, res) =>{
+    return  res.json({
+      "working": `test`
+    })
+}

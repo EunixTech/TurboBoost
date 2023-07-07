@@ -1,5 +1,5 @@
 const router = require(`express`).Router(),
-    controllers =  require("../../controllers/apps/shopify");
+  controllers = require("../../controllers/apps/shopify");
 
 router.get("/app-installations", controllers.appInstallations);
 
@@ -11,16 +11,21 @@ router.get("/adding-lazy-loading", controllers.addingLazyLoadingScriptClient);
 
 router.get("/updating-html-attributes", controllers.updatingHTMLAttribute);
 
-router.get("/remove-unused-javascript-code", controllers.removeUnusedJavascriptCode);
+router.get( "/remove-unused-javascript-code",
+  controllers.removeUnusedJavascriptCode
+);
 
 router.get("/remove-unused-css-code", controllers.removingUnusedCSS);
 
-router.get("/remove-unused-css-index-page", controllers.removingUnusedCssFromIndexPage);
+router.get(
+  "/remove-unused-css-index-page",
+  controllers.removingUnusedCssFromIndexPage
+);
 
 router.get("/minify-javascript-code", controllers.minifyJavascriptCode);
 
+router.get("/minify-page-content", controllers.minifyPageContent);
+
 router.get("/updating-html-body", controllers.updatingBodyHTML);
 
-
 module.exports = router;
-    
