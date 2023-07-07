@@ -17,7 +17,6 @@ router.get("/remove-unused-css-code", controllers.removingUnusedCSS);
 
 router.get("/remove-unused-css-index-page", controllers.removingUnusedCssFromIndexPage);
 
-
 router.get("/minify-javascript-code", controllers.minifyJavascriptCode);
 
 router.get("/updating-html-body", controllers.updatingBodyHTML);
