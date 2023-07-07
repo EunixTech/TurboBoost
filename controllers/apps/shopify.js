@@ -4,6 +4,7 @@ const mongoose = require("mongoose"),
   cssbeautify = require("cssbeautify"),
   Cheerio = require("cheerio"),
   UglifyJS = require("uglify-es"),
+  minifyPageContent = require("../../resources/scripts/minify-page-content"),
   User = mongoose.model("user"),
   ShopifyService = require("../../services/apps/index"),
   { getFetchConfig } = require("../../utils/getFetchConfig"),
@@ -1186,10 +1187,67 @@ exports.removingUnusedCssFromIndexPage = (req, res) => {
   });
 };
 
+exports.minifyPageContent = (req, res) => {
+  const fetchConfig = getFetchConfig();
 
+  // finding theme
+  Axios({
+    ...fetchConfig,
+    url: `https://turboboost-dev.myshopify.com/admin/api/2023-07/pages.json`,
+  }).then(async (foundPages) => {
+    const pages = foundPages?.data?.pages;
 
-exports.minifyPageContent = (req, res) =>{
-    return  res.json({
-      "working": `test`
-    })
-}
+    console.log(pages);
+
+    if (pages?.length) {
+      // minifyPageContent()
+      for (let i = pages.length - 1; i >= 0; i--) {
+        const pageContent = pages[i]?.body_html,
+          pageId = pages[i]?.id;
+
+        if (pageContent) {
+          const minifiedPageContent = minifyPageContent(pageContent);
+          console.log(pageContent);
+          console.log(minifiedPageContent);
+
+          let data = JSON.stringify({
+            page: {
+              id: pageId,
+              body_html: minifiedPageContent,
+            },
+          });
+
+          let config = {
+            method: "put",
+            maxBodyLength: Infinity,
+            url: `https://turboboost-dev.myshopify.com/admin/api/2023-07/pages/${pageId}.json`,
+            headers: {
+              "X-Shopify-Access-Token":
+                "shpua_832b00f9f277821c02a70c5524402acd",
+              "Content-Type": "application/json",
+            },
+            data: data,
+          };
+
+          Axios.request(config)
+            .then((response) => {
+              console.log(response);
+              // return res.json({
+              //   data: foundPages.data,
+              // });
+
+              if (response.status === 200) {
+                res.json({
+                  message: `success`,
+                });
+              }
+              console.log(JSON.stringify(response.data));
+            })
+            .catch((error) => {
+              console.log(error);
+            });
+        }
+      }
+    }
+  });
+};
