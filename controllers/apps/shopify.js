@@ -1009,3 +1009,12 @@ async function getUsedSelectors() {
     return [];
   }
 }
+
+
+
+// removing unused css code from index page
+exports.removingUnusedCssFromIndexPage = (req, res) =>{
+  res.json({
+    dd: `working`
+  })
+}
