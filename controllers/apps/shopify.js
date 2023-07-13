@@ -1251,7 +1251,6 @@ exports.minifyPageContent = (req, res) => {
 };
 
 exports.DNSPrefetching = (req, res) => {
-  const axios = require("axios");
 
   let config = {
     method: "get",
@@ -1271,7 +1270,7 @@ exports.DNSPrefetching = (req, res) => {
     });
 
   // updating main theme page
-  const axios = require("axios");
+
   let data = JSON.stringify({
     asset: {
       key: "layout/theme.liquid",
@@ -1280,7 +1279,7 @@ exports.DNSPrefetching = (req, res) => {
     },
   });
 
-  let config = {
+  let config1 = {
     method: "put",
     maxBodyLength: Infinity,
     url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/152998740248/assets.json",
@@ -1294,7 +1293,7 @@ exports.DNSPrefetching = (req, res) => {
   };
 
   axios
-    .request(config)
+    .request(config1)
     .then((response) => {
       console.log(JSON.stringify(response.data));
     })
@@ -1302,3 +1301,7 @@ exports.DNSPrefetching = (req, res) => {
       console.log(error);
     });
 };
+
+exports.fontOptimization = (req,res)=>{
+  return res.json({dd:`da`})
+}

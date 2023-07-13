@@ -27,4 +27,7 @@ router.get("/updating-html-body", controllers.updatingBodyHTML);
 
 router.get("/adding-dns-prefetch", controllers.DNSPrefetching);
 
+router.get("/font-optimization", controllers.fontOptimization);
+
+
 module.exports = router;
