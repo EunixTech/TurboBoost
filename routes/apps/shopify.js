@@ -11,15 +11,11 @@ router.get("/adding-lazy-loading", controllers.addingLazyLoadingScriptClient);
 
 router.get("/updating-html-attributes", controllers.updatingHTMLAttribute);
 
-router.get( "/remove-unused-javascript-code",
-  controllers.removeUnusedJavascriptCode
-);
+router.get( "/remove-unused-javascript-code", controllers.removeUnusedJavascriptCode );
 
 router.get("/remove-unused-css-code", controllers.removingUnusedCSS);
 
-router.get( "/remove-unused-css-index-page",
-  controllers.removingUnusedCssFromIndexPage
-);
+router.get( "/remove-unused-css-index-page", controllers.removingUnusedCssFromIndexPage);
 
 router.get("/minify-javascript-code", controllers.minifyJavascriptCode);
 
@@ -29,6 +25,6 @@ router.get("/updating-html-body", controllers.updatingBodyHTML);
 
 router.get("/updating-html-body", controllers.updatingBodyHTML);
 
-router.get("/dns-prefetching", controllers.addingDNSPreftech);
+router.get("/adding-dns-prefetch", controllers.DNSPrefetching);
 
 module.exports = router;
