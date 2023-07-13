@@ -17,8 +17,7 @@ router.get( "/remove-unused-javascript-code",
 
 router.get("/remove-unused-css-code", controllers.removingUnusedCSS);
 
-router.get(
-  "/remove-unused-css-index-page",
+router.get( "/remove-unused-css-index-page",
   controllers.removingUnusedCssFromIndexPage
 );
 
@@ -27,5 +26,9 @@ router.get("/minify-javascript-code", controllers.minifyJavascriptCode);
 router.get("/minify-page-content", controllers.minifyPageContent);
 
 router.get("/updating-html-body", controllers.updatingBodyHTML);
+
+router.get("/updating-html-body", controllers.updatingBodyHTML);
+
+router.get("/dns-prefetching", controllers.addingDNSPreftech);
 
 module.exports = router;

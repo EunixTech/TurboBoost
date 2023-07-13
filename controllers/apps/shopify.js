@@ -1232,10 +1232,7 @@ exports.minifyPageContent = (req, res) => {
           Axios.request(config)
             .then((response) => {
               console.log(response);
-              // return res.json({
-              //   data: foundPages.data,
-              // });
-
+          
               if (response.status === 200) {
                 res.json({
                   message: `success`,
@@ -1251,3 +1248,10 @@ exports.minifyPageContent = (req, res) => {
     }
   });
 };
+
+
+exports.DNSPrefetching = (req,res)=>{
+  res.json({
+    working:'wprking'
+  })
+}
