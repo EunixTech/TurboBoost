@@ -1302,6 +1302,14 @@ exports.DNSPrefetching = (req, res) => {
     });
 };
 
-exports.fontOptimization = (req,res)=>{
-  return res.json({dd:`da`})
-}
+exports.fontOptimization = (req, res) => {
+  const fetchConfig = getFetchConfig();
+
+  Axios({
+    ...fetchConfig,
+    url: ` https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154354057496/assets.json?asset[key]=layout/theme.liquid`,
+  }).then(async (foundTheme) => {
+    console.log(foundTheme);
+    res.json({ data: foundTheme?.data?.asset?.value,});
+  });
+};
