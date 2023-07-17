@@ -1251,7 +1251,6 @@ exports.minifyPageContent = (req, res) => {
 };
 
 exports.DNSPrefetching = (req, res) => {
-
   let config = {
     method: "get",
     url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/152998740248/assets.json?asset[key]=layout/theme.liquid",
@@ -1310,6 +1309,12 @@ exports.fontOptimization = (req, res) => {
     url: ` https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154354057496/assets.json?asset[key]=layout/theme.liquid`,
   }).then(async (foundTheme) => {
     console.log(foundTheme);
-    res.json({ data: foundTheme?.data?.asset?.value,});
+    res.json({ data: foundTheme?.data?.asset?.value });
+  });
+};
+
+exports.imageSizeAdaptions = (req, res) => {
+  res.json({
+    data: "working",
   });
 };
