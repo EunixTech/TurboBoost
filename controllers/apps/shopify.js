@@ -1315,7 +1315,55 @@ exports.fontOptimization = (req, res) => {
 
 exports.imageSizeAdaptions = (req, res) => {
   // file to update
-  // mannu-updated-image.liquid
+  //updated-image.liquid
+
+  const axios = require("axios");
+
+  let config = {
+    method: "get",
+    maxBodyLength: Infinity,
+    url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154354057496/assets.json?asset[key]=snippets/card-product.liquid",
+    headers: {
+      "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd"
+  }
+
+  axios
+    .request(config)
+    .then((response) => {
+      console.log(JSON.stringify(response.data));
+
+      const axios = require('axios');
+let data = JSON.stringify({
+  "asset": {
+    "key": "snippets/card-product.liquid",
+    "value": JSON.stringify(response.data)
+  }
+});
+
+let config = {
+  method: 'put',
+  maxBodyLength: Infinity,
+  url: 'https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json',
+  headers: { 
+    'X-Shopify-Access-Token': 'shpua_832b00f9f277821c02a70c5524402acd', 
+    'Content-Type': 'application/json', 
+    
+  },
+  data : data
+};
+
+axios.request(config)
+.then((response) => {
+  console.log(JSON.stringify(response.data));
+})
+.catch((error) => {
+  console.log(error);
+});
+
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 
   res.json({
     data: "working",
