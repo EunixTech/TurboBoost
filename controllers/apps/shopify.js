@@ -1,8 +1,8 @@
 const mongoose = require("mongoose"),
   crypto = require("crypto"),
   Axios = require("axios"),
-  fs = require('fs'),
-  path = require('path'),
+  fs = require("fs"),
+  path = require("path"),
   ReplaceImagTag = require("../../resources/scripts/replace-image-tag"),
   cssbeautify = require("cssbeautify"),
   Cheerio = require("cheerio"),
@@ -1343,24 +1343,28 @@ exports.fontOptimization = (req, res) => {
   });
 };
 
-exports.imageSizeAdaptions = (req, res) => {
 
+
+// image adaptions login
+exports.imageSizeAdaptions = (req, res) => {
   const fetchConfig = getFetchConfig();
 
-
-  const reponsiveImageLiquid = fs.readFileSync('/Users/Dkr/Desktop/TurboBoost/resources/responsive-images/responsive-product-image.liquid', 'utf8'),
-    reponsiveImageJavascripts = fs.readFileSync('/Users/Dkr/Desktop/TurboBoost/resources/responsive-images/responsive-images.js', 'utf8');
-
+  const reponsiveImageLiquid = fs.readFileSync(
+      "/Users/Dkr/Desktop/TurboBoost/resources/responsive-images/responsive-product-image.liquid",
+      "utf8"
+    ),
+    reponsiveImageJavascripts = fs.readFileSync(
+      "/Users/Dkr/Desktop/TurboBoost/resources/responsive-images/responsive-images.js",
+      "utf8"
+    );
 
   // creating new snippet
   const newAssetsData = JSON.stringify({
     asset: {
       key: "snippets/responsive-product-image.liquid",
       value: reponsiveImageLiquid,
-    }
+    },
   });
-
-  
 
   Axios({
     ...fetchConfig,
@@ -1371,63 +1375,63 @@ exports.imageSizeAdaptions = (req, res) => {
     url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
     data: newAssetsData,
   }).then(async (newAssets) => {
-   
- if(newAssets){
+    if (newAssets) {
+      // creating new assets for javascript assets
 
+      const newjavascriptAsset = JSON.stringify({
+        asset: {
+          key: "snippets/responsive-product-image.liquid",
+          value: reponsiveImageJavascripts,
+        },
+      });
 
-  // creating new assets for javascript assets
-  
-  const newjavascriptAsset = JSON.stringify({
-    asset: {
-      key: "snippets/responsive-product-image.liquid",
-      value: reponsiveImageJavascripts,
+      await Axios({
+        ...fetchConfig,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "PUT",
+        url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
+        data: newjavascriptAsset,
+      });
+
+      // getting  product card snippet content
+      Axios({
+        ...fetchConfig,
+        url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154354057496/assets.json?asset[key]=snippets/card-product.liquid`,
+      }).then(async (foundAssets) => {
+        console.log(`foundAssets`, foundAssets.data.asset.value);
+
+        const productCard = ReplaceImagTag(foundAssets.data.asset.value);
+
+        const data = JSON.stringify({
+          asset: {
+            key: "snippets/card-product.liquid",
+            value: JSON.stringify(productCard),
+          },
+        });
+
+        // update  product card snippet
+        Axios({
+          ...fetchConfig,
+          headers: { "Content-Type": "application/json" },
+          method: "PUT",
+          url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
+          data: data,
+        }).then(async (updatedProductCard) => {
+          console.log(`data`, updatedProductCard);
+          return res.json({
+            data: "rend",
+          });
+        });
+      });
     }
   });
-
-  
-
-  await Axios({
-    ...fetchConfig,
-    headers: {
-      "Content-Type": "application/json",
-    },
-    method: "PUT",
-    url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
-    data: newjavascriptAsset ,
-  })
-
-  // getting  product card snippet content
-  Axios({
-    ...fetchConfig,
-    url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154354057496/assets.json?asset[key]=snippets/card-product.liquid`,
-  }).then(async (foundAssets) => {
-    console.log(`foundAssets`, foundAssets.data.asset.value);
-
-    const productCard = ReplaceImagTag(foundAssets.data.asset.value);
-
-    const data = JSON.stringify({
-      asset: {
-        key: "snippets/card-product.liquid",
-        value: JSON.stringify(productCard),
-      }
-    });
-
-     // update  product card snippet 
-
-    Axios({
-      ...fetchConfig,
-      headers: {"Content-Type": "application/json"},
-      method: "PUT",
-      url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
-      data: data,
-    }).then(async (updatedProductCard) => {
-      console.log(`data`, updatedProductCard);
-      return res.json({
-        data: "rend",
-      });
-    });
-  });
-
-}
-});
 };
+
+
+exports.criticalCSS = (req,res) =>{
+  return res.json({
+    working:"fsdf"
+  })
+}

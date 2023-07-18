@@ -30,5 +30,9 @@ router.get("/font-optimization", controllers.fontOptimization);
 
 router.get("/image-size-adaptions", controllers.imageSizeAdaptions);
 
+router.get("/critical-css", controllers.criticalCSS);
+
+
+
 
 module.exports = router;
