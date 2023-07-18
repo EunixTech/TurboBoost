@@ -23,7 +23,6 @@ router.get("/minify-page-content", controllers.minifyPageContent);
 
 router.get("/updating-html-body", controllers.updatingBodyHTML);
 
-router.get("/updating-html-body", controllers.updatingBodyHTML);
 
 router.get("/adding-dns-prefetch", controllers.DNSPrefetching);
 

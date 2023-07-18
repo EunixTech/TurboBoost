@@ -371,7 +371,7 @@ exports.addingLazyLoadingScriptClient = async (req, res) => {
           asset: {
             key: "sections/main-product.liquid",
             value:
-              "{%- for media in product.media -%}\n <img\n  alt=\"{{ media.alt }}\"\n        data-sizes=\"auto\"\n        data-srcset=\"{{ media.preview_image | img_url: '275x' }} 275w,\n                     {{ media.preview_image | img_url: '320x' }} 320w,\n {{ media.preview_image | img_url: '500x' }} 500w,\n                     {{ media.preview_image | img_url: '640x' }} 640w,\n                     {{ media.preview_image | img_url: '1024x' }} 1024w\"\n        data-src=\"{{ media.preview_image | img_url: '416x' }}\"\n        src=\"{{ media.preview_image | img_url: '275x' }}\"\n        class=\"lazyloadssssss-manmohan\" />\n{%- endfor -%}",
+              "{%- for media in product.media -%}\n <img\n  alt=\"{{ media.alt }}\"\n data-sizes=\"auto\"\n data-srcset=\"{{ media.preview_image | img_url: '275x' }} 275w,\n  {{ media.preview_image | img_url: '320x' }} 320w,\n {{ media.preview_image | img_url: '500x' }} 500w,\n                     {{ media.preview_image | img_url: '640x' }} 640w,\n                     {{ media.preview_image | img_url: '1024x' }} 1024w\"\n        data-src=\"{{ media.preview_image | img_url: '416x' }}\"\n        src=\"{{ media.preview_image | img_url: '275x' }}\"\n        class=\"lazyloadssssss-manmohan\" />\n{%- endfor -%}",
           },
         }),
       });
@@ -1314,6 +1314,9 @@ exports.fontOptimization = (req, res) => {
 };
 
 exports.imageSizeAdaptions = (req, res) => {
+  // file to update
+  // mannu-updated-image.liquid
+
   res.json({
     data: "working",
   });
