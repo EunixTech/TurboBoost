@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const {
     defaultStringConfig,
-    defaultBooleanConfig
 } = require("../utils/mongoose");
 
 const userSchema = new mongoose.Schema({
