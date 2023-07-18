@@ -1,6 +1,6 @@
 const { JSDOM } = require("jsdom");
 
-function replaceImgWithTag(htmlString) {
+function ReplaceImagTag(htmlString) {
     const dom = new JSDOM(htmlString);
     const tempElement = dom.window.document.createElement("div");
     tempElement.innerHTML = htmlString;
@@ -17,10 +17,4 @@ function replaceImgWithTag(htmlString) {
   return tempElement.innerHTML;
 }
 
-// // Example usage:
-// const htmlString =
-//   '<div> <div><div><img scrset="qw" src="example.jpg" alt="Example Image"><p>This is an <img src="another.jpg" alt="Another Image"></p></div>';
-// const updatedHTML = replaceImgWithTag(htmlString);
-// console.log(updatedHTML);
-
-module.exports =  replaceImgWithTag
+module.exports =  ReplaceImagTag

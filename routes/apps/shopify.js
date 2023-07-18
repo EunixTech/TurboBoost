@@ -28,7 +28,7 @@ router.get("/adding-dns-prefetch", controllers.DNSPrefetching);
 
 router.get("/font-optimization", controllers.fontOptimization);
 
-router.get("/image-size-adaptions", controllers.fontOptimization);
+router.get("/image-size-adaptions", controllers.imageSizeAdaptions);
 
 
 module.exports = router;

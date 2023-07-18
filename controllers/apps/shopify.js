@@ -1,7 +1,9 @@
 const mongoose = require("mongoose"),
   crypto = require("crypto"),
   Axios = require("axios"),
-  replaceImgWithTag = require("../../resources/scripts/replace-image-tag")
+  fs = require('fs'),
+  path = require('path'),
+  ReplaceImagTag = require("../../resources/scripts/replace-image-tag"),
   cssbeautify = require("cssbeautify"),
   Cheerio = require("cheerio"),
   UglifyJS = require("uglify-es"),
@@ -1295,7 +1297,7 @@ exports.DNSPrefetching = (req, res) => {
   axios
     .request(config1)
     .then((response) => {
-      console.log(JSON.stringify(response.data));
+      console.log();
     })
     .catch((error) => {
       console.log(error);
@@ -1313,83 +1315,88 @@ exports.fontOptimization = (req, res) => {
     res.json({ data: foundTheme?.data?.asset?.value });
 
     let data = JSON.stringify({
-      "asset": {
-        "key": "assets/font.liquid",
-        "value": JSON.stringify(response.data)
-      }
-    });
-    
-    let config = {
-      method: 'put',
-      maxBodyLength: Infinity,
-      url: 'https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json',
-      headers: { 
-        'X-Shopify-Access-Token': 'shpua_832b00f9f277821c02a70c5524402acd', 
-        'Content-Type': 'application/json', 
-        
+      asset: {
+        key: "assets/font.liquid",
+        value: foundTheme?.data?.asset?.value,
       },
-      data : data
-    };
-    
-    axios.request(config)
-    .then((response) => {
-      console.log(JSON.stringify(response.data));
-    })
-    .catch((error) => {
-      console.log(error);
     });
-    
+
+    let config = {
+      method: "put",
+      maxBodyLength: Infinity,
+      url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
+      headers: {
+        "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
+        "Content-Type": "application/json",
+      },
+      data: data,
+    };
+
+    axios
+      .request(config)
+      .then((response) => {
+        console.log(JSON.stringify(response.data));
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   });
 };
 
-
-
-
 exports.imageSizeAdaptions = (req, res) => {
-  let config = {
-    method: "get",
-    url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154354057496/assets.json?asset[key]=snippets/card-product.liquid",
+  
+  const fetchConfig = getFetchConfig();
+
+  const reponsiveImageLiquid = fs.readFileSync('/Users/Dkr/Desktop/TurboBoost/resources/responsive-images/responsive-product-image.liquid', 'utf8');
+
+  const newAssetsData = JSON.stringify({
+    asset: {
+      key: "snippets/responsive-product-image.liquid",
+      value: reponsiveImageLiquid,
+    }
+  });
+
+  Axios({
+    ...fetchConfig,
     headers: {
-      "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd"
-  }
+      "Content-Type": "application/json",
+    },
+    method: "PUT",
+    url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
+    data: newAssetsData,
+  }).then(async (newAssets) => {
+   
+ if(newAssets){
 
-  Axios.request(config)
-  .then((response) => {
-      console.log(JSON.stringify(response.data));
+  Axios({
+    ...fetchConfig,
+    url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154354057496/assets.json?asset[key]=snippets/card-product.liquid`,
+  }).then(async (foundAssets) => {
+    console.log(`foundAssets`, foundAssets.data.asset.value);
 
-      
-let data = JSON.stringify({
-  "asset": {
-    "key": "snippets/card-product.liquid",
-    "value": JSON.stringify(response.data)
-  }
+    const productCard = ReplaceImagTag(foundAssets.data.asset.value);
+
+    const data = JSON.stringify({
+      asset: {
+        key: "snippets/card-product.liquid",
+        value: JSON.stringify(productCard),
+      }
+    });
+
+    Axios({
+      ...fetchConfig,
+      headers: {"Content-Type": "application/json"},
+      method: "PUT",
+      url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
+      data: data,
+    }).then(async (updatedProductCard) => {
+      console.log(`data`, updatedProductCard);
+      return res.json({
+        data: "rend",
+      });
+    });
+  });
+
+}
 });
-
-let config = {
-  method: 'put',
-  url: 'https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json',
-  headers: { 
-    'X-Shopify-Access-Token': 'shpua_832b00f9f277821c02a70c5524402acd', 
-    'Content-Type': 'application/json', 
-    
-  },
-  data : data
-};
-
-Axios.request(config)
-.then((response) => {
-  console.log(JSON.stringify(response.data));
-})
-.catch((error) => {
-  console.log(error);
-});
-
-    })
-    .catch((error) => {
-      console.log(error);
-    })
-
-  res.json({
-    data: "working",
-  })
 };
