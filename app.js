@@ -13,7 +13,6 @@ const dbConnection = require('./config/dbConnection'),
     loadHelmet = require(`./loaders/helmets`),
     loadExpressSession = require(`./loaders/expressSession`);
 
-
 dbConnection(mongoose);
 
 require("./model/apps/outhState");
