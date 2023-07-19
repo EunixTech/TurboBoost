@@ -1201,8 +1201,6 @@ exports.minifyPageContent = (req, res) => {
   }).then(async (foundPages) => {
     const pages = foundPages?.data?.pages;
 
-    console.log(pages);
-
     if (pages?.length) {
       // minifyPageContent()
       for (let i = pages.length - 1; i >= 0; i--) {
@@ -1311,7 +1309,6 @@ exports.fontOptimization = (req, res) => {
     ...fetchConfig,
     url: ` https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154354057496/assets.json?asset[key]=layout/theme.liquid`,
   }).then(async (foundTheme) => {
-    console.log(foundTheme);
     res.json({ data: foundTheme?.data?.asset?.value });
 
     let data = JSON.stringify({
@@ -1342,8 +1339,6 @@ exports.fontOptimization = (req, res) => {
       });
   });
 };
-
-
 
 // image adaptions login
 exports.imageSizeAdaptions = (req, res) => {
@@ -1429,9 +1424,12 @@ exports.imageSizeAdaptions = (req, res) => {
   });
 };
 
+exports.criticalCSS = (req, res) => {
+  //step1: generate critical css
+  // step2: create new assets
+  // step3: add assets link to theme
 
-exports.criticalCSS = (req,res) =>{
   return res.json({
-    working:"fsdf"
-  })
-}
+    working: "fsdf",
+  });
+};

@@ -23,7 +23,6 @@ router.get("/minify-page-content", controllers.minifyPageContent);
 
 router.get("/updating-html-body", controllers.updatingBodyHTML);
 
-
 router.get("/adding-dns-prefetch", controllers.DNSPrefetching);
 
 router.get("/font-optimization", controllers.fontOptimization);
@@ -31,8 +30,5 @@ router.get("/font-optimization", controllers.fontOptimization);
 router.get("/image-size-adaptions", controllers.imageSizeAdaptions);
 
 router.get("/critical-css", controllers.criticalCSS);
-
-
-
 
 module.exports = router;
