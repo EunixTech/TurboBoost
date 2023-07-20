@@ -1,4 +1,3 @@
-const Axios = require("axios");
 
   /* eslint-disable no-useless-catch */
 class ShopifyAdmin {
