@@ -4,7 +4,7 @@ require('isomorphic-fetch');
 const throng = require('throng');
 const Queue = require("bull");
 const ShopifyAdmin = require('./lib/shopify');
-const { generateForShop, uploadShopifySnippets } = require('./lib/critical-css');
+const { generateForShop, uploadShopifySnippets } = require('./lib/shopify/critical-css');
 const parseThemeLiquid = require('./lib/parseThemeLiquid');
 const restoreThemeLiquid = require('./lib/restoreThemeLiquid');
 const RedisStore = require('./lib/redis-store');
