@@ -1,6 +1,6 @@
 
 // import {generate} from 'critical';
-
+import getShopUrls from "./lib/shopify/critical-css/getShopUrls";
 
 // const dimensions = [{
 // 	height: 640,	// moto G4
