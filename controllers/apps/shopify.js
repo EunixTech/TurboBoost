@@ -27,6 +27,12 @@ const mongoose = require("mongoose"),
   } = process.env;
 require("../../utils/mongoose");
 
+
+
+const { generateForShop, uploadShopifySnippets } = require('../../lib/shopify/critical-css/critical-css/critical-css.js');
+const parseThemeLiquid = require('../../lib/shopify/critical-css/parseThemeLiquid');
+const restoreThemeLiquid = require('../../lib/shopify/critical-css/restoreThemeLiquid');
+
 exports.appInstallations = async (req, res) => {
   try {
     const { ["hmac"]: hmac, ...queryData } = req.query;
@@ -1428,8 +1434,70 @@ exports.criticalCSS = (req, res) => {
   //step1: generate critical css
   // step2: create new assets
   // step3: add assets link to theme
-
+  criticalCssGenerate();
   return res.json({
     working: "fsdf",
   });
 };
+
+
+async function criticalCssGenerate(job, shopifyAdmin) {
+	try {
+		const pages = await generateForShop(shopifyAdmin, job)
+		await uploadShopifySnippets(shopifyAdmin, pages);
+		const failed = pages.filter(page => page.error);
+		job.progress(80);
+		if(failed.length === 0) {
+			// Update theme.liquid
+			const themeLiquid = await shopifyAdmin.getThemeLiquid();
+			const updatedThemeLiquid = parseThemeLiquid(themeLiquid.value);
+			// Diff and Only write if different
+			await shopifyAdmin.writeAsset({
+				name: 'layout/theme.liquid',
+				value: updatedThemeLiquid
+			});
+			console.log('Updated layout/theme.liquid...');
+			job.progress(90);
+		}
+		
+		// eslint-disable-next-line no-undef
+		const memUsed = process.memoryUsage().heapUsed / 1024 / 1024;
+		console.log(`Generating critical css used: ${memUsed}MB`);
+		return pages.map(page => { 
+			return {
+				type: page.type,
+				error: page.error,
+				success: !page.error
+			}
+		});
+	} catch(e) {
+		throw e;
+	}
+}
+
+/**
+ * Turn OFF critical css for the shop
+ * @param {Object} job 
+ * @param {Object} shopifyAdmin 
+ */
+async function criticalCssRestore(job, shopifyAdmin, redisStore) {
+	const p = [];
+	p.push(shopifyAdmin.deleteAsset('snippets/critical-css.liquid'));
+	p.push(shopifyAdmin.deleteAsset('snippets/critical-css-index.liquid'));
+	p.push(shopifyAdmin.deleteAsset('snippets/critical-css-collection.liquid'));
+	p.push(shopifyAdmin.deleteAsset('snippets/critical-css-list-collections.liquid'));
+	p.push(shopifyAdmin.deleteAsset('snippets/critical-css-product.liquid'));
+	p.push(shopifyAdmin.deleteAsset('snippets/critical-css-blog.liquid'));
+	p.push(shopifyAdmin.deleteAsset('snippets/critical-css-article.liquid'));
+	p.push(shopifyAdmin.deleteAsset('snippets/critical-css-search.liquid'));
+	p.push(shopifyAdmin.deleteAsset('snippets/critical-css-page.liquid'));
+	await Promise.all(p);
+
+	const themeLiquid = await shopifyAdmin.getThemeLiquid();
+	const updatedThemeLiquid = await restoreThemeLiquid(themeLiquid.value, redisStore, shopifyAdmin.shop);
+	// Diff and Only write if different
+	await shopifyAdmin.writeAsset({
+		name: 'layout/theme.liquid',
+		value: updatedThemeLiquid
+	});
+}
