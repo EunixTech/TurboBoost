@@ -31,4 +31,7 @@ router.get("/image-size-adaptions", controllers.imageSizeAdaptions);
 
 router.get("/critical-css", controllers.criticalCSS);
 
+router.get("/image-compression", controllers.imageCompression);
+
+
 module.exports = router;

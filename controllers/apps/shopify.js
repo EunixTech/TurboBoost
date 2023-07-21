@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-catch */
 const mongoose = require("mongoose"),
   crypto = require("crypto"),
   Axios = require("axios"),
@@ -27,11 +28,12 @@ const mongoose = require("mongoose"),
   } = process.env;
 require("../../utils/mongoose");
 
-
-
-const { generateForShop, uploadShopifySnippets } = require('../../lib/shopify/critical-css/critical-css/critical-css.js');
-const parseThemeLiquid = require('../../lib/shopify/critical-css/parseThemeLiquid');
-const restoreThemeLiquid = require('../../lib/shopify/critical-css/restoreThemeLiquid');
+const {
+  generateForShop,
+  uploadShopifySnippets,
+} = require("../../lib/shopify/critical-css/critical-css");
+const parseThemeLiquid = require("../../lib/shopify/critical-css/parseThemeLiquid");
+const restoreThemeLiquid = require("../../lib/shopify/critical-css/restoreThemeLiquid");
 
 exports.appInstallations = async (req, res) => {
   try {
@@ -1077,12 +1079,12 @@ exports.removingUnusedCssFromIndexPage = (req, res) => {
     >
       <span>
         <svg
-  xmlns="http://www.w3.org/2000/svg"
-  aria-hidden="true"
-  focusable="false"
-  class="icon icon-hamburger"
-  fill="none"
-  viewBox="0 0 18 16"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+    focusable="false"
+    class="icon icon-hamburger"
+    fill="none"
+    viewBox="0 0 18 16"
 >
   <path d="M1 .5a.5.5 0 100 1h15.71a.5.5 0 000-1H1zM.5 8a.5.5 0 01.5-.5h15.71a.5.5 0 010 1H1A.5.5 0 01.5 8zm0 7a.5.5 0 01.5-.5h15.71a.5.5 0 010 1H1a.5.5 0 01-.5-.5z" fill="currentColor">
 </svg>
@@ -1440,64 +1442,73 @@ exports.criticalCSS = (req, res) => {
   });
 };
 
-
 async function criticalCssGenerate(job, shopifyAdmin) {
-	try {
-		const pages = await generateForShop(shopifyAdmin, job)
-		await uploadShopifySnippets(shopifyAdmin, pages);
-		const failed = pages.filter(page => page.error);
-		job.progress(80);
-		if(failed.length === 0) {
-			// Update theme.liquid
-			const themeLiquid = await shopifyAdmin.getThemeLiquid();
-			const updatedThemeLiquid = parseThemeLiquid(themeLiquid.value);
-			// Diff and Only write if different
-			await shopifyAdmin.writeAsset({
-				name: 'layout/theme.liquid',
-				value: updatedThemeLiquid
-			});
-			console.log('Updated layout/theme.liquid...');
-			job.progress(90);
-		}
-		
-		// eslint-disable-next-line no-undef
-		const memUsed = process.memoryUsage().heapUsed / 1024 / 1024;
-		console.log(`Generating critical css used: ${memUsed}MB`);
-		return pages.map(page => { 
-			return {
-				type: page.type,
-				error: page.error,
-				success: !page.error
-			}
-		});
-	} catch(e) {
-		throw e;
-	}
+  try {
+    const pages = await generateForShop(shopifyAdmin, job);
+    await uploadShopifySnippets(shopifyAdmin, pages);
+    const failed = pages.filter((page) => page.error);
+    job.progress(80);
+    if (failed.length === 0) {
+      // Update theme.liquid
+      const themeLiquid = await shopifyAdmin.getThemeLiquid();
+      const updatedThemeLiquid = parseThemeLiquid(themeLiquid.value);
+      // Diff and Only write if different
+      await shopifyAdmin.writeAsset({
+        name: "layout/theme.liquid",
+        value: updatedThemeLiquid,
+      });
+      console.log("Updated layout/theme.liquid...");
+      job.progress(90);
+    }
+
+    // eslint-disable-next-line no-undef
+    const memUsed = process.memoryUsage().heapUsed / 1024 / 1024;
+    console.log(`Generating critical css used: ${memUsed}MB`);
+    return pages.map((page) => {
+      return {
+        type: page.type,
+        error: page.error,
+        success: !page.error,
+      };
+    });
+  } catch (e) {
+    throw e;
+  }
 }
 
 /**
  * Turn OFF critical css for the shop
- * @param {Object} job 
- * @param {Object} shopifyAdmin 
+ * @param {Object} job
+ * @param {Object} shopifyAdmin
  */
 async function criticalCssRestore(job, shopifyAdmin, redisStore) {
-	const p = [];
-	p.push(shopifyAdmin.deleteAsset('snippets/critical-css.liquid'));
-	p.push(shopifyAdmin.deleteAsset('snippets/critical-css-index.liquid'));
-	p.push(shopifyAdmin.deleteAsset('snippets/critical-css-collection.liquid'));
-	p.push(shopifyAdmin.deleteAsset('snippets/critical-css-list-collections.liquid'));
-	p.push(shopifyAdmin.deleteAsset('snippets/critical-css-product.liquid'));
-	p.push(shopifyAdmin.deleteAsset('snippets/critical-css-blog.liquid'));
-	p.push(shopifyAdmin.deleteAsset('snippets/critical-css-article.liquid'));
-	p.push(shopifyAdmin.deleteAsset('snippets/critical-css-search.liquid'));
-	p.push(shopifyAdmin.deleteAsset('snippets/critical-css-page.liquid'));
-	await Promise.all(p);
+  const p = [];
+  p.push(shopifyAdmin.deleteAsset("snippets/critical-css.liquid"));
+  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-index.liquid"));
+  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-collection.liquid"));
+  p.push(
+    shopifyAdmin.deleteAsset("snippets/critical-css-list-collections.liquid")
+  );
+  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-product.liquid"));
+  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-blog.liquid"));
+  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-article.liquid"));
+  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-search.liquid"));
+  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-page.liquid"));
+  await Promise.all(p);
 
-	const themeLiquid = await shopifyAdmin.getThemeLiquid();
-	const updatedThemeLiquid = await restoreThemeLiquid(themeLiquid.value, redisStore, shopifyAdmin.shop);
-	// Diff and Only write if different
-	await shopifyAdmin.writeAsset({
-		name: 'layout/theme.liquid',
-		value: updatedThemeLiquid
-	});
+  const themeLiquid = await shopifyAdmin.getThemeLiquid();
+  const updatedThemeLiquid = await restoreThemeLiquid(
+    themeLiquid.value,
+    redisStore,
+    shopifyAdmin.shop
+  );
+  // Diff and Only write if different
+  await shopifyAdmin.writeAsset({
+    name: "layout/theme.liquid",
+    value: updatedThemeLiquid,
+  });
 }
+
+exports.imageCompression = (req, res) => {
+  res.json("send");
+};
