@@ -144,31 +144,7 @@ class ShopifyAdmin {
 
 
     async getShopDetails (shopURL)  {
-        // return new Promise((resolve,reject)=>{
-        //     if(!shop||!token){
-        //     reject("Shop and token are required for shop details")
-        //     }
-
-        // let config = {
-        //     method: 'get',
-        //     maxBodyLength: Infinity,
-        //     url: `https://${shop}/admin/shop.json`,
-        //     headers: {
-        //     'X-Shopify-Access-Token': token,
-        //     }
-        // };
-
-        // Axios.request(config)
-        //     .then((response) => {
-            
-        //     resolve(response.data)
-        //     })
-        //     .catch((error) => {
-        //     console.log(error)
-        //     resolve({})
-        //     });
-        // })
-
+ 
         try {
 			const shop = await fetch( `https://${shopURL}/admin/shop.json`, {
 					headers: {
@@ -178,6 +154,25 @@ class ShopifyAdmin {
 				
 			this.shop = shop.data;
 			return this.shop;
+		} 
+		catch(e) {
+			throw e;
+		}
+    }
+
+
+	async getAppProducts ()  {
+    
+        try {
+			const products = await fetch( `https://turboboost-dev.myshopify.com/admin/api/2023-07/products.json`, {
+					headers: {
+						'X-Shopify-Access-Token': "shpua_832b00f9f277821c02a70c5524402acd"
+					}
+				}).then(res => res.json());
+
+
+			this.products = products.products;
+			return this.products;
 		} 
 		catch(e) {
 			throw e;

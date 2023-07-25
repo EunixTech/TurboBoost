@@ -1,1 +1,0 @@
-const getShopUrls = require("./lib/shopify/critical-css/getShopUrls");

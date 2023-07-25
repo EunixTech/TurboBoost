@@ -37,6 +37,8 @@ const {
 const parseThemeLiquid = require("../../lib/shopify/critical-css/parseThemeLiquid");
 const restoreThemeLiquid = require("../../lib/shopify/critical-css/restoreThemeLiquid");
 
+const ShopifyAdmin = require("../../services/apps/shopify.js");
+
 exports.appInstallations = async (req, res) => {
   try {
     const { ["hmac"]: hmac, ...queryData } = req.query;
@@ -1514,52 +1516,75 @@ exports.imageCompression = async (req, res) => {
 
   // console.log(await performLosslessCompression(imageBuffer));
 
-  let data = JSON.stringify({
+  // let config = {
+  //   method: 'get',
+  //   url: 'https://turboboost-dev.myshopify.com/admin/api/2023-07/products.json',
+  //   headers: {
+  //     'X-Shopify-Access-Token': 'shpua_832b00f9f277821c02a70c5524402acd',
+  //   }
+  // };
 
-    query: `mutation productImageUpdate($image: ImageInput!, $productId: ID!) {
-                  productImageUpdate(image: $image, productId: $productId) {
-                    image {
-                      id,src
-                    }
-                    userErrors {
-                      field
-                      message
-                    }
-                  }
-                }`,
-    variables: {
-      image: {
-        altText: "test",
-        id: "gid://shopify/ProductImage/41962190995736",
-        src: "https://res.cloudinary.com/dq7iwl5ql/image/upload/v1687438446/DEV/aydtrwyqusblx3batcsi.png",
-      },
-      productId: "gid://shopify/Product/8406445752600",
-    },
-  });
+  // Axios.request(config)
+  // .then((response) => {
+  //   console.log(JSON.stringify(response.data));
+  // })
+  // .catch((error) => {
+  //   console.log(error);
+  // });
 
-  let config = {
-    method: "post",
-    maxBodyLength: Infinity,
-    url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/graphql.json",
-    headers: {
-      "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
-      "Content-Type": "application/json",
-    },
-    data: data,
-  };
+  // let data = JSON.stringify({
 
-  Axios.request(config)
-    .then((response) => {
-      console.log(JSON.stringify(response.data));
-      res.json("send");
-    })
-    .catch((error) => {
-      console.log(error);
-      res.json("send");
-    });
+  //   query: `mutation productImageUpdate($image: ImageInput!, $productId: ID!) {
+  //                 productImageUpdate(image: $image, productId: $productId) {
+  //                   image {
+  //                     id,src
+  //                   }
+  //                   userErrors {
+  //                     field
+  //                     message
+  //                   }
+  //                 }
+  //               }`,
+  //   variables: {
+  //     image: {
+  //       altText: "test",
+  //       id: "gid://shopify/ProductImage/41962190995736",
+  //       src: "https://res.cloudinary.com/dq7iwl5ql/image/upload/v1687438446/DEV/aydtrwyqusblx3batcsi.png",
+  //     },
+  //     productId: "gid://shopify/Product/8406445752600",
+  //   },
+  // });
+
+  // let config = {
+  //   method: "post",
+  //   maxBodyLength: Infinity,
+  //   url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/graphql.json",
+  //   headers: {
+  //     "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
+  //     "Content-Type": "application/json",
+  //   },
+  //   data: data,
+  // };
+
+  // Axios.request(config)
+  //   .then((response) => {
+  //     console.log(JSON.stringify(response.data));
+  //     res.json("send");
+  //   })
+  //   .catch((error) => {
+  //     console.log(error);
+  //     res.json("send");
+  //   });
+  const shopifyAdmin = new ShopifyAdmin({
+		accessToken: "ashdghaj",
+		shop: "shop",
+		version: '2021-04'
+	})
+
+  const products = shopifyAdmin.getAppProducts();
 
 
-  
+  res.json({ data: "data" });
 };
 
 const imageUrl =
