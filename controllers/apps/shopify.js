@@ -28,6 +28,8 @@ const mongoose = require("mongoose"),
   } = process.env;
 require("../../utils/mongoose");
 
+const sharp = require("sharp");
+
 const {
   generateForShop,
   uploadShopifySnippets,
@@ -285,8 +287,6 @@ exports.fetchAllProduct = async (req, res) => {
     headers: {
       "X-Shopify-Access-Token": "shpua_92e1118272f4b9fd9af36af7fd2ec2d2",
       "Content-Type": "application/json",
-      Cookie:
-        "__cf_bm=4SUrq29XCW4.ROWvgNsea_HYs4tpxw1hA1MqN_5016M-1687808384-0-AToLqgA5GmgslUR9bRyWh9X3U1/jWswRf2qbln1Qg7YZhPrH0njI6uY/nijxtVu1dhDjtdJh9Nde5SSbdLgXn4c=",
     },
     data: data,
   };
@@ -1509,6 +1509,110 @@ async function criticalCssRestore(job, shopifyAdmin, redisStore) {
   });
 }
 
-exports.imageCompression = (req, res) => {
-  res.json("send");
+exports.imageCompression = async (req, res) => {
+  // const imageBuffer = await downloadImage();
+
+  // console.log(await performLosslessCompression(imageBuffer));
+
+  let data = JSON.stringify({
+
+    query: `mutation productImageUpdate($image: ImageInput!, $productId: ID!) {
+                  productImageUpdate(image: $image, productId: $productId) {
+                    image {
+                      id,src
+                    }
+                    userErrors {
+                      field
+                      message
+                    }
+                  }
+                }`,
+    variables: {
+      image: {
+        altText: "test",
+        id: "gid://shopify/ProductImage/41962190995736",
+        src: "https://res.cloudinary.com/dq7iwl5ql/image/upload/v1687438446/DEV/aydtrwyqusblx3batcsi.png",
+      },
+      productId: "gid://shopify/Product/8406445752600",
+    },
+  });
+
+  let config = {
+    method: "post",
+    maxBodyLength: Infinity,
+    url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/graphql.json",
+    headers: {
+      "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
+      "Content-Type": "application/json",
+    },
+    data: data,
+  };
+
+  Axios.request(config)
+    .then((response) => {
+      console.log(JSON.stringify(response.data));
+      res.json("send");
+    })
+    .catch((error) => {
+      console.log(error);
+      res.json("send");
+    });
+
+
+  
 };
+
+const imageUrl =
+  "https://res.cloudinary.com/dq7iwl5ql/image/upload/v1689922993/DEV/qsljvzq6bpflt505ubah.webp"; // Replace this with the URL of the image you want to compress
+
+// Function to download the image from the given URL
+async function downloadImage() {
+  try {
+    const response = await Axios.get(imageUrl, { responseType: "arraybuffer" });
+    return response.data;
+  } catch (error) {
+    console.error("Error downloading the image:", error.message);
+    process.exit(1);
+  }
+}
+
+// Function to perform Lossy Compression
+async function performLossyCompression(imageBuffer) {
+  try {
+    const compressedImageBuffer = await sharp(imageBuffer)
+      .jpeg({ quality: 80 })
+      .toBuffer();
+    fs.writeFileSync("lossy_compressed_image.jpg", compressedImageBuffer);
+    // console.log('Lossy Compression completed and saved as "lossy_compressed_image.jpg".');
+    return compressedImageBuffer;
+  } catch (error) {
+    console.error("Error during Lossy Compression:", error.message);
+  }
+}
+
+// Function to perform Lossless Compression
+async function performLosslessCompression(imageBuffer) {
+  try {
+    const compressedImageBuffer = await sharp(imageBuffer)
+      .webp({ lossless: true })
+      .toBuffer();
+    fs.writeFileSync("lossless_compressed_image.webp", compressedImageBuffer);
+    console.log(
+      'Lossless Compression completed and saved as "lossless_compressed_image.webp".'
+    );
+  } catch (error) {
+    console.error("Error during Lossless Compression:", error.message);
+  }
+}
+
+// Main function to run the script
+// async function run() {
+
+//  const imageBuffer = await downloadImage();
+//   if (imageBuffer) {
+//     performLossyCompression(imageBuffer);
+//     performLosslessCompression(imageBuffer);
+//   }
+// }
+
+// run();

@@ -14,13 +14,12 @@ module.exports = (mongoose) => {
 
     mongoose.connect(mongoURLToUse, {
         useNewUrlParser: true,
-        
         useUnifiedTopology: true,
         dbName: dbToUse,
     })
         .then((data) => console.log(`[ ${dbToUse} ] DB Connected`))
         .catch((err) => {
-            console.log(`err`, error)
+            console.log(`err`, err)
             console.log(`DB Not Connected`);
         });
 }
