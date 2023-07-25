@@ -160,8 +160,7 @@ class ShopifyAdmin {
 
   async getAppProducts() {
     try {
-      const products = await fetch(
-        `https://turboboost-dev.myshopify.com/admin/api/2023-07/products.json`,
+      const products = await fetch(`https://turboboost-dev.myshopify.com/admin/api/2023-07/products.json`,
         {
           headers: {
             "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
@@ -214,17 +213,7 @@ class ShopifyAdmin {
         ...config
       }).then((res) => res.json());
 
-	  return 
-
-    // Axios.request(config)
-    //   .then((response) => {
-    //     console.log(JSON.stringify(response.data));
-    //     res.json("send");
-    //   })
-    //   .catch((error) => {
-    //     console.log(error);
-    //     res.json("send");
-    //   });
+	  return shop;
   }
 }
 

@@ -1532,45 +1532,7 @@ exports.imageCompression = async (req, res) => {
 const imageUrl =
   "https://res.cloudinary.com/dq7iwl5ql/image/upload/v1689922993/DEV/qsljvzq6bpflt505ubah.webp"; // Replace this with the URL of the image you want to compress
 
-// Function to download the image from the given URL
-async function downloadImage() {
-  try {
-    const response = await Axios.get(imageUrl, { responseType: "arraybuffer" });
-    return response.data;
-  } catch (error) {
-    console.error("Error downloading the image:", error.message);
-    process.exit(1);
-  }
-}
 
-// Function to perform Lossy Compression
-async function performLossyCompression(imageBuffer) {
-  try {
-    const compressedImageBuffer = await sharp(imageBuffer)
-      .jpeg({ quality: 80 })
-      .toBuffer();
-    fs.writeFileSync("lossy_compressed_image.jpg", compressedImageBuffer);
-    // console.log('Lossy Compression completed and saved as "lossy_compressed_image.jpg".');
-    return compressedImageBuffer;
-  } catch (error) {
-    console.error("Error during Lossy Compression:", error.message);
-  }
-}
-
-// Function to perform Lossless Compression
-async function performLosslessCompression(imageBuffer) {
-  try {
-    const compressedImageBuffer = await sharp(imageBuffer)
-      .webp({ lossless: true })
-      .toBuffer();
-    fs.writeFileSync("lossless_compressed_image.webp", compressedImageBuffer);
-    console.log(
-      'Lossless Compression completed and saved as "lossless_compressed_image.webp".'
-    );
-  } catch (error) {
-    console.error("Error during Lossless Compression:", error.message);
-  }
-}
 
 // Main function to run the script
 // async function run() {
