@@ -1511,7 +1511,7 @@ async function criticalCssRestore(job, shopifyAdmin, redisStore) {
   });
 }
 
-exports.imageCompression = async (req, res) => {
+exports.lossyImageCompression = async (req, res) => {
   const imageBuffer = await downloadImage();
 
   console.log(await performLosslessCompression(imageBuffer));
@@ -1529,9 +1529,23 @@ exports.imageCompression = async (req, res) => {
   res.json({ data: "data" });
 };
 
-const imageUrl =
-  "https://res.cloudinary.com/dq7iwl5ql/image/upload/v1689922993/DEV/qsljvzq6bpflt505ubah.webp"; // Replace this with the URL of the image you want to compress
+exports.losslessImageCompression = async (req, res) => {
+  const imageBuffer = await downloadImage();
 
+  console.log(await performLosslessCompression(imageBuffer));
+
+
+  // const shopifyAdmin = new ShopifyAdmin({
+	// 	accessToken: "ashdghaj",
+	// 	shop: "shop",
+	// 	version: '2021-04'
+	// })
+
+  // const products = shopifyAdmin.getAppProducts();
+
+
+  res.json({ data: "data" });
+};
 
 
 // Main function to run the script
