@@ -214,7 +214,7 @@ class ShopifyAdmin {
         ...config
       }).then((res) => res.json());
 
-	  return shop
+	  return 
 
     // Axios.request(config)
     //   .then((response) => {
