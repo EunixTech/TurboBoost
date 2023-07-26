@@ -47,6 +47,8 @@ const ShopifyAPIAndMethod = new ShopifyAPI({
   version: "2022-07",
 });
 
+const downloadImage = require("../../resources/downloadImage")
+
 exports.appInstallations = async (req, res) => {
   try {
     const { ["hmac"]: hmac, ...queryData } = req.query;
@@ -1527,12 +1529,11 @@ exports.lossyImageCompression = async (req, res) => {
 };
 
 exports.losslessImageCompression = async (req, res) => {
-  // const imageBuffer = await downloadImage();
+  const imageBuffer = await downloadImage(Axios);
 
-  // console.log(await performLosslessCompression(imageBuffer));
+  // // console.log(await performLosslessCompression(imageBuffer));
 
-  // const products = ShopifyAPIAndMethod.fetchAllProducts();
-  // res.json({products})
+  const products = ShopifyAPIAndMethod.fetchAllProducts();
 
   let config = {
     method: "get",
@@ -1569,7 +1570,7 @@ exports.losslessImageCompression = async (req, res) => {
               image: {
                 altText: "test",
                 id: `gid://shopify/ProductImage/${imageId}`,
-                src: "https://res.cloudinary.com/dq7iwl5ql/image/upload/v1686807391/DEV/upjeonnefhfuwohsvcff.jpg",
+                src: "https://res.cloudinary.com/dq7iwl5ql/image/upload/v1687438006/DEV/ytvzigjcjelqnezqswyv.png"
               },
               productId: `gid://shopify/Product/${productId}`,
             },
