@@ -1,5 +1,6 @@
 /* eslint-disable no-useless-catch */
-class ShopifyAdmin {
+class ShopifyAPI {
+
     constructor({ shop, accessToken, version }) {
         if (!shop || !accessToken || !version) {
             throw new Error("Cannot initialise ShopifyAdmin. Required parameter missing");
@@ -11,20 +12,20 @@ class ShopifyAdmin {
         this.url = `https://${this.shop}/admin/api/${this.version}`;
     }
   
-    fetch(endpoint, method = "GET", data = null) {
+    // fetch(endpoint, method = "GET", data = null) {
 
-        const options = {
-            headers: {
-            "X-Shopify-Access-Token": this.accessToken,
-            },
-        };
+    //     const options = {
+    //         headers: {
+    //         "X-Shopify-Access-Token": this.accessToken,
+    //         },
+    //     };
 
-        if (method === "PUT" && data) {
-            options.headers["Content-Type"] = "application/json";
-            options.body = JSON.stringify(data);
-        }
-        return fetch(`${this.url}/${endpoint}`, options).then((res) => res.json());
-    }
+    //     if (method === "PUT" && data) {
+    //         options.headers["Content-Type"] = "application/json";
+    //         options.body = JSON.stringify(data);
+    //     }
+    //     return fetch(`${this.url}/${endpoint}`, options).then((res) => res.json());
+    // }
   
     async init() {
 
@@ -101,7 +102,7 @@ class ShopifyAdmin {
             const resJson = await res.json();
     
             if (resJson.errors) {
-            throw new Error(JSON.stringify(resJson.errors));
+              throw new Error(JSON.stringify(resJson.errors));
             }
             return true;
         } catch (e) {
@@ -122,27 +123,6 @@ class ShopifyAdmin {
           }
         ).then((res) => res.json());
         return true;
-      } catch (e) {
-        throw e;
-      }
-    }
-  
-    async makeBillingRequest(returnUrl) {
-      try {
-        return await fetch(`${this.url}/application_charges.json`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Shopify-Access-Token": this.accessToken,
-          },
-          body: JSON.stringify({
-            application_charge: {
-              name: "One time fee",
-              price: 10.0,
-              return_url: returnUrl,
-            },
-          }),
-        }).then((res) => res.json());
       } catch (e) {
         throw e;
       }
@@ -224,5 +204,5 @@ class ShopifyAdmin {
     }
   }
   
-  module.exports = ShopifyAdmin;
+  module.exports = ShopifyAPI;
   

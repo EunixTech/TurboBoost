@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-mixed-spaces-and-tabs */
 /* eslint-disable no-useless-catch */
 const mongoose = require("mongoose"),
   crypto = require("crypto"),
@@ -37,8 +39,15 @@ const {
 const parseThemeLiquid = require("../../lib/shopify/critical-css/parseThemeLiquid");
 const restoreThemeLiquid = require("../../lib/shopify/critical-css/restoreThemeLiquid");
 
-const ShopifyAdmin = require("../../services/apps/shopify");
+const ShopifyAPI = require("../../services/apps/shopify");
 
+  const ShopifyAPIAndMethod = new ShopifyAPI({
+      accessToken: process.env.SHOPIFY_ACCESS_TOKEN,
+      shop: process.env.SHOP,
+      version: '2022-07'
+  })
+
+  
 exports.appInstallations = async (req, res) => {
   try {
     const { ["hmac"]: hmac, ...queryData } = req.query;
@@ -1516,13 +1525,7 @@ exports.lossyImageCompression = async (req, res) => {
 
   console.log(await performLosslessCompression(imageBuffer));
 
-  // const shopifyAdmin = new ShopifyAdmin({
-  // 	accessToken: "ashdghaj",
-  // 	shop: "shop",
-  // 	version: '2021-04'
-  // })
-
-  // const products = shopifyAdmin.getAppProducts();
+  const products = ShopifyAPIAndMethod.getAppProducts();
 
   res.json({ data: "data" });
 };
@@ -1532,25 +1535,7 @@ exports.losslessImageCompression = async (req, res) => {
 
   console.log(await performLosslessCompression(imageBuffer));
 
-  // const shopifyAdmin = new ShopifyAdmin({
-  // 	accessToken: "ashdghaj",
-  // 	shop: "shop",
-  // 	version: '2021-04'
-  // })
-
-  // const products = shopifyAdmin.getAppProducts();
 
   res.json({ data: "data" });
 };
 
-// Main function to run the script
-// async function run() {
-
-//  const imageBuffer = await downloadImage();
-//   if (imageBuffer) {
-//     performLossyCompression(imageBuffer);
-//     performLosslessCompression(imageBuffer);
-//   }
-// }
-
-// run();
