@@ -1533,76 +1533,81 @@ exports.losslessImageCompression = async (req, res) => {
 
   // // console.log(await performLosslessCompression(imageBuffer));
 
-  const products = ShopifyAPIAndMethod.fetchAllProducts();
+  // const products = ShopifyAPIAndMethod.fetchAllProducts();
 
-  let config = {
-    method: "get",
-    maxBodyLength: Infinity,
-    url: "https://turboboost-dev.myshopify.com/admin/api/2023-07/products.json",
-    headers: {
-      "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
-    },
-  };
+  // let config = {
+  //   method: "get",
+  //   url: "https://turboboost-dev.myshopify.com/admin/api/2023-07/products.json",
+  //   headers: {
+  //     "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
+  //   },
+  // };
 
-  Axios.request(config)
-    .then((response) => {
-      const data = response?.data?.products;
+  // Axios.request(config)
+  //   .then((response) => {
+  //     const data = response?.data?.products;
 
-      for (var i = data.length - 1; i >= 0; i--) {
-        const productId = data[i]?.id;
-        const imageId = data[i]?.image?.id;
-        console.log(productId, imageId);
+  //     for (var i = data.length - 1; i >= 0; i--) {
+  //       const productId = data[i]?.id;
+  //       const imageId = data[i]?.image?.id;
+  //       console.log(productId, imageId);
 
-        if (data[i]?.image?.id) {
-          let data1 = JSON.stringify({
-            query: `mutation productImageUpdate($image: ImageInput!, $productId: ID!) {
-                    productImageUpdate(image: $image, productId: $productId) {
-                      image {
-                        id,src
-                      }
-                      userErrors {
-                        field
-                        message
-                      }
-                    }
-                  }`,
-            variables: {
-              image: {
-                altText: "test",
-                id: `gid://shopify/ProductImage/${imageId}`,
-                src: "https://res.cloudinary.com/dq7iwl5ql/image/upload/v1687438006/DEV/ytvzigjcjelqnezqswyv.png"
-              },
-              productId: `gid://shopify/Product/${productId}`,
-            },
-          });
+  //       if (data[i]?.image?.id) {
 
-          let config1 = {
-            method: "post",
-            maxBodyLength: Infinity,
-            url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/graphql.json",
-            headers: {
-              "X-Shopify-Access-Token":
-                "shpua_832b00f9f277821c02a70c5524402acd",
-              "Content-Type": "application/json",
-            },
-            data: data1,
-          };
-          Axios.request(config1)
-            .then((response) => {
-              console.log(JSON.stringify(response.data));
-              // return res.json({
-              //   data: `ahgdjgs`,
-              // });
-            })
-            .catch((error) => {
-              console.log(error);
-            });
-        }
-      }
+  //         let data1 = JSON.stringify({
+  //           query: `mutation productImageUpdate($image: ImageInput!, $productId: ID!) {
+  //                   productImageUpdate(image: $image, productId: $productId) {
+  //                     image {
+  //                       id,src
+  //                     }
+  //                     userErrors {
+  //                       field
+  //                       message
+  //                     }
+  //                   }
+  //                 }`,
+  //           variables: {
+  //             image: {
+  //               altText: "test",
+  //               id: `gid://shopify/ProductImage/${imageId}`,
+  //               src: "https://res.cloudinary.com/dq7iwl5ql/image/upload/v1687438006/DEV/ytvzigjcjelqnezqswyv.png"
+  //             },
+  //             productId: `gid://shopify/Product/${productId}`,
+  //           },
+  //         });
 
-      res.json({ data: "data" });
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+  //         let config1 = {
+  //           method: "post",
+  //           maxBodyLength: Infinity,
+  //           url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/graphql.json",
+  //           headers: {
+  //               "X-Shopify-Access-Token":
+  //               "shpua_832b00f9f277821c02a70c5524402acd",
+  //               "Content-Type": "application/json",
+  //           },
+  //           data: data1,
+  //         };
+  //         Axios.request(config1)
+  //           .then((response) => {
+  //             console.log(JSON.stringify(response.data));
+  //             // return res.json({
+  //             //   data: `ahgdjgs`,
+  //             // });
+  //           })
+  //           .catch((error) => {
+  //             console.log(error);
+  //           });
+  //       }
+  //     }
+
+  //     res.json({ data: "data" });
+  //   })
+  //   .catch((error) => {
+  //     console.log(error);
+  //   });
+
+   const products = ShopifyAPIAndMethod.updateProductImages("8406445752600", "41962190995736","https://res.cloudinary.com/dq7iwl5ql/image/upload/v1686654518/DEV/kngpndh3rsxmpr4vx0qs.png");
+   return res.json({
+    data:`hdgjags`
+   })
 };
