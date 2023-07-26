@@ -1,4 +1,6 @@
 /* eslint-disable no-useless-catch */
+const fetchAPI = require("../../utils/fetchAPI");
+
 class ShopifyAPI {
 
     constructor({ shop, accessToken, version }) {
@@ -11,6 +13,8 @@ class ShopifyAPI {
         this.version = version;
         this.url = `https://${this.shop}/admin/api/${this.version}`;
     }
+
+  
   
     // fetch(endpoint, method = "GET", data = null) {
 
@@ -145,21 +149,25 @@ class ShopifyAPI {
   
     async fetchAllProducts() {
       
+      console.log(`this.url`, this.url)
+      console.log(`this.accessToken`, this.accessToken)
+
       try {
-        const products = await fetch(`${this.url}/products.json`,
+        const jsonRes = await fetch(`${this.url}/products.json`,
           {
-            headers: {
-              "X-Shopify-Access-Token": this.accessToken,
-            },
+            headers: { "X-Shopify-Access-Token": this.accessToken},
           }
         ).then((res) => res.json());
+
+        console.log(`jsonRes`,jsonRes)
   
-        this.products = products.products;
+        this.products = jsonRes.products;
         return this.products;
   
       } catch (e) {
         throw e;
       }
+
     }
   
     async updateProductImages() {

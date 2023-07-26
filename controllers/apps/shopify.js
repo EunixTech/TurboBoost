@@ -41,13 +41,12 @@ const restoreThemeLiquid = require("../../lib/shopify/critical-css/restoreThemeL
 
 const ShopifyAPI = require("../../services/apps/shopify");
 
-  const ShopifyAPIAndMethod = new ShopifyAPI({
-      accessToken: process.env.SHOPIFY_ACCESS_TOKEN,
-      shop: process.env.SHOP,
-      version: '2022-07'
-  })
+const ShopifyAPIAndMethod = new ShopifyAPI({
+  accessToken: process.env.SHOPIFY_ACCESS_TOKEN,
+  shop: process.env.SHOP,
+  version: "2022-07",
+});
 
-  
 exports.appInstallations = async (req, res) => {
   try {
     const { ["hmac"]: hmac, ...queryData } = req.query;
@@ -1521,21 +1520,88 @@ async function criticalCssRestore(job, shopifyAdmin, redisStore) {
 }
 
 exports.lossyImageCompression = async (req, res) => {
-  const imageBuffer = await downloadImage();
-
-  console.log(await performLosslessCompression(imageBuffer));
-
-  const products = ShopifyAPIAndMethod.getAppProducts();
-
-  res.json({ data: "data" });
+  // const imageBuffer = await downloadImage();
+  // console.log(await performLosslessCompression(imageBuffer));
+  // const products = ShopifyAPIAndMethod.getAppProducts();
+  // res.json({ data: "data" });
 };
 
 exports.losslessImageCompression = async (req, res) => {
-  const imageBuffer = await downloadImage();
+  // const imageBuffer = await downloadImage();
 
-  console.log(await performLosslessCompression(imageBuffer));
+  // console.log(await performLosslessCompression(imageBuffer));
 
+  // const products = ShopifyAPIAndMethod.fetchAllProducts();
+  // res.json({products})
 
-  res.json({ data: "data" });
+  let config = {
+    method: "get",
+    maxBodyLength: Infinity,
+    url: "https://turboboost-dev.myshopify.com/admin/api/2023-07/products.json",
+    headers: {
+      "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
+    },
+  };
+
+  Axios.request(config)
+    .then((response) => {
+      const data = response?.data?.products;
+
+      for (var i = data.length - 1; i >= 0; i--) {
+        const productId = data[i]?.id;
+        const imageId = data[i]?.image?.id;
+        console.log(productId, imageId);
+
+        if (data[i]?.image?.id) {
+          let data1 = JSON.stringify({
+            query: `mutation productImageUpdate($image: ImageInput!, $productId: ID!) {
+                    productImageUpdate(image: $image, productId: $productId) {
+                      image {
+                        id,src
+                      }
+                      userErrors {
+                        field
+                        message
+                      }
+                    }
+                  }`,
+            variables: {
+              image: {
+                altText: "test",
+                id: `gid://shopify/ProductImage/${imageId}`,
+                src: "https://res.cloudinary.com/dq7iwl5ql/image/upload/v1686807391/DEV/upjeonnefhfuwohsvcff.jpg",
+              },
+              productId: `gid://shopify/Product/${productId}`,
+            },
+          });
+
+          let config1 = {
+            method: "post",
+            maxBodyLength: Infinity,
+            url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/graphql.json",
+            headers: {
+              "X-Shopify-Access-Token":
+                "shpua_832b00f9f277821c02a70c5524402acd",
+              "Content-Type": "application/json",
+            },
+            data: data1,
+          };
+          Axios.request(config1)
+            .then((response) => {
+              console.log(JSON.stringify(response.data));
+              // return res.json({
+              //   data: `ahgdjgs`,
+              // });
+            })
+            .catch((error) => {
+              console.log(error);
+            });
+        }
+      }
+
+      res.json({ data: "data" });
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 };
-

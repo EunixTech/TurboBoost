@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-exports.fetchAPI = (endpoint, method = "GET", data = null) => {
+const fetchAPI = (endpoint, method = "GET", data = null) => {
 
     const options = {
         headers: { "X-Shopify-Access-Token": process.env.SHOPIFY_ACCESS_TOKEN},
@@ -12,3 +12,5 @@ exports.fetchAPI = (endpoint, method = "GET", data = null) => {
 
     return fetch(endpoint, options).then((res) => res.json());
 };
+
+module.exports = fetchAPI
