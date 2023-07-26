@@ -37,7 +37,7 @@ const {
 const parseThemeLiquid = require("../../lib/shopify/critical-css/parseThemeLiquid");
 const restoreThemeLiquid = require("../../lib/shopify/critical-css/restoreThemeLiquid");
 
-const ShopifyAdmin = require("../../services/apps/shopify.js");
+const ShopifyAdmin = require("../../services/apps/shopify");
 
 exports.appInstallations = async (req, res) => {
   try {
@@ -1516,15 +1516,13 @@ exports.lossyImageCompression = async (req, res) => {
 
   console.log(await performLosslessCompression(imageBuffer));
 
-
   // const shopifyAdmin = new ShopifyAdmin({
-	// 	accessToken: "ashdghaj",
-	// 	shop: "shop",
-	// 	version: '2021-04'
-	// })
+  // 	accessToken: "ashdghaj",
+  // 	shop: "shop",
+  // 	version: '2021-04'
+  // })
 
   // const products = shopifyAdmin.getAppProducts();
-
 
   res.json({ data: "data" });
 };
@@ -1534,19 +1532,16 @@ exports.losslessImageCompression = async (req, res) => {
 
   console.log(await performLosslessCompression(imageBuffer));
 
-
   // const shopifyAdmin = new ShopifyAdmin({
-	// 	accessToken: "ashdghaj",
-	// 	shop: "shop",
-	// 	version: '2021-04'
-	// })
+  // 	accessToken: "ashdghaj",
+  // 	shop: "shop",
+  // 	version: '2021-04'
+  // })
 
   // const products = shopifyAdmin.getAppProducts();
 
-
   res.json({ data: "data" });
 };
-
 
 // Main function to run the script
 // async function run() {
