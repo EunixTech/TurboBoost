@@ -143,11 +143,12 @@ class ShopifyAPI {
   }
 
   async fetchAllProducts() {
+    console.log(`this.url`,this.url)
     try {
-      const jsonRes = await fetch(`${this.url}/products.json`, {
+      const jsonRes = await fetch(`https://turboboost-dev.myshopify.com/admin/api/2023-07/products.json`, {
         headers: { "X-Shopify-Access-Token": this.accessToken },
       }).then((res) => res.json());
-      
+
       this.products = jsonRes.products;
       return this.products;
     } catch (e) {
