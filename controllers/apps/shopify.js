@@ -48,6 +48,8 @@ const ShopifyAPIAndMethod = new ShopifyAPI({
   version: "2022-07",
 });
 
+const uploadToCloudinary = require("../../utils/uploadToCloudinary");
+
 const downloadImage = require("../../resources/downloadImage");
 
 exports.appInstallations = async (req, res) => {
@@ -1531,14 +1533,18 @@ exports.lossyImageCompression = async (req, res) => {
     for (i = products.length - 1; i >= 0; i--) {
       const productId = products[i]?.id,
         imageId = products[i]?.image?.id,
-        imageURL =  products[i]?.image?.src
-     
-      const image =   await performLossyCompression(imageURL)
-      const productss = ShopifyAPIAndMethod.updateProductImages(
-        productId,
-        imageId,
-        image
-      );
+        imageURL = products[i]?.image?.src;
+
+        if (imageURL) {
+          const downloadedImgae =await downloadImage(Axios,imageURL);
+          const res = await uploadToCloudinary(downloadedImgae,options={});
+  
+          const productss = ShopifyAPIAndMethod.updateProductImages(
+            productId,
+            imageId,
+            res.url
+          );
+        }
     }
   }
   return res.json({
@@ -1552,18 +1558,23 @@ exports.losslessImageCompression = async (req, res) => {
   const products = await ShopifyAPIAndMethod.fetchAllProducts();
 
   if (products?.length) {
-
     for (i = products.length - 1; i >= 0; i--) {
       const productId = products[i]?.id,
         imageId = products[i]?.image?.id;
-        imageURL =  products[i]?.image?.src
-     
-        const image =   await performLosslessCompression(imageURL)
-      const productss = ShopifyAPIAndMethod.updateProductImages(
-        productId,
-        imageId,
-        "https://res.cloudinary.com/dq7iwl5ql/image/upload/v1684762915/DEV/er12zjnqu6kkgnuadpuv.jpg"
-      );
+      imageURL = products[i]?.image?.src;
+
+      if (imageURL) {
+        const downloadedImgae =await downloadImage(Axios,imageURL);
+        const res = await uploadToCloudinary(downloadedImgae,options={});
+
+        const productss = ShopifyAPIAndMethod.updateProductImages(
+          productId,
+          imageId,
+          res.url
+        );
+      }
+
+      
     }
   }
 

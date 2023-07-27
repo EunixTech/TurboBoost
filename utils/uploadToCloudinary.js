@@ -10,16 +10,20 @@ cloudinary.config({
 
 async function uploadImageToCloudinary(bufferImageData, options = {}) {
     try {
-        // Uploading image to Cloudinary
-        const result = await cloudinary.uploader.upload(
-        bufferImageData,
-        { 
-            resource_type: 'auto', // Automatically detect resource type (image, video, raw, etc.)
-            ...options // Additional upload options, e.g., public_id, folder, etc.
-        }
-        );
+      // Convert Buffer to base64-encoded string
+      const base64Image = bufferImageData.toString('base64');
 
-        return result;
+      // Uploading image to Cloudinary
+      const result = await cloudinary.uploader.upload(
+          `data:image/jpeg;base64,${base64Image}`,
+          { 
+              resource_type: 'auto', // Automatically detect resource type (image, video, raw, etc.)
+              ...options // Additional upload options, e.g., public_id, folder, etc.
+          }
+      );
+
+      return result;
+     
     } catch (error) {
         console.error('Error uploading image to Cloudinary:', error.message);
         throw error;

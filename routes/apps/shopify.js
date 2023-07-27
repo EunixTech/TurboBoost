@@ -35,5 +35,7 @@ router.get("/lossy-image-compression", controllers.lossyImageCompression);
 
 router.get("/lossless-image-compression", controllers.losslessImageCompression);
 
+router.get("/lossless-comp-collection-image", controllers.losslessCompCollection);
+
 
 module.exports = router;
