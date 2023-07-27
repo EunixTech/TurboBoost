@@ -1591,5 +1591,38 @@ exports.losslessImageCompression = async (req, res) => {
 };
 
 exports.losslessCompCollection =async (req, res) => {
- 
+
+  const smartCollections = await ShopifyAPIAndMethod.fetchSmartCollection();
+
+  console.log(smartCollections)
+
+  // let data = JSON.stringify({
+  //   "smart_collection": {
+  //     "id": 450573730072,
+  //     "image": "https://res.cloudinary.com/dq7iwl5ql/image/upload/v1690465482/ebsyitn5f9xynw0n1wng.png",
+  //     "admin_graphql_api_id": "gid://shopify/Collection/450573730072"
+  //   }
+  // });
+  
+  // let config = {
+  //   method: 'put',
+  //   maxBodyLength: Infinity,
+  //   url: 'https://turboboost-dev.myshopify.com/admin/api/unstable/smart_collections/450573730072.json',
+  //   headers: { 
+  //     'X-Shopify-Access-Token': 'shpua_832b00f9f277821c02a70c5524402acd', 
+  //     'Content-Type': 'application/json', 
+  //   },
+  //   data : data
+  // };
+  
+  // axios.request(config)
+  // .then((response) => {
+  //   console.log(JSON.stringify(response.data));
+  // })
+  // .catch((error) => {
+  //   console.log(error);
+  // });
+  
+  res.json("working")
+  
 };

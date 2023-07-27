@@ -156,6 +156,20 @@ class ShopifyAPI {
     }
   }
 
+
+  async fetchSmartCollection() {
+   
+    try {
+      const jsonRes = await fetch(`https://turboboost-dev.myshopify.com/admin/api/2023-07/smart_collections.json`, {
+        headers: { "X-Shopify-Access-Token": this.accessToken },
+      }).then((res) => res.json());
+      
+      return jsonRes?.smart_collections
+    } catch (e) {
+      throw e;
+    }
+  }
+
   async updateProductImages(productId = "", imageId = "", imageURL = "") {
 
     const data = JSON.stringify({
