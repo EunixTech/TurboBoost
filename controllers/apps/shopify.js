@@ -34,6 +34,11 @@ require("../../utils/mongoose");
 const sharp = require("sharp");
 
 const {
+  losslessCompression,
+  lossyCompression
+} = require("../../resources/image-compression")
+
+const {
   generateForShop,
   uploadShopifySnippets,
 } = require("../../lib/shopify/critical-css/critical-css");
@@ -1537,7 +1542,8 @@ exports.lossyImageCompression = async (req, res) => {
 
         if (imageURL) {
           const downloadedImgae =await downloadImage(Axios,imageURL);
-          const res = await uploadToCloudinary(downloadedImgae,options={});
+          const compressedImage =  await lossyCompression(downloadedImgae)
+          const res = await uploadToCloudinary(compressedImage,options={});
   
           const productss = ShopifyAPIAndMethod.updateProductImages(
             productId,
@@ -1565,7 +1571,8 @@ exports.losslessImageCompression = async (req, res) => {
 
       if (imageURL) {
         const downloadedImgae =await downloadImage(Axios,imageURL);
-        const res = await uploadToCloudinary(downloadedImgae,options={});
+        const compressedImage =  await losslessCompression(downloadedImgae)
+        const res = await uploadToCloudinary(compressedImage,options={});
 
         const productss = ShopifyAPIAndMethod.updateProductImages(
           productId,
@@ -1581,4 +1588,8 @@ exports.losslessImageCompression = async (req, res) => {
   return res.json({
     data: "success",
   });
+};
+
+exports.losslessCompCollection =async (req, res) => {
+ 
 };
