@@ -35,8 +35,8 @@ const sharp = require("sharp");
 
 const {
   losslessCompression,
-  lossyCompression
-} = require("../../resources/image-compression")
+  lossyCompression,
+} = require("../../resources/image-compression");
 
 const {
   generateForShop,
@@ -1540,17 +1540,17 @@ exports.lossyImageCompression = async (req, res) => {
         imageId = products[i]?.image?.id,
         imageURL = products[i]?.image?.src;
 
-        if (imageURL) {
-          const downloadedImgae =await downloadImage(Axios,imageURL);
-          const compressedImage =  await lossyCompression(downloadedImgae)
-          const res = await uploadToCloudinary(compressedImage,options={});
-  
-          const productss = ShopifyAPIAndMethod.updateProductImages(
-            productId,
-            imageId,
-            res.url
-          );
-        }
+      if (imageURL) {
+        const downloadedImgae = await downloadImage(Axios, imageURL);
+        const compressedImage = await lossyCompression(downloadedImgae);
+        const res = await uploadToCloudinary(compressedImage, (options = {}));
+
+        const productss = ShopifyAPIAndMethod.updateProductImages(
+          productId,
+          imageId,
+          res.url
+        );
+      }
     }
   }
   return res.json({
@@ -1570,9 +1570,9 @@ exports.losslessImageCompression = async (req, res) => {
       imageURL = products[i]?.image?.src;
 
       if (imageURL) {
-        const downloadedImgae =await downloadImage(Axios,imageURL);
-        const compressedImage =  await losslessCompression(downloadedImgae)
-        const res = await uploadToCloudinary(compressedImage,options={});
+        const downloadedImgae = await downloadImage(Axios, imageURL);
+        const compressedImage = await losslessCompression(downloadedImgae);
+        const res = await uploadToCloudinary(compressedImage, (options = {}));
 
         const productss = ShopifyAPIAndMethod.updateProductImages(
           productId,
@@ -1580,8 +1580,6 @@ exports.losslessImageCompression = async (req, res) => {
           res.url
         );
       }
-
-      
     }
   }
 
@@ -1590,39 +1588,62 @@ exports.losslessImageCompression = async (req, res) => {
   });
 };
 
-exports.losslessCompCollection =async (req, res) => {
+exports.losslessCompCollection = async (req, res, next) => {
+
+  /* 
+    1 = loassy compression
+    2 = loassless compression
+  */
+  const compressionType = req?.query?.compressionType;
+
+  if(!compressionType)  return sendFailureJSONResponse(res,{  message: `please provide compression type`});
 
   const smartCollections = await ShopifyAPIAndMethod.fetchSmartCollection();
 
-  console.log(smartCollections)
+  if (smartCollections?.length) {
+    for (i = smartCollections.length - 1; i >= 0; i--) {
+      const smartCollectionId = smartCollections[i]?.id,
+        imageURL = smartCollections[i]?.src;
 
-  // let data = JSON.stringify({
-  //   "smart_collection": {
-  //     "id": 450573730072,
-  //     "image": "https://res.cloudinary.com/dq7iwl5ql/image/upload/v1690465482/ebsyitn5f9xynw0n1wng.png",
-  //     "admin_graphql_api_id": "gid://shopify/Collection/450573730072"
-  //   }
-  // });
-  
-  // let config = {
-  //   method: 'put',
-  //   maxBodyLength: Infinity,
-  //   url: 'https://turboboost-dev.myshopify.com/admin/api/unstable/smart_collections/450573730072.json',
-  //   headers: { 
-  //     'X-Shopify-Access-Token': 'shpua_832b00f9f277821c02a70c5524402acd', 
-  //     'Content-Type': 'application/json', 
-  //   },
-  //   data : data
-  // };
-  
-  // axios.request(config)
-  // .then((response) => {
-  //   console.log(JSON.stringify(response.data));
-  // })
-  // .catch((error) => {
-  //   console.log(error);
-  // });
-  
-  res.json("working")
-  
+ 
+        const downloadedImgae = await downloadImage(Axios, imageURL);
+
+        let compressedImage;
+        if(compressionType === 1){
+            compressedImage = await lossyCompression(downloadedImgae);
+        } else if(compressionType === 2){
+          compressedImage = await losslessCompression(downloadedImgae);
+        }
+      
+ 
+      const data = JSON.stringify({
+        smart_collection: {
+          id: smartCollectionId,
+          image:compressedImage,
+          admin_graphql_api_id: `gid://shopify/Collection/${smartCollectionId}`,
+        },
+      });
+
+      let config = {
+        method: "put",
+        url: `https://turboboost-dev.myshopify.com/admin/api/unstable/smart_collections/${smartCollectionId}.json`,
+        headers: {
+          "X-Shopify-Access-Token": process.env.SHOPIFY_ACCESS_TOKEN,
+          "Content-Type": "application/json",
+        },
+        data: data,
+      };
+
+      Axios
+        .request(config)
+        .then((response) => {})
+        .catch((error) => {
+          console.log(error);
+        });
+    }
+  }
+
+  return rsendSuccessJSONResponse(res,{
+    message: `success`
+  })
 };
