@@ -18,8 +18,8 @@ const productImageSchema = new mongoose.Schema({
     url: {
         ...defaultStringConfig,
         required: true
-    },
-    graphql_id:{
+    }
+    admin_graphql_api_id:{
         ...defaultStringConfig,
         required: true
     }
