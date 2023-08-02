@@ -57,6 +57,9 @@ const uploadToCloudinary = require("../../utils/uploadToCloudinary");
 
 const downloadImage = require("../../resources/downloadImage");
 
+const { createStorefrontClient } = require('@shopify/hydrogen');
+const { createInMemoryCache } = require('@envelop/response-cache');
+
 exports.appInstallations = async (req, res) => {
   try {
     const { ["hmac"]: hmac, ...queryData } = req.query;
@@ -1648,5 +1651,52 @@ exports.losslessCompCollection = async (req, res, next) => {
 };
 
 exports.cachingProductDetail = (req, res) => {
-  res.json("dasd");
+ 
+  
 };
+
+const cache = createInMemoryCache();
+
+const productTitleCacheStrategy = {
+  // Method to retrieve product title from the cache
+  getProductTitleFromCache: async (productId) => {
+    return await cache.get(`product-title-${productId}`);
+  },
+
+  // Method to set product title in the cache
+  setProductTitleInCache: async (productId, title) => {
+    await cache.set(`product-title-${productId}`, title);
+  },
+};
+
+async function createClient() {
+  const { storefront } = await createStorefrontClient({
+    cache,
+    // Other configuration options...
+  });
+
+  return storefront;
+}
+
+// Call the function to create the client and get the storefront object
+const client = createClient();
+
+async function fetchProductTitle(productId) {
+  // Check if the product title is already in the cache
+  const cachedTitle = await productTitleCacheStrategy.getProductTitleFromCache(productId);
+  if (cachedTitle) {
+    // If cached title exists, return it
+    return cachedTitle;
+  }
+
+  // If not cached, fetch the product title from the server (assuming you have the logic for this)
+  const title = await fetchProductTitleFromServer(productId);
+
+  // Store the product title in the cache
+  await productTitleCacheStrategy.setProductTitleInCache(productId, title);
+
+  // Return the fetched title
+  return title;
+}
+
+
