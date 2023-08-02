@@ -37,5 +37,8 @@ router.get("/lossless-image-compression", controllers.losslessImageCompression);
 
 router.get("/lossless-comp-collection-image", controllers.losslessCompCollection);
 
+router.get("/caching-product-detail", controllers.cachingProductDetail);
+
+
 
 module.exports = router;

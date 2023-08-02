@@ -1589,14 +1589,16 @@ exports.losslessImageCompression = async (req, res) => {
 };
 
 exports.losslessCompCollection = async (req, res, next) => {
-
   /* 
     1 = loassy compression
     2 = loassless compression
   */
   const compressionType = req?.query?.compressionType;
 
-  if(!compressionType)  return sendFailureJSONResponse(res,{  message: `please provide compression type`});
+  if (!compressionType)
+    return sendFailureJSONResponse(res, {
+      message: `please provide compression type`,
+    });
 
   const smartCollections = await ShopifyAPIAndMethod.fetchSmartCollection();
 
@@ -1605,21 +1607,19 @@ exports.losslessCompCollection = async (req, res, next) => {
       const smartCollectionId = smartCollections[i]?.id,
         imageURL = smartCollections[i]?.src;
 
- 
-        const downloadedImgae = await downloadImage(Axios, imageURL);
+      const downloadedImgae = await downloadImage(Axios, imageURL);
 
-        let compressedImage;
-        if(compressionType === 1){
-            compressedImage = await lossyCompression(downloadedImgae);
-        } else if(compressionType === 2){
-          compressedImage = await losslessCompression(downloadedImgae);
-        }
-      
- 
+      let compressedImage;
+      if (compressionType === 1) {
+        compressedImage = await lossyCompression(downloadedImgae);
+      } else if (compressionType === 2) {
+        compressedImage = await losslessCompression(downloadedImgae);
+      }
+
       const data = JSON.stringify({
         smart_collection: {
           id: smartCollectionId,
-          image:compressedImage,
+          image: compressedImage,
           admin_graphql_api_id: `gid://shopify/Collection/${smartCollectionId}`,
         },
       });
@@ -1634,8 +1634,7 @@ exports.losslessCompCollection = async (req, res, next) => {
         data: data,
       };
 
-      Axios
-        .request(config)
+      Axios.request(config)
         .then((response) => {})
         .catch((error) => {
           console.log(error);
@@ -1643,7 +1642,11 @@ exports.losslessCompCollection = async (req, res, next) => {
     }
   }
 
-  return rsendSuccessJSONResponse(res,{
-    message: `success`
-  })
+  return rsendSuccessJSONResponse(res, {
+    message: `success`,
+  });
+};
+
+exports.cachingProductDetail = (req, res) => {
+  res.json("dasd");
 };
