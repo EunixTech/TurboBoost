@@ -11,11 +11,17 @@ router.get("/adding-lazy-loading", controllers.addingLazyLoadingScriptClient);
 
 router.get("/updating-html-attributes", controllers.updatingHTMLAttribute);
 
-router.get( "/remove-unused-javascript-code", controllers.removeUnusedJavascriptCode );
+router.get(
+  "/remove-unused-javascript-code",
+  controllers.removeUnusedJavascriptCode
+);
 
 router.get("/remove-unused-css-code", controllers.removingUnusedCSS);
 
-router.get( "/remove-unused-css-index-page", controllers.removingUnusedCssFromIndexPage);
+router.get(
+  "/remove-unused-css-index-page",
+  controllers.removingUnusedCssFromIndexPage
+);
 
 router.get("/minify-javascript-code", controllers.minifyJavascriptCode);
 
@@ -35,10 +41,13 @@ router.get("/lossy-image-compression", controllers.lossyImageCompression);
 
 router.get("/lossless-image-compression", controllers.losslessImageCompression);
 
-router.get("/lossless-comp-collection-image", controllers.losslessCompCollection);
+router.get(
+  "/lossless-comp-collection-image",
+  controllers.losslessCompCollection
+);
 
 router.get("/caching-product-detail", controllers.cachingProductDetail);
 
-
+router.get("/caching-theme-assets", controllers.cachingThemeAssets);
 
 module.exports = router;

@@ -1607,6 +1607,7 @@ exports.losslessCompCollection = async (req, res, next) => {
 
   if (smartCollections?.length) {
     for (i = smartCollections.length - 1; i >= 0; i--) {
+
       const smartCollectionId = smartCollections[i]?.id,
         imageURL = smartCollections[i]?.src;
 
@@ -1648,10 +1649,22 @@ exports.losslessCompCollection = async (req, res, next) => {
   return rsendSuccessJSONResponse(res, {message: `success`,});
 };
 
+
+
+
 exports.cachingProductDetail = (req, res) => {
  
   
 };
+
+
+exports.cachingThemeAssets = (req, res) => {
+  res.json({
+    data: `nwakjdhak`
+  })
+  
+};
+
 
 
 // Create cache strategies for product details, user data, and configuration data
@@ -1762,21 +1775,21 @@ async function fetchAndCacheData() {
 }
 
 // // Example usage:
-// async function fetchDataFromCache() {
-//   const client = await createClientWithCaching();
+async function fetchDataFromCache() {
+  const client = await createClientWithCaching();
 
-//   // Fetch product details from the cache
-//   const cachedProduct = await productCacheStrategy.getProductFromCache('product-id-123');
-//   console.log('Cached product:', cachedProduct);
+  // Fetch product details from the cache
+  const cachedProduct = await productCacheStrategy.getProductFromCache('product-id-123');
+  console.log('Cached product:', cachedProduct);
 
-//   // Fetch user data from the cache
-//   const cachedUser = await userCacheStrategy.getUserFromCache('user-id-456');
-//   console.log('Cached user:', cachedUser);
+  // Fetch user data from the cache
+  const cachedUser = await userCacheStrategy.getUserFromCache('user-id-456');
+  console.log('Cached user:', cachedUser);
 
-//   // Fetch configuration data from the cache
-//   const cachedConfig = await configCacheStrategy.getConfigFromCache();
-//   console.log('Cached config:', cachedConfig);
-// }
+  // Fetch configuration data from the cache
+  const cachedConfig = await configCacheStrategy.getConfigFromCache();
+  console.log('Cached config:', cachedConfig);
+}
 
 
 
