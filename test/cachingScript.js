@@ -14,6 +14,25 @@ function applyChangesToHTML(html) {
   
     return html;
   }
+
+
+  
+  // eslint-disable-next-line no-unused-vars
+  function refreshDynamicImages(html) {
+    var parser = new DOMParser();
+    var doc = parser.parseFromString(html, 'text/html');
+    var dynamicImages = doc.querySelectorAll('img.dynamic-image');
+  
+    dynamicImages.forEach(function(img) {
+      var imageUrl = img.getAttribute('src');
+      var updatedAt = img.getAttribute('data-updated-at');
+      var optimizedImageUrl = imageUrl + '?v=' + updatedAt;
+  
+      img.setAttribute('src', optimizedImageUrl);
+    });
+  
+    return doc.documentElement.outerHTML;
+  }
   
   // Sample HTML content
   const sampleHTML = `
