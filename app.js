@@ -31,10 +31,10 @@ app.use(cors());
 const allRoutes = require("./routes/all");
 app.use(allRoutes)
 
-app.use((err, req, res) => {
-    console.log(err)
-    return res.status(500).send({ error: 'seriously something went wrong ' });
-});
+// app.use((err, req, res) => {
+//     console.log(err)
+//     return res.status(500).send({ error: 'seriously something went wrong ' });
+// });
 
 // Server setup
 app.listen(process.env.PORT, () => console.log(`[ Turbo Boost ] on ${process.env.PORT}`));
