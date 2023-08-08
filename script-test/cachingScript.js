@@ -52,7 +52,6 @@ function applyChangesToHTML(html) {
   }
   
  
-
   function applyAggressiveCaching(html) {
     // Define the version timestamp
     var version = new Date().getTime();
@@ -180,7 +179,8 @@ function setCacheControlHeaders(htmlContent) {
 
 // Example usage
 const originalHtml = `
-  <html>
+
+  <html> 
     <head>
       <link rel="stylesheet" href="styles.css">
     </head>

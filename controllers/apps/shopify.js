@@ -12,10 +12,12 @@ const mongoose = require("mongoose"),
   Cheerio = require("cheerio"),
   UglifyJS = require("uglify-es"),
   minifyPageContent = require("../../resources/scripts/minify-page-content"),
+  AssetsCaching = require("../../resources/scripts/assets-caching"),
   addDNSPrefetch = require("../../resources/scripts/DNS-prefetch"),
   User = mongoose.model("user"),
   ShopifyService = require("../../services/apps/index"),
   { getFetchConfig } = require("../../utils/getFetchConfig"),
+
   OauthState = mongoose.model("outhState"),
   {
     sendSuccessJSONResponse,
@@ -1637,6 +1639,7 @@ exports.losslessCompCollection = async (req, res, next) => {
         data: data,
       };
 
+
       Axios.request(config)
         .then((response) => {})
         .catch((error) => {
@@ -1665,14 +1668,14 @@ exports.cachingThemeAssets = (req, res) => {
   }).then(async (foundTheme) => {
 
     const theme = foundTheme?.data?.asset?.value;
+      const updatedTheme = AssetsCaching(theme)
 
       // updating main theme page
 
   let data = JSON.stringify({
     asset: {
       key: "layout/theme.liquid",
-      value:
-        '<!doctype html> manmohan updated\n<html class="no-js" lang="{{ request.locale.iso_code }}">\n  <head>\n    <meta charset="utf-8">\n    <meta http-equiv="X-UA-Compatible" manmohan content="IE=edge">\n    <meta name="viewport" content="width=device-width,initial-scale=1">\n    <meta name="theme-color" content="">\n    <link rel="canonical" href="{{ canonical_url }}">\n\n    {%- if settings.favicon != blank -%}\n      <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">\n    {%- endif -%}\n\n    {%- unless settings.type_header_font.system? and settings.type_body_font.system? -%}\n      <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>\n    {%- endunless -%}\n\n    <title>\n      {{ page_title }}\n      {%- if current_tags %} &ndash; tagged "{{ current_tags | join: \', \' }}"{% endif -%}\n      {%- if current_page != 1 %} &ndash; Page {{ current_page }}{% endif -%}\n      {%- unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless -%}\n    </title>\n\n    {% if page_description %}\n      <meta name="description" content="{{ page_description | escape }}">\n    {% endif %}\n\n    {% render \'meta-tags\' %}\n\n    <script src="{{ \'constants.js\' | asset_url }}" defer="defer"></script>\n    <script src="{{ \'pubsub.js\' | asset_url }}" defer="defer"></script>\n    <script src="{{ \'global.js\' | asset_url }}" defer="defer"></script>\n    {%- if settings.animations_reveal_on_scroll -%}\n      <script src="{{ \'animations.js\' | asset_url }}" defer="defer"></script>\n    {%- endif -%}\n\n    {{ content_for_header }} <!-- Add this line -->\n  </head>\n\n  <body class="gradient{% if settings.animations_hover_elements != \'none\' %} animate--hover-{{ settings.animations_hover_elements }}{% endif %}">\n    <a class="skip-to-content-link button visually-hidden" href="#MainContent">\n      {{ \'accessibility.skip_to_text\' | t }}\n    </a>\n\n    {%- if settings.cart_type == \'drawer\' -%}\n      {%- render \'cart-drawer\' -%}\n    {%- endif -%}\n\n    {% sections \'header-group\' %}\n\n    <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">\n      {{ content_for_layout }} <!-- Add this line -->\n    </main>\n\n    {% sections \'footer-group\' %}\n\n    <ul hidden>\n      <li id="a11y-refresh-page-message">{{ \'accessibility.refresh_page\' | t }}</li>\n      <li id="a11y-new-window-message">{{ \'accessibility.link_messages.new_window\' | t }}</li>\n    </ul>\n\n    <script>\n      window.shopUrl = \'{{ request.origin }}\';\n      window.routes = {\n        cart_add_url: \'{{ routes.cart_add_url }}\',\n        cart_change_url: \'{{ routes.cart_change_url }}\',\n        cart_update_url: \'{{ routes.cart_update_url }}\',\n        cart_url: \'{{ routes.cart_url }}\',\n        predictive_search_url: \'{{ routes.predictive_search_url }}\',\n      };\n\n      window.cartStrings = {\n        error: `{{ \'sections.cart.cart_error\' | t }}`,\n        quantityError: `{{ \'sections.cart.cart_quantity_error_html\' | t: quantity: \'[quantity]\' }}`,\n      };\n\n      window.variantStrings = {\n        addToCart: `{{ \'products.product.add_to_cart\' | t }}`,\n        soldOut: `{{ \'products.product.sold_out\' | t }}`,\n        unavailable: `{{ \'products.product.unavailable\' | t }}`,\n        unavailable_with_option: `{{ \'products.product.value_unavailable\' | t: option_value: \'[value]\' }}`,\n      };\n\n      window.accessibilityStrings = {\n        imageAvailable: `{{ \'products.product.media.image_available\' | t: index: \'[index]\' }}`,\n        shareSuccess: `{{ \'general.share.success_message\' | t }}`,\n        pauseSlideshow: `{{ \'sections.slideshow.pause_slideshow\' | t }}`,\n        playSlideshow: `{{ \'sections.slideshow.play_slideshow\' | t }}`,\n      };\n    </script>\n\n    {%- if settings.predictive_search_enabled -%}\n      <script src="{{ \'predictive-search.js\' | asset_url }}" defer="defer"></script>\n    {%- endif -%}\n  </body>\n</html>\n',
+      value: updatedTheme
     },
   });
 

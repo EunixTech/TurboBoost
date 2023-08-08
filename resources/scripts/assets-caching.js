@@ -1,4 +1,4 @@
-function processHTML(htmlContent, cacheDuration) {
+function AssetsCaching(htmlContent, cacheDuration) {
     // Versioned CSS with Cache-Control
     htmlContent = htmlContent.replace(/<link rel="stylesheet" href="(.*?\.css)">/g, (match, url) => {
       const versionedUrl = `${url}?v=${Math.floor(Date.now() / 1000)}`;
@@ -41,4 +41,4 @@ function processHTML(htmlContent, cacheDuration) {
     return modifiedResponse.text();
   }
   
-  module.exports = processHTML
+  module.exports = AssetsCaching
