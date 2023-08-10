@@ -1670,23 +1670,25 @@ exports.cachingThemeAssets = (req, res) => {
 
 exports.fontOptimization = (req, res, next) => {
 
-  const fetchConfig = getFetchConfig();
 
-  Axios({
-    ...fetchConfig,
-    url: ` https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154354057496/assets.json?asset[key]=layout/theme.liquid`,
-  }).then(async (foundTheme) => {
-    res.json({ data: foundTheme?.data?.asset?.value });
+let config = {
+  method: 'get',
+  url: 'https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154780401944/assets.json?content_type = text/css',
+  headers: { 
+    'X-Shopify-Access-Token': 'shpua_5251b9ea9543d66b17346f5857542659', 
+  }
+};
 
-    let data = JSON.stringify({
-      asset: {
-        key: "assets/font.liquid",
-        value: foundTheme?.data?.asset?.value,
-      },
-    });
+Axios.request(config)
+.then((response) => {
+  const assets = response.data.assets;
+  const cssAssets = assets.filter(asset => asset.content_type === 'text/css');
+  console.log(cssAssets);
+})
+.catch((error) => {
+  console.log(error);
+});
 
-
-  });
 };
 
 
