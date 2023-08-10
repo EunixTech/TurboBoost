@@ -1689,10 +1689,10 @@ Axios.request(config)
 
     const assetPublicURL =  cssAssets[i]?.public_url;
 
-    CheckFontFaceExists(assetPublicURL, (containsFontFace) => {
+    CheckFontFaceExists(assetPublicURL, (containsFontFace, cssContentToSend) => {
       if (containsFontFace) {
         console.log('CSS file contains @font-face rules:', containsFontFace);
-       
+        console.log('CSS file cssContentToSend:', cssContentToSend);
       } else {
         console.log('CSS file does not contain @font-face rules.',containsFontFace);
       }
