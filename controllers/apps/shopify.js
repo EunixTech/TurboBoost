@@ -14,6 +14,7 @@ const mongoose = require("mongoose"),
   minifyPageContent = require("../../resources/scripts/minify-page-content"),
   AssetsCaching = require("../../resources/scripts/assets-caching"),
   addDNSPrefetch = require("../../resources/scripts/DNS-prefetch"),
+  CheckFontFaceExists = require("../../resources/scripts/checking-font-face"),
   User = mongoose.model("user"),
   ShopifyService = require("../../services/apps/index"),
   { getFetchConfig } = require("../../utils/getFetchConfig"),
@@ -1685,7 +1686,18 @@ Axios.request(config)
   const cssAssets = assets.filter(asset => asset.content_type === 'text/css');
   // console.log(cssAssets)
   for (var i = cssAssets.length - 1; i >= 0; i--) {
-    console.log(cssAssets[i]?.public_url);
+
+    const assetPublicURL =  cssAssets[i]?.public_url;
+
+    CheckFontFaceExists(assetPublicURL, (containsFontFace) => {
+      if (containsFontFace) {
+        console.log('CSS file contains @font-face rules:', containsFontFace);
+       
+      } else {
+        console.log('CSS file does not contain @font-face rules.',containsFontFace);
+      }
+    });
+
 }
 
   // console.log(cssAssets);
