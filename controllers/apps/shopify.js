@@ -1334,44 +1334,6 @@ exports.DNSPrefetching = (req, res) => {
     });
 };
 
-exports.fontOptimization = (req, res) => {
-  const fetchConfig = getFetchConfig();
-
-  Axios({
-    ...fetchConfig,
-    url: ` https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154354057496/assets.json?asset[key]=layout/theme.liquid`,
-  }).then(async (foundTheme) => {
-    res.json({ data: foundTheme?.data?.asset?.value });
-
-    let data = JSON.stringify({
-      asset: {
-        key: "assets/font.liquid",
-        value: foundTheme?.data?.asset?.value,
-      },
-    });
-
-    let config = {
-      method: "put",
-      maxBodyLength: Infinity,
-      url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
-      headers: {
-        "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
-        "Content-Type": "application/json",
-      },
-      data: data,
-    };
-
-    axios
-      .request(config)
-      .then((response) => {
-        console.log(JSON.stringify(response.data));
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  });
-};
-
 // image adaptions login
 exports.imageSizeAdaptions = (req, res) => {
   const fetchConfig = getFetchConfig();
@@ -1664,13 +1626,13 @@ exports.cachingThemeAssets = (req, res) => {
 
   Axios({
     ...fetchConfig,
-    url: ` https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154354057496/assets.json?asset[key]=layout/theme.liquid`,
+    url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154354057496/assets.json?asset[key]=layout/theme.liquid`,
   }).then(async (foundTheme) => {
 
     const theme = foundTheme?.data?.asset?.value;
       const updatedTheme = AssetsCaching(theme)
 
-      // updating main theme page
+    // updating main theme page
 
   let data = JSON.stringify({
     asset: {
@@ -1684,7 +1646,7 @@ exports.cachingThemeAssets = (req, res) => {
     maxBodyLength: Infinity,
     url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/152998740248/assets.json",
     headers: {
-      "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
+      "X-Shopify-Access-Token" : "shpua_832b00f9f277821c02a70c5524402acd",
       "Content-Type": "application/json",
     
     },
@@ -1705,6 +1667,27 @@ exports.cachingThemeAssets = (req, res) => {
   
 };
 
+
+exports.fontOptimization = (req, res, next) => {
+
+  const fetchConfig = getFetchConfig();
+
+  Axios({
+    ...fetchConfig,
+    url: ` https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154354057496/assets.json?asset[key]=layout/theme.liquid`,
+  }).then(async (foundTheme) => {
+    res.json({ data: foundTheme?.data?.asset?.value });
+
+    let data = JSON.stringify({
+      asset: {
+        key: "assets/font.liquid",
+        value: foundTheme?.data?.asset?.value,
+      },
+    });
+
+
+  });
+};
 
 
 // Create cache strategies for product details, user data, and configuration data
