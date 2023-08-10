@@ -1,13 +1,17 @@
 const mongoose = require("mongoose");
 const { defaultStringConfig } = require("../../utils/mongoose");
 
-const productSchema = new mongoose.Schema(
+const liquidThemeSchema = new mongoose.Schema(
   {
-    theme: {
+    theme_id: {
       ...defaultStringConfig,
       required: true,
     },
-    admin_graphql_api_id: {
+    theme_content: {
+      ...defaultStringConfig,
+      required: true,
+    },
+    theme_graphql_api_id: {
       ...defaultStringConfig,
       required: true,
     },
@@ -15,4 +19,4 @@ const productSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("product", productSchema);
+module.exports = mongoose.model("LiquidTheme", liquidThemeSchema);
