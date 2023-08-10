@@ -1683,7 +1683,13 @@ Axios.request(config)
 .then((response) => {
   const assets = response.data.assets;
   const cssAssets = assets.filter(asset => asset.content_type === 'text/css');
-  console.log(cssAssets);
+  // console.log(cssAssets)
+  for (var i = cssAssets.length - 1; i >= 0; i--) {
+    console.log(cssAssets[i]?.public_url);
+}
+
+  // console.log(cssAssets);
+  // console.log(cssAssets);
 })
 .catch((error) => {
   console.log(error);

@@ -1,9 +1,9 @@
-function checkCssForFontFace(cssUrl, callback) {
-    fetch(cssUrl)
-      .then(response => response.text())
+function checkFontFaceExists(cssAssetsURL, callback) {
+    fetch(cssAssetsURL)
+      .then(res => res.text())
       .then(cssContent => {
-        const fontFaceRegex = /@font-face\s*\{[\s\S]*?\}/g;
-        const fontFaceMatches = cssContent.match(fontFaceRegex);
+        const fontFaceRegex = /@font-face\s*\{[\s\S]*?\}/g,
+          fontFaceMatches = cssContent.match(fontFaceRegex);
   
         if (fontFaceMatches && fontFaceMatches.length > 0) {
           callback(true, fontFaceMatches);
@@ -18,8 +18,8 @@ function checkCssForFontFace(cssUrl, callback) {
   }
   
   // Usage
-  const cssUrl = 'https://cdn.shopify.com/s/files/1/0780/8001/6664/t/12/assets/main.css?v=1691603769';
-  checkCssForFontFace(cssUrl, (containsFontFace, fontFaceMatches) => {
+  const cssAssetsURL = 'https://cdn.shopify.com/s/files/1/0780/8001/6664/t/12/assets/main.css?v=1691603769';
+  checkFontFaceExists(cssAssetsURL, (containsFontFace, fontFaceMatches) => {
     if (containsFontFace) {
       console.log('CSS file contains @font-face rules:');
       fontFaceMatches.forEach((match, index) => {
