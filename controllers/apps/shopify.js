@@ -15,23 +15,23 @@ const mongoose = require("mongoose"),
   AssetsCaching = require("../../resources/scripts/assets-caching"),
   addDNSPrefetch = require("../../resources/scripts/DNS-prefetch"),
   CheckFontFaceExists = require("../../resources/scripts/checking-font-face"),
-  User = mongoose.model("user"),
-  ShopifyService = require("../../services/apps/index"),
-  { getFetchConfig } = require("../../utils/getFetchConfig"),
-
-  OauthState = mongoose.model("outhState"),
-  {
+  AddingFontDisplayInCss = require("../../resources/scripts/add-font-display");
+(User = mongoose.model("user")),
+  (ShopifyService = require("../../services/apps/index")),
+  ({ getFetchConfig } = require("../../utils/getFetchConfig")),
+  (OauthState = mongoose.model("outhState")),
+  ({
     sendSuccessJSONResponse,
     sendFailureJSONResponse,
-  } = require("../../handlers/jsonResponseHandlers"),
-  {
+  } = require("../../handlers/jsonResponseHandlers")),
+  ({
     SHOPIFY_API_KEY,
     SHOPIFY_API_SECRET,
     SHOPIFY_API_REDIRECT,
     SHOPIFY_API_SCOPES,
     SHOPIFY_BASE_URL,
     // eslint-disable-next-line no-undef
-  } = process.env;
+  } = process.env);
 require("../../utils/mongoose");
 
 const sharp = require("sharp");
@@ -60,8 +60,8 @@ const uploadToCloudinary = require("../../utils/uploadToCloudinary");
 
 const downloadImage = require("../../resources/downloadImage");
 
-const { createStorefrontClient, CachePolicy } = require('@shopify/hydrogen');
-const { createInMemoryCache } = require('@envelop/response-cache');
+const { createStorefrontClient, CachePolicy } = require("@shopify/hydrogen");
+const { createInMemoryCache } = require("@envelop/response-cache");
 
 exports.appInstallations = async (req, res) => {
   try {
@@ -1320,7 +1320,6 @@ exports.DNSPrefetching = (req, res) => {
     headers: {
       "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
       "Content-Type": "application/json",
-    
     },
     data: data,
   };
@@ -1552,7 +1551,6 @@ exports.losslessImageCompression = async (req, res) => {
   return res.json({
     data: "success",
   });
-
 };
 
 exports.losslessCompCollection = async (req, res, next) => {
@@ -1571,7 +1569,6 @@ exports.losslessCompCollection = async (req, res, next) => {
 
   if (smartCollections?.length) {
     for (i = smartCollections.length - 1; i >= 0; i--) {
-
       const smartCollectionId = smartCollections[i]?.id,
         imageURL = smartCollections[i]?.src;
 
@@ -1602,7 +1599,6 @@ exports.losslessCompCollection = async (req, res, next) => {
         data: data,
       };
 
-
       Axios.request(config)
         .then((response) => {})
         .catch((error) => {
@@ -1611,109 +1607,104 @@ exports.losslessCompCollection = async (req, res, next) => {
     }
   }
 
-  return rsendSuccessJSONResponse(res, {message: `success`,});
+  return rsendSuccessJSONResponse(res, { message: `success` });
 };
 
-
-
-
-exports.cachingProductDetail = (req, res) => {
- 
-  
-};
-
+exports.cachingProductDetail = (req, res) => {};
 
 exports.cachingThemeAssets = (req, res) => {
-
   Axios({
     ...fetchConfig,
     url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154354057496/assets.json?asset[key]=layout/theme.liquid`,
   }).then(async (foundTheme) => {
-
     const theme = foundTheme?.data?.asset?.value;
-      const updatedTheme = AssetsCaching(theme)
+    const updatedTheme = AssetsCaching(theme);
 
     // updating main theme page
 
-  let data = JSON.stringify({
-    asset: {
-      key: "layout/theme.liquid",
-      value: updatedTheme
-    },
+    let data = JSON.stringify({
+      asset: {
+        key: "layout/theme.liquid",
+        value: updatedTheme,
+      },
+    });
+
+    let config1 = {
+      method: "put",
+      maxBodyLength: Infinity,
+      url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/152998740248/assets.json",
+      headers: {
+        "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
+        "Content-Type": "application/json",
+      },
+      data: data,
+    };
+
+    axios
+      .request(config1)
+      .then((response) => {
+        console.log();
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   });
+};
 
-  let config1 = {
-    method: "put",
-    maxBodyLength: Infinity,
-    url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/152998740248/assets.json",
-    headers: {
-      "X-Shopify-Access-Token" : "shpua_832b00f9f277821c02a70c5524402acd",
-      "Content-Type": "application/json",
-    
-    },
-    data: data,
-  };
 
-  axios
-    .request(config1)
-    .then((response) => {
-      console.log();
-    })
-    .catch((error) => {
-      console.log(error);
+
+exports.fontOptimization = async (req, res, next) => {
+  try {
+    const response = await Axios.get("https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154780401944/assets.json?content_type=text/css", {
+      headers: {
+        "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
+      },
     });
 
+    const assets = response.data.assets;
+    const cssAssets = assets.filter((asset) => asset.content_type === "text/css");
 
-})
-  
-};
+    for (const cssAsset of cssAssets) {
+      const assetPublicURL = cssAsset.public_url;
+      const key = cssAsset.key;
 
+      const { fontExists, cssContent } = await CheckFontFaceExists(assetPublicURL);
 
-exports.fontOptimization = (req, res, next) => {
+      if (fontExists) {
+        const updateCssContent = AddingFontDisplayInCss(cssContent);
 
+        const data = JSON.stringify({
+          asset: {
+            key: key,
+            value: updateCssContent,
+          },
+        });
 
-let config = {
-  method: 'get',
-  url: 'https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154780401944/assets.json?content_type = text/css',
-  headers: { 
-    'X-Shopify-Access-Token': 'shpua_5251b9ea9543d66b17346f5857542659', 
-  }
-};
-
-Axios.request(config)
-.then((response) => {
-  const assets = response.data.assets;
-  const cssAssets = assets.filter(asset => asset.content_type === 'text/css');
-  // console.log(cssAssets)
-  for (var i = cssAssets.length - 1; i >= 0; i--) {
-
-    const assetPublicURL =  cssAssets[i]?.public_url;
-
-    CheckFontFaceExists(assetPublicURL, (containsFontFace, cssContentToSend) => {
-      if (containsFontFace) {
-        console.log('CSS file contains @font-face rules:', containsFontFace);
-        console.log('CSS file cssContentToSend:', cssContentToSend);
-      } else {
-        console.log('CSS file does not contain @font-face rules.',containsFontFace);
+        await Axios.put("https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json", data, {
+          headers: {
+            "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
+            "Content-Type": "application/json",
+          },
+        });
       }
+    }
+
+    return res.json({
+      message: "success",
     });
-
-}
-
-  // console.log(cssAssets);
-  // console.log(cssAssets);
-})
-.catch((error) => {
-  console.log(error);
-});
-
+  } catch (error) {
+    console.error("Font optimization error:", error);
+    res.status(500).json({
+      message: "error",
+    });
+  }
 };
 
 
 // Create cache strategies for product details, user data, and configuration data
-    const productCache = createInMemoryCache();
-    const userCache = createInMemoryCache();
-    const configCache = createInMemoryCache();
+const productCache = createInMemoryCache();
+const userCache = createInMemoryCache();
+const configCache = createInMemoryCache();
 
 // Cache strategy for product details
 const productCacheStrategy = {
@@ -1744,50 +1735,49 @@ const userCacheStrategy = {
 // Cache strategy for configuration data
 const configCacheStrategy = {
   getConfigFromCache: async () => {
-    return await configCache.get('config');
+    return await configCache.get("config");
   },
   setConfigInCache: async (config) => {
-    await configCache.set('config', config);
+    await configCache.set("config", config);
   },
   clearConfigCache: async () => {
-    await configCache.delete('config');
+    await configCache.delete("config");
   },
 };
 
 // Create the Storefront client with caching for all data types
 async function createClientWithCaching() {
-
   const { storefront } = await createStorefrontClient({
     cache: {
       async get(request) {
         // Use the appropriate cache strategy based on the cache key
-        if (request.key.startsWith('product-')) {
+        if (request.key.startsWith("product-")) {
           return productCacheStrategy.getProductFromCache(request.key);
-        } else if (request.key.startsWith('user-')) {
+        } else if (request.key.startsWith("user-")) {
           return userCacheStrategy.getUserFromCache(request.key);
-        } else if (request.key === 'config') {
+        } else if (request.key === "config") {
           return configCacheStrategy.getConfigFromCache();
         }
         // Add more cache strategies for other data types if needed
       },
       async set(request, response) {
         // Use the appropriate cache strategy based on the cache key
-        if (request.key.startsWith('product-')) {
+        if (request.key.startsWith("product-")) {
           await productCacheStrategy.setProductInCache(request.key, response);
-        } else if (request.key.startsWith('user-')) {
+        } else if (request.key.startsWith("user-")) {
           await userCacheStrategy.setUserInCache(request.key, response);
-        } else if (request.key === 'config') {
+        } else if (request.key === "config") {
           await configCacheStrategy.setConfigInCache(response);
         }
         // Add more cache strategies for other data types if needed
       },
       async delete(request) {
         // Use the appropriate cache strategy based on the cache key
-        if (request.key.startsWith('product-')) {
+        if (request.key.startsWith("product-")) {
           await productCacheStrategy.clearProductCache(request.key);
-        } else if (request.key.startsWith('user-')) {
+        } else if (request.key.startsWith("user-")) {
           await userCacheStrategy.clearUserCache(request.key);
-        } else if (request.key === 'config') {
+        } else if (request.key === "config") {
           await configCacheStrategy.clearConfigCache();
         }
         // Add more cache strategies for other data types if needed
@@ -1806,11 +1796,11 @@ async function fetchAndCacheData() {
 
   // Fetch product details and cache the result
   const productResult = await client.query(/* ... */);
-  await productCacheStrategy.setProductInCache('product-id-123', productResult);
+  await productCacheStrategy.setProductInCache("product-id-123", productResult);
 
   // Fetch user data and cache the result
   const userResult = await client.query(/* ... */);
-  await userCacheStrategy.setUserInCache('user-id-456', userResult);
+  await userCacheStrategy.setUserInCache("user-id-456", userResult);
 
   // Fetch configuration data and cache the result
   const configResult = await client.query(/* ... */);
@@ -1822,24 +1812,16 @@ async function fetchDataFromCache() {
   const client = await createClientWithCaching();
 
   // Fetch product details from the cache
-  const cachedProduct = await productCacheStrategy.getProductFromCache('product-id-123');
-  console.log('Cached product:', cachedProduct);
+  const cachedProduct = await productCacheStrategy.getProductFromCache(
+    "product-id-123"
+  );
+  console.log("Cached product:", cachedProduct);
 
   // Fetch user data from the cache
-  const cachedUser = await userCacheStrategy.getUserFromCache('user-id-456');
-  console.log('Cached user:', cachedUser);
+  const cachedUser = await userCacheStrategy.getUserFromCache("user-id-456");
+  console.log("Cached user:", cachedUser);
 
   // Fetch configuration data from the cache
   const cachedConfig = await configCacheStrategy.getConfigFromCache();
-  console.log('Cached config:', cachedConfig);
+  console.log("Cached config:", cachedConfig);
 }
-
-
-
-
-
-
-
-
-
-
