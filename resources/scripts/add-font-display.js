@@ -1,7 +1,5 @@
 const AddingFontDisplayInCss = (cssContent) => {
 
-    console.log(`cssContentcssContentcssContent`,cssContent)
-
     const fontFaceRegex = /@font-face\s*\{[\s\S]*?\}/g,
         fontFaceMatches = cssContent.match(fontFaceRegex);
 

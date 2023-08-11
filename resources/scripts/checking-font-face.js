@@ -22,6 +22,7 @@
 // };
 
 const CheckFontFaceExists = async (cssAssetsURL) => {
+  
   try {
     const res = await fetch(cssAssetsURL);
     const cssContent = await res.text();
