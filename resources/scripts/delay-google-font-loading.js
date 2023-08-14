@@ -1,26 +1,26 @@
 const DelayGoogleFontLoading = (htmlContent) => {
-    console.log(`htmlContent`,htmlContent)
 
-    const fontPattern = /https:\/\/fonts\.googleapis\.com\/css\?.*/g,
+    const fontPattern = /https:\/\/fonts\.googleapis\.com\/css2\?[^"]+/g,
         fontLinks = htmlContent.match(fontPattern);
   
+    if (fontLinks) {
 
-
-    if(fontLinks){
         let modifiedHtml = htmlContent;
 
         fontLinks.forEach(link => {
-            const modifiedLink = link + '&display=swap';
-            modifiedHtml = modifiedHtml.replace(link, modifiedLink);
+            if (!/display=swap/.test(link)) {
+                const modifiedLink = link.replace(/(\?[^"]+)/, '$1&display=swap');
+                modifiedHtml = modifiedHtml.replace(link, modifiedLink);
+            } 
         });
-        return modifiedHtml;
-    } else {
-        return htmlContent;
-    }
 
+        return {
+            isModified: true,
+            modifiedHtml
+        }
 
-  
- 
-}
+    } else { return {isModified: false}; }
 
-module.exports = DelayGoogleFontLoading
+};
+
+module.exports = DelayGoogleFontLoading;

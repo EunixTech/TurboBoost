@@ -1,31 +1,30 @@
-const AddDisplaProperties = (htmlContent) => {
-
-    const fontPattern = /https:\/\/fonts\.googleapis\.com\/css\?.*/g;
+const AddDisplayProperties = (htmlContent) => {
+    const fontPattern = /https:\/\/fonts\.googleapis\.com\/css2\?[^"]+/g;
     const fontLinks = htmlContent.match(fontPattern);
   
     let modifiedHtml = htmlContent;
     fontLinks.forEach(link => {
-      const modifiedLink = link + '&display=swap';
-      modifiedHtml = modifiedHtml.replace(link, modifiedLink);
+        if (!/display=swap/.test(link)) {
+            const modifiedLink = link.replace(/(\?[^"]+)/, '$1&display=swap');
+            modifiedHtml = modifiedHtml.replace(link, modifiedLink);
+        }
     });
   
     return modifiedHtml;
 }
 
-console.log(AddDisplaProperties(`<!DOCTYPE html>
+const exampleHtml = `
+<!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100" rel="stylesheet">
 </head>
 <body>
     <h1>Hello, Google Fonts!</h1>
 </body>
-</html>`))
+</html>
+`;
 
-
-
-
-
-
-// module.exports = AddDisplaProperties
+const modifiedHtml = AddDisplayProperties(exampleHtml);
+console.log(modifiedHtml);
