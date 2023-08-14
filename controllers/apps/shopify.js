@@ -15,23 +15,24 @@ const mongoose = require("mongoose"),
   AssetsCaching = require("../../resources/scripts/assets-caching"),
   addDNSPrefetch = require("../../resources/scripts/DNS-prefetch"),
   CheckFontFaceExists = require("../../resources/scripts/checking-font-face"),
-  AddingFontDisplayInCss = require("../../resources/scripts/add-font-display");
-(User = mongoose.model("user")),
-  (ShopifyService = require("../../services/apps/index")),
-  ({ getFetchConfig } = require("../../utils/getFetchConfig")),
-  (OauthState = mongoose.model("outhState")),
-  ({
+  AddingFontDisplayInCss = require("../../resources/scripts/add-font-display"),
+  DelayGoogleFontLoading = require("../../resources/scripts/delay-google-font-loading"),
+    User = mongoose.model("user"),
+  ShopifyService = require("../../services/apps/index"),
+  { getFetchConfig } = require("../../utils/getFetchConfig"),
+  OauthState = mongoose.model("outhState"),
+  {
     sendSuccessJSONResponse,
     sendFailureJSONResponse,
-  } = require("../../handlers/jsonResponseHandlers")),
-  ({
+  } = require("../../handlers/jsonResponseHandlers"),
+  {
     SHOPIFY_API_KEY,
     SHOPIFY_API_SECRET,
     SHOPIFY_API_REDIRECT,
     SHOPIFY_API_SCOPES,
     SHOPIFY_BASE_URL,
     // eslint-disable-next-line no-undef
-  } = process.env);
+  } = process.env;
 require("../../utils/mongoose");
 
 const sharp = require("sharp");
@@ -1701,9 +1702,26 @@ exports.fontOptimization = async (req, res, next) => {
 };
 
  exports.delayingGoogleFont = (req,res, next) =>{
-   return  res.json({
-      working:"working"
-    })
+
+  let config = {
+    method: 'get',
+    url: 'https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154780401944/assets.json?asset[key]=layout/theme.liquid',
+    headers: { 
+      'X-Shopify-Access-Token': 'shpua_5251b9ea9543d66b17346f5857542659'
+    }
+  };
+  
+  Axios.request(config)
+  .then((response) => {
+    const htmlContent = response.data.asset.value;
+    const updateLiquidTheme = DelayGoogleFontLoading(htmlContent)
+    console.log(updateLiquidTheme);
+    res.json("working")
+  })
+  .catch((error) => {
+    console.log(error);
+  });
+  
 }
 
 
