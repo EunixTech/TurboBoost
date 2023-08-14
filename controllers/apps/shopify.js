@@ -1700,6 +1700,12 @@ exports.fontOptimization = async (req, res, next) => {
   }
 };
 
+ exports.delayingGoogleFont = (req,res, next) =>{
+   return  res.json({
+      working:"working"
+    })
+}
+
 
 // Create cache strategies for product details, user data, and configuration data
 const productCache = createInMemoryCache();
