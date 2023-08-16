@@ -17,6 +17,7 @@ const mongoose = require("mongoose"),
   CheckFontFaceExists = require("../../resources/scripts/checking-font-face"),
   AddingFontDisplayInCss = require("../../resources/scripts/add-font-display"),
   DelayGoogleFontLoading = require("../../resources/scripts/delay-google-font-loading"),
+  {addGoogleTagManager, checkForGoogleTagManager} = require("../../resources/scripts/google-tag-manager"),
   User = mongoose.model("user"),
   ShopifyService = require("../../services/apps/index"),
   { getFetchConfig } = require("../../utils/getFetchConfig"),
@@ -1766,7 +1767,59 @@ exports.delayingGoogleFont = (req, res, next) => {
 };
 
 exports.addingGoogleTagManager = (req, res)=>{
-  res.json({data:"dsdhajsgd"})
+
+  let config = {
+    method: "get",
+    url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154780401944/assets.json?asset[key]=layout/theme.liquid",
+    headers: {
+      "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
+    },
+  };
+
+  Axios.request(config)
+    .then((response) => {
+      const htmlContent = response.data.asset.value;
+     
+      const isExist = checkForGoogleTagManager(htmlContent);
+
+      if (!isExist) {
+
+        const updateLiquidTheme = addGoogleTagManager(htmlContent);
+        let data = JSON.stringify({
+          asset: {
+            key: "layout/theme.liquid",
+            value: updateLiquidTheme
+          },
+        });
+
+        let config2 = {
+          method: "put",
+          url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
+          headers: {
+            "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
+            "Content-Type": "application/json",
+          },
+          data: data,
+        };
+
+        Axios
+          .request(config2)
+          .then((response) => {
+            if(response){
+              return sendSuccessJSONResponse(res,{
+                message: "success"
+              })
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      }
+
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 }
 
 // Create cache strategies for product details, user data, and configuration data
