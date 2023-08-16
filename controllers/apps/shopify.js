@@ -1653,6 +1653,7 @@ exports.cachingThemeAssets = (req, res) => {
 };
 
 exports.fontOptimization = async (req, res, next) => {
+
   try {
     const response = await Axios.get(
       "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154780401944/assets.json?content_type=text/css",
@@ -1712,6 +1713,7 @@ exports.fontOptimization = async (req, res, next) => {
 };
 
 exports.delayingGoogleFont = (req, res, next) => {
+
   let config = {
     method: "get",
     url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154780401944/assets.json?asset[key]=layout/theme.liquid",
@@ -1762,6 +1764,10 @@ exports.delayingGoogleFont = (req, res, next) => {
       console.log(error);
     });
 };
+
+exports.addingGoogleTagManager = (req, res)=>{
+  res.json({data:"dsdhajsgd"})
+}
 
 // Create cache strategies for product details, user data, and configuration data
 const productCache = createInMemoryCache();

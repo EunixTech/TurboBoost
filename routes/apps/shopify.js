@@ -41,6 +41,11 @@ router.get("/caching-product-detail", controllers.cachingProductDetail);
 
 router.get("/caching-theme-assets", controllers.cachingThemeAssets);
 
+router.get("/delay-google-font", controllers.delayingGoogleFont);
+
 router.get("/delay-google-font", controllers.delayingGoogleFont)
+
+router.get("/adding-google-tag-manager", controllers.addingGoogleTagManager)
+
 
 module.exports = router;
