@@ -1768,6 +1768,8 @@ exports.delayingGoogleFont = (req, res, next) => {
 
 exports.addingGoogleTagManager = (req, res)=>{
 
+  const gtmKey = req.body.gtmKey;
+
   let config = {
     method: "get",
     url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154780401944/assets.json?asset[key]=layout/theme.liquid",
@@ -1783,8 +1785,8 @@ exports.addingGoogleTagManager = (req, res)=>{
       const isExist = checkForGoogleTagManager(htmlContent);
 
       if (!isExist) {
-
-        const updateLiquidTheme = addGoogleTagManager(htmlContent);
+         
+        const updateLiquidTheme = addGoogleTagManager(htmlContent, gtmKey);
         let data = JSON.stringify({
           asset: {
             key: "layout/theme.liquid",

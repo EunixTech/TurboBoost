@@ -45,7 +45,7 @@ router.get("/delay-google-font", controllers.delayingGoogleFont);
 
 router.get("/delay-google-font", controllers.delayingGoogleFont)
 
-router.get("/adding-google-tag-manager", controllers.addingGoogleTagManager)
+router.post("/adding-google-tag-manager", controllers.addingGoogleTagManager)
 
 
 module.exports = router;
