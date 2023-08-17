@@ -1464,38 +1464,7 @@ async function criticalCssGenerate(job, shopifyAdmin) {
   }
 }
 
-/**
- * Turn OFF critical css for the shop
- * @param {Object} job
- * @param {Object} shopifyAdmin
- */
-async function criticalCssRestore(job, shopifyAdmin, redisStore) {
-  const p = [];
-  p.push(shopifyAdmin.deleteAsset("snippets/critical-css.liquid"));
-  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-index.liquid"));
-  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-collection.liquid"));
-  p.push(
-    shopifyAdmin.deleteAsset("snippets/critical-css-list-collections.liquid")
-  );
-  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-product.liquid"));
-  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-blog.liquid"));
-  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-article.liquid"));
-  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-search.liquid"));
-  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-page.liquid"));
-  await Promise.all(p);
 
-  const themeLiquid = await shopifyAdmin.getThemeLiquid();
-  const updatedThemeLiquid = await restoreThemeLiquid(
-    themeLiquid.value,
-    redisStore,
-    shopifyAdmin.shop
-  );
-  // Diff and Only write if different
-  await shopifyAdmin.writeAsset({
-    name: "layout/theme.liquid",
-    value: updatedThemeLiquid,
-  });
-}
 
 exports.lossyImageCompression = async (req, res) => {
   const products = await ShopifyAPIAndMethod.fetchAllProducts();
@@ -1823,6 +1792,13 @@ exports.addingGoogleTagManager = (req, res)=>{
       console.log(error);
     });
 }
+
+exports.restoreCriticalCss = (req,res,next) =>{
+  res.json("jjhfs")
+
+
+}
+
 
 // Create cache strategies for product details, user data, and configuration data
 const productCache = createInMemoryCache();
