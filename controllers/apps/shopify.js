@@ -17,7 +17,7 @@ const mongoose = require("mongoose"),
   CheckFontFaceExists = require("../../resources/scripts/checking-font-face"),
   AddingFontDisplayInCss = require("../../resources/scripts/add-font-display"),
   DelayGoogleFontLoading = require("../../resources/scripts/delay-google-font-loading"),
-  {addGoogleTagManager, checkForGoogleTagManager} = require("../../resources/scripts/google-tag-manager"),
+  { addGoogleTagManager, checkForGoogleTagManager } = require("../../resources/scripts/google-tag-manager"),
   User = mongoose.model("user"),
   ShopifyService = require("../../services/apps/index"),
   { getFetchConfig } = require("../../utils/getFetchConfig"),
@@ -1341,9 +1341,9 @@ exports.imageSizeAdaptions = (req, res) => {
   const fetchConfig = getFetchConfig();
 
   const reponsiveImageLiquid = fs.readFileSync(
-      "/Users/Dkr/Desktop/TurboBoost/resources/responsive-images/responsive-product-image.liquid",
-      "utf8"
-    ),
+    "/Users/Dkr/Desktop/TurboBoost/resources/responsive-images/responsive-product-image.liquid",
+    "utf8"
+  ),
     reponsiveImageJavascripts = fs.readFileSync(
       "/Users/Dkr/Desktop/TurboBoost/resources/responsive-images/responsive-images.js",
       "utf8"
@@ -1571,7 +1571,7 @@ exports.losslessCompCollection = async (req, res, next) => {
       };
 
       Axios.request(config)
-        .then((response) => {})
+        .then((response) => { })
         .catch((error) => {
           console.log(error);
         });
@@ -1581,7 +1581,7 @@ exports.losslessCompCollection = async (req, res, next) => {
   return rsendSuccessJSONResponse(res, { message: `success` });
 };
 
-exports.cachingProductDetail = (req, res) => {};
+exports.cachingProductDetail = (req, res) => { };
 
 exports.cachingThemeAssets = (req, res) => {
   Axios({
@@ -1718,8 +1718,8 @@ exports.delayingGoogleFont = (req, res, next) => {
         Axios
           .request(config2)
           .then((response) => {
-            if(response){
-              return sendSuccessJSONResponse(res,{
+            if (response) {
+              return sendSuccessJSONResponse(res, {
                 message: "success"
               })
             }
@@ -1735,7 +1735,7 @@ exports.delayingGoogleFont = (req, res, next) => {
     });
 };
 
-exports.addingGoogleTagManager = (req, res)=>{
+exports.addingGoogleTagManager = (req, res) => {
 
   const gtmKey = req.body.gtmKey;
 
@@ -1750,11 +1750,11 @@ exports.addingGoogleTagManager = (req, res)=>{
   Axios.request(config)
     .then((response) => {
       const htmlContent = response.data.asset.value;
-     
+
       const isExist = checkForGoogleTagManager(htmlContent);
 
       if (!isExist) {
-         
+
         const updateLiquidTheme = addGoogleTagManager(htmlContent, gtmKey);
         let data = JSON.stringify({
           asset: {
@@ -1776,8 +1776,8 @@ exports.addingGoogleTagManager = (req, res)=>{
         Axios
           .request(config2)
           .then((response) => {
-            if(response){
-              return sendSuccessJSONResponse(res,{
+            if (response) {
+              return sendSuccessJSONResponse(res, {
                 message: "success"
               })
             }
@@ -1793,31 +1793,40 @@ exports.addingGoogleTagManager = (req, res)=>{
     });
 }
 
-exports.restoreCriticalCss = async(req,res,next) =>{
+exports.restoreCriticalCss = async (req, res, next) => {
 
- await criticalCssRestore(shopifyAdmin)
+  await criticalCssRestore(shopifyAdmin, redisStore)
 }
 
-  /**
- * Turn OFF critical css for the shop
- * @param {Object} shopifyAdmin
- */
-  async function criticalCssRestore(shopifyAdmin) {
-    const p = [];
-    p.push(shopifyAdmin.deleteAsset("snippets/critical-css.liquid"));
-    p.push(shopifyAdmin.deleteAsset("snippets/critical-css-index.liquid"));
-    p.push(shopifyAdmin.deleteAsset("snippets/critical-css-collection.liquid"));
-    p.push(
-      shopifyAdmin.deleteAsset("snippets/critical-css-list-collections.liquid")
-    );
-    p.push(shopifyAdmin.deleteAsset("snippets/critical-css-product.liquid"));
-    p.push(shopifyAdmin.deleteAsset("snippets/critical-css-blog.liquid"));
-    p.push(shopifyAdmin.deleteAsset("snippets/critical-css-article.liquid"));
-    p.push(shopifyAdmin.deleteAsset("snippets/critical-css-search.liquid"));
-    p.push(shopifyAdmin.deleteAsset("snippets/critical-css-page.liquid"));
-    await Promise.all(p);
-  
-  }
+/**
+* Turn OFF critical css for the shop
+* @param {Object} shopifyAdmin
+*/
+async function criticalCssRestore(shopifyAdmin, redisStore) {
+  const p = [];
+  p.push(shopifyAdmin.deleteAsset("snippets/critical-css.liquid"));
+  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-index.liquid"));
+  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-collection.liquid"));
+  p.push(
+    shopifyAdmin.deleteAsset("snippets/critical-css-list-collections.liquid")
+  );
+  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-product.liquid"));
+  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-blog.liquid"));
+  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-article.liquid"));
+  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-search.liquid"));
+  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-page.liquid"));
+  await Promise.all(p);
+
+
+  const themeLiquid = await shopifyAdmin.getThemeLiquid();
+  const updatedThemeLiquid = await restoreThemeLiquid(themeLiquid.value, redisStore, shopifyAdmin.shop);
+  // Diff and Only write if different
+  await shopifyAdmin.writeAsset({
+    name: 'layout/theme.liquid',
+    value: updatedThemeLiquid
+  });
+
+}
 
 
 // Create cache strategies for product details, user data, and configuration data
