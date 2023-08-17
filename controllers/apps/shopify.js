@@ -1793,11 +1793,32 @@ exports.addingGoogleTagManager = (req, res)=>{
     });
 }
 
-exports.restoreCriticalCss = (req,res,next) =>{
-  res.json("jjhfs")
+exports.restoreCriticalCss = async(req,res,next) =>{
 
-
+ await criticalCssRestore(shopifyAdmin)
 }
+
+  /**
+ * Turn OFF critical css for the shop
+ * @param {Object} shopifyAdmin
+ */
+  async function criticalCssRestore(shopifyAdmin) {
+    const p = [];
+    p.push(shopifyAdmin.deleteAsset("snippets/critical-css.liquid"));
+    p.push(shopifyAdmin.deleteAsset("snippets/critical-css-index.liquid"));
+    p.push(shopifyAdmin.deleteAsset("snippets/critical-css-collection.liquid"));
+    p.push(
+      shopifyAdmin.deleteAsset("snippets/critical-css-list-collections.liquid")
+    );
+    p.push(shopifyAdmin.deleteAsset("snippets/critical-css-product.liquid"));
+    p.push(shopifyAdmin.deleteAsset("snippets/critical-css-blog.liquid"));
+    p.push(shopifyAdmin.deleteAsset("snippets/critical-css-article.liquid"));
+    p.push(shopifyAdmin.deleteAsset("snippets/critical-css-search.liquid"));
+    p.push(shopifyAdmin.deleteAsset("snippets/critical-css-page.liquid"));
+    await Promise.all(p);
+  
+  }
+
 
 
 // Create cache strategies for product details, user data, and configuration data
