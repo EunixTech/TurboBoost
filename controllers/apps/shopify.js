@@ -1820,7 +1820,6 @@ exports.restoreCriticalCss = async(req,res,next) =>{
   }
 
 
-
 // Create cache strategies for product details, user data, and configuration data
 const productCache = createInMemoryCache();
 const userCache = createInMemoryCache();
