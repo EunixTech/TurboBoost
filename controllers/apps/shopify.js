@@ -1807,9 +1807,7 @@ async function criticalCssRestore(shopifyAdmin, redisStore) {
   p.push(shopifyAdmin.deleteAsset("snippets/critical-css.liquid"));
   p.push(shopifyAdmin.deleteAsset("snippets/critical-css-index.liquid"));
   p.push(shopifyAdmin.deleteAsset("snippets/critical-css-collection.liquid"));
-  p.push(
-    shopifyAdmin.deleteAsset("snippets/critical-css-list-collections.liquid")
-  );
+  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-list-collections.liquid"));
   p.push(shopifyAdmin.deleteAsset("snippets/critical-css-product.liquid"));
   p.push(shopifyAdmin.deleteAsset("snippets/critical-css-blog.liquid"));
   p.push(shopifyAdmin.deleteAsset("snippets/critical-css-article.liquid"));
