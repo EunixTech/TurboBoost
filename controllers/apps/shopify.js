@@ -1803,26 +1803,44 @@ exports.restoreCriticalCss = async (req, res, next) => {
 * @param {Object} shopifyAdmin
 */
 async function criticalCssRestore(shopifyAdmin, redisStore) {
-  const p = [];
-  p.push(shopifyAdmin.deleteAsset("snippets/critical-css.liquid"));
-  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-index.liquid"));
-  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-collection.liquid"));
-  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-list-collections.liquid"));
-  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-product.liquid"));
-  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-blog.liquid"));
-  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-article.liquid"));
-  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-search.liquid"));
-  p.push(shopifyAdmin.deleteAsset("snippets/critical-css-page.liquid"));
-  await Promise.all(p);
+  // const p = [];
+  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css.liquid"));
+  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-index.liquid"));
+  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-collection.liquid"));
+  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-list-collections.liquid"));
+  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-product.liquid"));
+  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-blog.liquid"));
+  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-article.liquid"));
+  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-search.liquid"));
+  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-page.liquid"));
+  // await Promise.all(p);
 
 
-  const themeLiquid = await shopifyAdmin.getThemeLiquid();
-  const updatedThemeLiquid = await restoreThemeLiquid(themeLiquid.value, redisStore, shopifyAdmin.shop);
-  // Diff and Only write if different
-  await shopifyAdmin.writeAsset({
-    name: 'layout/theme.liquid',
-    value: updatedThemeLiquid
-  });
+  // const themeLiquid = await shopifyAdmin.getThemeLiquid();
+  // const updatedThemeLiquid = await restoreThemeLiquid(themeLiquid.value, redisStore, shopifyAdmin.shop);
+  // // Diff and Only write if different
+  // await shopifyAdmin.writeAsset({
+  //   name: 'layout/theme.liquid',
+  //   value: updatedThemeLiquid
+  // });
+
+  try {
+    const session = await Shopify.Utils.loadCurrentSession(ctx.req, ctx.res, true);
+    if(!session) {
+      ctx.body = JSON.stringify({ error: "could not find session" });
+      return;
+    }
+    const job = await workQueue.add({
+      type: 'restore',
+      shop: session.shop,
+      accessToken: session.accessToken,
+    });
+    console.log(`created job ${job.id}`);
+    ctx.body = JSON.stringify({ id: job.id });
+  } catch(e) {
+    console.log(e);
+    ctx.body = JSON.stringify({ error: "could not find session" });
+  }
 
 }
 
