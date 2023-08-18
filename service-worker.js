@@ -10,8 +10,7 @@ const RedisStore = require('./lib/redis-store');
 // Connect to a local redis instance locally, and the Heroku-provided URL in production
 let REDIS_URL = process.env.REDIS_URL || "redis://127.0.0.1:6379";
 
-// Spin up multiple processes to handle jobs to take advantage of more CPU cores
-// See: https://devcenter.heroku.com/articles/node-concurrency for more info
+
 let workers = process.env.WEB_CONCURRENCY || 2;
 
 let maxJobsPerWorker = 50;
@@ -24,7 +23,7 @@ async function initShopifyAdmin({ shop, accessToken}) {
 	const shopifyAdmin = new ShopifyAdmin({
 		accessToken: accessToken,
 		shop: shop,
-		version: '2021-04'
+		version: '2022-07'
 	})
 	await shopifyAdmin.init();
 	return shopifyAdmin;
@@ -35,6 +34,7 @@ async function initShopifyAdmin({ shop, accessToken}) {
  * @param {Object} job 
  * @param {Object} shopifyAdmin 
  */
+
 async function criticalCssGenerate(job, shopifyAdmin) {
 	try {
 		const pages = await generateForShop(shopifyAdmin, job)
@@ -73,6 +73,7 @@ async function criticalCssGenerate(job, shopifyAdmin) {
  * @param {Object} job 
  * @param {Object} shopifyAdmin 
  */
+
 async function criticalCssRestore(job, shopifyAdmin, redisStore) {
 	const p = [];
 	p.push(shopifyAdmin.deleteAsset('snippets/critical-css.liquid'));

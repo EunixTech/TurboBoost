@@ -3,11 +3,17 @@ require(`dotenv`).config({ path: `process.env` });
 
 const express = require(`express`),
     cors = require('cors'),
+    Queue = require('bull'),
     helmet = require("helmet"),
     mongoose = require("mongoose"),
     expressSession = require(`express-session`),
     MongoStore = require(`connect-mongo`),
     app = express();
+
+// Create / Connect to a named work queue
+const workQueue = new Queue('critical-css', process.env.REDIS_URL, { redis: { 
+	tls: { rejectUnauthorized: false }
+}});
 
 
 const dbConnection = require('./config/dbConnection'),
@@ -35,6 +41,19 @@ app.use(allRoutes)
 //     console.log(err)
 //     return res.status(500).send({ error: 'seriously something went wrong ' });
 // });
+
+
+// You can listen to global events to get notified when jobs are processed
+workQueue.on('global:completed', async (jobId, result) => {
+    let job = await workQueue.getJob(jobId);
+    if (job !== null) {
+        job.update({
+            ...job.data,
+            result: result
+        });
+    }
+  console.log(`Job ${jobId} completed with result ${result}`);
+});
 
 // Server setup
 app.listen(process.env.PORT, () => console.log(`[ Turbo Boost ] on ${process.env.PORT}`));
