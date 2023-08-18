@@ -1420,49 +1420,68 @@ exports.imageSizeAdaptions = (req, res) => {
   });
 };
 
-exports.criticalCSS = (req, res) => {
+exports.criticalCSS = async(req, res) => {
   //step1: generate critical css
   // step2: create new assets
   // step3: add assets link to theme
-  criticalCssGenerate();
-  return res.json({
-    working: "fsdf",
-  });
+  // criticalCssGenerate();
+  // return res.json({
+  //   working: "fsdf",
+  // });
+
+  try {
+    const session = await Shopify.Utils.loadCurrentSession(ctx.req, ctx.res, true);
+    if(!session) {
+      ctx.body = JSON.stringify({ error: "could not find session" });
+      return;
+    }
+    console.log(`/generate for ${session.shop} with access token: ${session.accessToken}`)
+    const job = await workQueue.add({
+      type: 'generate',
+      shop: session.shop,
+      accessToken: session.accessToken
+    });
+    console.log(`created job ${job.id}`);
+    ctx.body = JSON.stringify({ id: job.id });
+  } catch(e) {
+    console.log(e);
+    ctx.body = JSON.stringify({ error: "could not find session" });
+  }
 };
 
-async function criticalCssGenerate(job, shopifyAdmin) {
-  try {
-    const pages = await generateForShop(shopifyAdmin, job);
-    await uploadShopifySnippets(shopifyAdmin, pages);
-    const failed = pages.filter((page) => page.error);
-    job.progress(80);
-    if (failed.length === 0) {
-      // Update theme.liquid
-      const themeLiquid = await shopifyAdmin.getThemeLiquid();
-      const updatedThemeLiquid = parseThemeLiquid(themeLiquid.value);
-      // Diff and Only write if different
-      await shopifyAdmin.writeAsset({
-        name: "layout/theme.liquid",
-        value: updatedThemeLiquid,
-      });
-      console.log("Updated layout/theme.liquid...");
-      job.progress(90);
-    }
+// async function criticalCssGenerate(job, shopifyAdmin) {
+//   try {
+//     const pages = await generateForShop(shopifyAdmin, job);
+//     await uploadShopifySnippets(shopifyAdmin, pages);
+//     const failed = pages.filter((page) => page.error);
+//     job.progress(80);
+//     if (failed.length === 0) {
+//       // Update theme.liquid
+//       const themeLiquid = await shopifyAdmin.getThemeLiquid();
+//       const updatedThemeLiquid = parseThemeLiquid(themeLiquid.value);
+//       // Diff and Only write if different
+//       await shopifyAdmin.writeAsset({
+//         name: "layout/theme.liquid",
+//         value: updatedThemeLiquid,
+//       });
+//       console.log("Updated layout/theme.liquid...");
+//       job.progress(90);
+//     }
 
-    // eslint-disable-next-line no-undef
-    const memUsed = process.memoryUsage().heapUsed / 1024 / 1024;
-    console.log(`Generating critical css used: ${memUsed}MB`);
-    return pages.map((page) => {
-      return {
-        type: page.type,
-        error: page.error,
-        success: !page.error,
-      };
-    });
-  } catch (e) {
-    throw e;
-  }
-}
+//     // eslint-disable-next-line no-undef
+//     const memUsed = process.memoryUsage().heapUsed / 1024 / 1024;
+//     console.log(`Generating critical css used: ${memUsed}MB`);
+//     return pages.map((page) => {
+//       return {
+//         type: page.type,
+//         error: page.error,
+//         success: !page.error,
+//       };
+//     });
+//   } catch (e) {
+//     throw e;
+//   }
+// }
 
 
 
