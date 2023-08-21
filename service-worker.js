@@ -36,7 +36,9 @@ async function initShopifyAdmin({ shop, accessToken}) {
  */
 
 async function criticalCssGenerate(job, shopifyAdmin) {
+
 	try {
+
 		const pages = await generateForShop(shopifyAdmin, job)
 		await uploadShopifySnippets(shopifyAdmin, pages);
 		const failed = pages.filter(page => page.error);
@@ -60,7 +62,7 @@ async function criticalCssGenerate(job, shopifyAdmin) {
 			return {
 				type: page.type,
 				error: page.error,
-				success: !!!page.error
+				success: page.error
 			}
 		});
 	} catch(e) {
