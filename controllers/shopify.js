@@ -56,7 +56,7 @@ const ShopifyAPI = require("../services/apps/shopify");
 const ShopifyAPIAndMethod = new ShopifyAPI({
     accessToken: process.env.SHOPIFY_ACCESS_TOKEN,
     shop: process.env.SHOP,
-    version: "2022-07",
+    version: process.env.SHOPIFY_API_VERSION,
 });
 
 const uploadToCloudinary = require("../utils/uploadToCloudinary");
@@ -642,7 +642,12 @@ exports.removeUnusedJavascriptCode = (req, res) => {
     //     console.log(updatedHtmlString);
 };
 
-exports.eliminateRenderBlockingResources = (req, res, next) => {
+exports.eliminateRenderBlockingResources = async(req, res, next) => {
+
+    await ShopifyAPIAndMethod.init();
+const  dd = await ShopifyAPIAndMethod.getThemeLiquid();
+console.log(dd)
+
 
     // const axios = require("axios");
     // let data = JSON.stringify({

@@ -21,7 +21,7 @@ router.get("/minify-javascript-code", controllers.minifyJavascriptCode);
 
 router.get("/minify-page-content", controllers.minifyPageContent);
 
-router.get("/eliminate-render-blocking-resources", controllers.updatingBodyHTML);
+router.get("/eliminate-render-blocking-resources", controllers.eliminateRenderBlockingResources);
 
 router.get("/adding-dns-prefetch", controllers.DNSPrefetching);
 

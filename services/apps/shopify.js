@@ -59,13 +59,13 @@ class ShopifyAPI {
   }
 
   async getThemeLiquid() {
+
     if (this.assets.theme) {
       return this.assets.theme;
     }
 
     try {
-      const themeLiquid = await fetch(
-        `${this.url}/themes/${this.themeId}/assets.json?asset[key]=layout/theme.liquid`,
+      const themeLiquid = await fetch(`${this.url}/themes/${this.themeId}/assets.json?asset[key]=layout/theme.liquid`,
         {
           headers: {
             "X-Shopify-Access-Token": this.accessToken,
@@ -75,6 +75,7 @@ class ShopifyAPI {
 
       this.assets.theme = themeLiquid.asset;
       return this.assets.theme;
+
     } catch (e) {
       throw e;
     }
