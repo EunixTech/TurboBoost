@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const {
     defaultStringConfig,
     defaultBooleanConfig
-} = require("../../utils/mongoose");
+} = require("../utils/mongoose");
 
 const outhStateSchema = new mongoose.Schema({
     
