@@ -4,7 +4,7 @@ const {
 } = require("../../handlers/jsonResponseHandlers");
 
 class MongooseAPI {
-    
+
     async handleError(e, res) {
         console.error(e);
         return sendFailureJSONResponse(res, { message: e.message });
@@ -62,7 +62,5 @@ class MongooseAPI {
         }
     }
 }
-
-module.exports = MongooseAPI;
 
 module.exports = MongooseAPI;
