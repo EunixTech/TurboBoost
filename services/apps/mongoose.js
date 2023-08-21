@@ -3,13 +3,24 @@ const {
     sendFailureJSONResponse,
 } = require("../../handlers/jsonResponseHandlers");
 
+
 class MongooseAPI {
 
-    async handleError(e, res) {
+    /**
+     * @param {Error} e - The error object.
+     * @param {Object} res - The response object.
+     * @returns {Object} The failure JSON response.
+     */
+    handleError(e, res) {
         console.error(e);
         return sendFailureJSONResponse(res, { message: e.message });
     }
 
+    /**
+     * @param {Object} model - The Mongoose model.
+     * @param {Object} dataObj - The data object for the new document.
+     * @param {Object} res - The response object.
+     */
     async createOperation(model, dataObj, res) {
         try {
             const createdItem = await model.create(dataObj);
@@ -26,6 +37,11 @@ class MongooseAPI {
         }
     }
 
+    /**
+     * @param {Object} model - The Mongoose model.
+     * @param {Object} queryObj - The query object for finding the document.
+     * @param {Object} res - The response object.
+     */
     async readOperation(model, queryObj, res) {
         try {
             const item = await model.findOne(queryObj);
@@ -38,6 +54,11 @@ class MongooseAPI {
         }
     }
 
+    /**
+     * @param {Object} queryObj - The query object for finding the document.
+     * @param {Object} updateObj - The update object for the document.
+     * @param {Object} res - The response object.
+     */
     async updateOperation(model, queryObj, updateObj, res) {
         try {
             const updatedItem = await model.findOneAndUpdate(queryObj, updateObj, { new: true });
@@ -50,6 +71,11 @@ class MongooseAPI {
         }
     }
 
+    /**
+     * @param {Object} model - The Mongoose model.
+     * @param {Object} queryObj - The query object for finding the document.
+     * @param {Object} res - The response object.
+     */
     async deleteOperation(model, queryObj, res) {
         try {
             const deletedItem = await model.findOneAndDelete(queryObj);
