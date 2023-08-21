@@ -6,7 +6,6 @@ const mongoose = require("mongoose"),
     crypto = require("crypto"),
     Axios = require("axios"),
     fs = require("fs"),
-    path = require("path"),
     ReplaceImagTag = require("../resources/scripts/replace-image-tag"),
     cssbeautify = require("cssbeautify"),
     Cheerio = require("cheerio"),
@@ -32,8 +31,10 @@ const mongoose = require("mongoose"),
         SHOPIFY_API_REDIRECT,
         SHOPIFY_API_SCOPES,
         SHOPIFY_BASE_URL,
-        // eslint-disable-next-line no-undef
+
     } = process.env;
+
+    
 require("../utils/mongoose");
 
 const sharp = require("sharp");
@@ -468,7 +469,7 @@ exports.updatingHTMLAttribute = (req, res, next) => {
         });
 };
 
-exports.minifyJavascriptCode = (req, res) => {
+exports.minifyJavascriptCode = (req, res, next) => {
     function removeUnusedCodeFromHTML(html) {
         const scriptRegex = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
         const scriptTags = html.match(scriptRegex);
@@ -641,63 +642,64 @@ exports.removeUnusedJavascriptCode = (req, res) => {
     //     console.log(updatedHtmlString);
 };
 
-exports.updatingBodyHTML = (req, res) => {
-    const axios = require("axios");
-    let data = JSON.stringify({
-        page: {
-            id: 121769328920,
-            body_html:
-                "<p>Returns accepted if we receive the items <strong>14 days</strong> after purchase.</p>",
-            author: "Christopher Gorski",
-            title: "New warranty",
-            handle: "new-warranty",
-        },
-    });
+exports.eliminateRenderBlockingResources = (req, res, next) => {
 
-    let config = {
-        method: "put",
-        maxBodyLength: Infinity,
-        url: "https://turboboost-dev.myshopify.com/admin/api/2023-07/pages/121769328920.json",
-        headers: {
-            "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
-            "Content-Type": "application/json",
-        },
-        data: data,
-    };
+    // const axios = require("axios");
+    // let data = JSON.stringify({
+    //     page: {
+    //         id: 121769328920,
+    //         body_html:
+    //             "<p>Returns accepted if we receive the items <strong>14 days</strong> after purchase.</p>",
+    //         author: "Christopher Gorski",
+    //         title: "New warranty",
+    //         handle: "new-warranty",
+    //     },
+    // });
 
-    axios
-        .request(config)
-        .then((response) => {
-            console.log(JSON.stringify(response.data));
-        })
-        .catch((error) => {
-            console.log(error);
-        });
+    // let config = {
+    //     method: "put",
+    //     maxBodyLength: Infinity,
+    //     url: "https://turboboost-dev.myshopify.com/admin/api/2023-07/pages/121769328920.json",
+    //     headers: {
+    //         "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
+    //         "Content-Type": "application/json",
+    //     },
+    //     data: data,
+    // };
 
-    // updating html body
+    // axios
+    //     .request(config)
+    //     .then((response) => {
+    //         console.log(JSON.stringify(response.data));
+    //     })
+    //     .catch((error) => {
+    //         console.log(error);
+    //     });
 
-    const jsdom = require("jsdom");
-    const { JSDOM } = jsdom;
+    // // updating html body
 
-    function addAriaLabelToAnchors(htmlString) {
-        const dom = new JSDOM(htmlString);
-        const document = dom.window.document;
+    // const jsdom = require("jsdom");
+    // const { JSDOM } = jsdom;
 
-        const anchors = document.getElementsByTagName("a");
+    // function addAriaLabelToAnchors(htmlString) {
+    //     const dom = new JSDOM(htmlString);
+    //     const document = dom.window.document;
 
-        for (let i = 0; i < anchors.length; i++) {
-            const anchor = anchors[i];
-            anchor.setAttribute("aria-label", "Link");
-        }
+    //     const anchors = document.getElementsByTagName("a");
 
-        return dom.serialize();
-    }
+    //     for (let i = 0; i < anchors.length; i++) {
+    //         const anchor = anchors[i];
+    //         anchor.setAttribute("aria-label", "Link");
+    //     }
 
-    // Example usage
-    const html =
-        '<div><a href="https://example.com">Link 1</a><a href="https://example.com">Link 2</a></div>';
-    const modifiedHtml = addAriaLabelToAnchors(html);
-    console.log(modifiedHtml);
+    //     return dom.serialize();
+    // }
+
+    // // Example usage
+    // const html =
+    //     '<div><a href="https://example.com">Link 1</a><a href="https://example.com">Link 2</a></div>';
+    // const modifiedHtml = addAriaLabelToAnchors(html);
+    // console.log(modifiedHtml);
 };
 
 exports.removingUnusedCSS = async (req, res) => {
@@ -1482,8 +1484,6 @@ exports.criticalCSS = async (req, res) => {
 //     throw e;
 //   }
 // }
-
-
 
 exports.lossyImageCompression = async (req, res) => {
     const products = await ShopifyAPIAndMethod.fetchAllProducts();
