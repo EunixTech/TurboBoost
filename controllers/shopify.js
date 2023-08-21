@@ -7,25 +7,25 @@ const mongoose = require("mongoose"),
     Axios = require("axios"),
     fs = require("fs"),
     path = require("path"),
-    ReplaceImagTag = require("../../resources/scripts/replace-image-tag"),
+    ReplaceImagTag = require("../resources/scripts/replace-image-tag"),
     cssbeautify = require("cssbeautify"),
     Cheerio = require("cheerio"),
     UglifyJS = require("uglify-es"),
-    minifyPageContent = require("../../resources/scripts/minify-page-content"),
-    AssetsCaching = require("../../resources/scripts/assets-caching"),
-    addDNSPrefetch = require("../../resources/scripts/DNS-prefetch"),
-    CheckFontFaceExists = require("../../resources/scripts/checking-font-face"),
-    AddingFontDisplayInCss = require("../../resources/scripts/add-font-display"),
-    DelayGoogleFontLoading = require("../../resources/scripts/delay-google-font-loading"),
-    { addGoogleTagManager, checkForGoogleTagManager } = require("../../resources/scripts/google-tag-manager"),
+    minifyPageContent = require("../resources/scripts/minify-page-content"),
+    AssetsCaching = require("../resources/scripts/assets-caching"),
+    addDNSPrefetch = require("../resources/scripts/DNS-prefetch"),
+    CheckFontFaceExists = require("../resources/scripts/checking-font-face"),
+    AddingFontDisplayInCss = require("../resources/scripts/add-font-display"),
+    DelayGoogleFontLoading = require("../resources/scripts/delay-google-font-loading"),
+    { addGoogleTagManager, checkForGoogleTagManager } = require("../resources/scripts/google-tag-manager"),
     User = mongoose.model("user"),
-    ShopifyService = require("../../services/apps/index"),
-    { getFetchConfig } = require("../../utils/getFetchConfig"),
+    ShopifyService = require("../services/apps/index"),
+    { getFetchConfig } = require("../utils/getFetchConfig"),
     OauthState = mongoose.model("outhState"),
     {
         sendSuccessJSONResponse,
         sendFailureJSONResponse,
-    } = require("../../handlers/jsonResponseHandlers"),
+    } = require("../handlers/jsonResponseHandlers"),
     {
         SHOPIFY_API_KEY,
         SHOPIFY_API_SECRET,
@@ -34,23 +34,23 @@ const mongoose = require("mongoose"),
         SHOPIFY_BASE_URL,
         // eslint-disable-next-line no-undef
     } = process.env;
-require("../../utils/mongoose");
+require("../utils/mongoose");
 
 const sharp = require("sharp");
 
 const {
     losslessCompression,
     lossyCompression,
-} = require("../../resources/image-compression");
+} = require("../resources/image-compression");
 
 const {
     generateForShop,
     uploadShopifySnippets,
-} = require("../../lib/shopify/critical-css/critical-css");
-const parseThemeLiquid = require("../../lib/shopify/critical-css/parseThemeLiquid");
-const restoreThemeLiquid = require("../../lib/shopify/critical-css/restoreThemeLiquid");
+} = require("../lib/shopify/critical-css/critical-css");
+const parseThemeLiquid = require("../lib/shopify/critical-css/parseThemeLiquid");
+const restoreThemeLiquid = require("../lib/shopify/critical-css/restoreThemeLiquid");
 
-const ShopifyAPI = require("../../services/apps/shopify");
+const ShopifyAPI = require("../services/apps/shopify");
 
 const ShopifyAPIAndMethod = new ShopifyAPI({
     accessToken: process.env.SHOPIFY_ACCESS_TOKEN,
@@ -58,9 +58,9 @@ const ShopifyAPIAndMethod = new ShopifyAPI({
     version: "2022-07",
 });
 
-const uploadToCloudinary = require("../../utils/uploadToCloudinary");
+const uploadToCloudinary = require("../utils/uploadToCloudinary");
 
-const downloadImage = require("../../resources/downloadImage");
+const downloadImage = require("../resources/downloadImage");
 
 const { createStorefrontClient, CachePolicy } = require("@shopify/hydrogen");
 const { createInMemoryCache } = require("@envelop/response-cache");

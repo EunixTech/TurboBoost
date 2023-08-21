@@ -22,7 +22,7 @@ const dbConnection = require('./config/dbConnection'),
 
 dbConnection(mongoose);
 
-require("./model/apps/outhState");
+require("./model/outhState");
 require("./model/users");
 
 loadHelmet(app, helmet);

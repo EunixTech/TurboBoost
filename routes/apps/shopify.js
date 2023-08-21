@@ -1,5 +1,5 @@
 const router = require(`express`).Router(),
-  controllers = require("../../controllers/apps/shopify");
+  controllers = require("../../controllers/shopify");
 
 router.get("/app-installations", controllers.appInstallations);
 
