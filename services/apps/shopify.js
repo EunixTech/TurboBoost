@@ -15,20 +15,20 @@ class ShopifyAPI {
     this.url = `https://${this.shop}/admin/api/${this.version}`;
   }
 
-  // fetch(endpoint, method = "GET", data = null) {
+  fetch(endpoint, method = "GET", data = null) {
 
-  //     const options = {
-  //         headers: {
-  //         "X-Shopify-Access-Token": this.accessToken,
-  //         },
-  //     };
+    const options = {
+      headers: {
+        "X-Shopify-Access-Token": this.accessToken,
+      },
+    };
 
-  //     if (method === "PUT" && data) {
-  //         options.headers["Content-Type"] = "application/json";
-  //         options.body = JSON.stringify(data);
-  //     }
-  //     return fetch(`${this.url}/${endpoint}`, options).then((res) => res.json());
-  // }
+    if (method === "PUT" && data) {
+      options.headers["Content-Type"] = "application/json";
+      options.body = JSON.stringify(data);
+    }
+    return fetch(`${this.url}/${endpoint}`, options).then((res) => res.json());
+  }
 
   async init() {
     try {
@@ -144,7 +144,7 @@ class ShopifyAPI {
   }
 
   async fetchAllProducts() {
-    console.log(`this.url`,this.url)
+    console.log(`this.url`, this.url)
     try {
       const jsonRes = await fetch(`https://turboboost-dev.myshopify.com/admin/api/2023-07/products.json`, {
         headers: { "X-Shopify-Access-Token": this.accessToken },
@@ -159,12 +159,12 @@ class ShopifyAPI {
 
 
   async fetchSmartCollection() {
-   
+
     try {
       const jsonRes = await fetch(`https://turboboost-dev.myshopify.com/admin/api/2023-07/smart_collections.json`, {
         headers: { "X-Shopify-Access-Token": this.accessToken },
       }).then((res) => res.json());
-      
+
       return jsonRes?.smart_collections
     } catch (e) {
       throw e;
