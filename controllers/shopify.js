@@ -645,8 +645,8 @@ exports.removeUnusedJavascriptCode = (req, res) => {
 exports.eliminateRenderBlockingResources = async(req, res, next) => {
 
     await ShopifyAPIAndMethod.init();
-const  dd = await ShopifyAPIAndMethod.getThemeLiquid();
-console.log(dd)
+    const  dd = await ShopifyAPIAndMethod.getThemeLiquid();
+    console.log(dd)
 
 
     // const axios = require("axios");

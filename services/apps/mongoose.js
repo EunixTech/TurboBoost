@@ -90,3 +90,26 @@ class MongooseAPI {
 }
 
 module.exports = MongooseAPI;
+
+
+// const handleOperation = (operation) => async (model, queryObj, res, ...args) => {
+//     try {
+//         const result = await operation(model, queryObj, ...args);
+//         if (!result) {
+//             return sendFailureJSONResponse(res, { message: "Operation failed" });
+//         }
+//         return sendSuccessJSONResponse(res, { data: result });
+//     } catch (e) {
+//         console.error(e);
+//         return sendFailureJSONResponse(res, { message: e.message });
+//     }
+// };
+
+// class MongooseAPI {
+//     createOperation = handleOperation((model, dataObj) => model.create(dataObj));
+//     readOperation = handleOperation((model, queryObj) => model.findOne(queryObj));
+//     updateOperation = handleOperation((model, queryObj, updateObj) => model.findOneAndUpdate(queryObj, updateObj, { new: true }));
+//     deleteOperation = handleOperation((model, queryObj) => model.findOneAndDelete(queryObj));
+// }
+
+// module.exports = MongooseAPI;
