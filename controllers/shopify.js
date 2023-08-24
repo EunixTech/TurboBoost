@@ -14,7 +14,7 @@ const mongoose = require("mongoose"),
   AssetsCaching = require("../resources/scripts/assets-caching"),
   addDNSPrefetch = require("../resources/scripts/DNS-prefetch"),
   CheckFontFaceExists = require("../resources/scripts/checking-font-face"),
-  AddingFontDisplayInCss = require("../resources/scripts/add-font-display"),
+  addingFontDisplayInCss = require("../resources/scripts/add-font-display"),
   convertStylesheets = require("../resources/scripts/convert-stylesheets"),
   DelayGoogleFontLoading = require("../resources/scripts/delay-google-font-loading"),
   {
@@ -1632,7 +1632,7 @@ exports.fontOptimization = async (req, res, next) => {
       );
 
       if (fontExists) {
-        const updateCssContent = AddingFontDisplayInCss(cssContent);
+        const updateCssContent = addingFontDisplayInCss(cssContent);
 
         const data = JSON.stringify({
           asset: {
@@ -1770,9 +1770,14 @@ exports.addingGoogleTagManager = (req, res) => {
     });
 };
 
+// restoration api started
+
 exports.restoreCriticalCss = async (req, res, next) => {
-  await criticalCssRestore(shopifyAdmin, redisStore);
+    await criticalCssRestore(shopifyAdmin, redisStore);
 };
+
+exports.resta
+
 
 /**
  * Turn OFF critical css for the shop
@@ -1821,6 +1826,8 @@ async function criticalCssRestore(shopifyAdmin, redisStore) {
     ctx.body = JSON.stringify({ error: "could not find session" });
   }
 }
+
+
 
 // Create cache strategies for product details, user data, and configuration data
 const productCache = createInMemoryCache();

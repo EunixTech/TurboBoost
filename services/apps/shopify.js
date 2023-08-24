@@ -250,3 +250,4 @@ class ShopifyAPI {
 }
 
 module.exports = ShopifyAPI;
+
