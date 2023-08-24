@@ -16,7 +16,6 @@ class ShopifyAPI {
   }
 
   fetch(endpoint, method = "GET", data = null) {
-
     const options = {
       headers: {
         "X-Shopify-Access-Token": this.accessToken,
@@ -32,8 +31,6 @@ class ShopifyAPI {
 
   async init() {
     try {
-      console.log("accessToken in init()", this.accessToken);
-      console.log("this.url", this.url);
 
       const themesRes = await fetch(`${this.url}/themes.json`, {
         headers: {
@@ -59,13 +56,13 @@ class ShopifyAPI {
   }
 
   async getThemeLiquid() {
-
     if (this.assets.theme) {
       return this.assets.theme;
     }
 
     try {
-      const themeLiquid = await fetch(`${this.url}/themes/${this.themeId}/assets.json?asset[key]=layout/theme.liquid`,
+      const themeLiquid = await fetch(
+        `${this.url}/themes/${this.themeId}/assets.json?asset[key]=layout/theme.liquid`,
         {
           headers: {
             "X-Shopify-Access-Token": this.accessToken,
@@ -75,13 +72,15 @@ class ShopifyAPI {
 
       this.assets.theme = themeLiquid.asset;
       return this.assets.theme;
-
     } catch (e) {
       throw e;
     }
   }
 
   async writeAsset({ name, value }) {
+
+    console.log(`${this.url}/themes/${this.themeId}/assets.json`);
+
     try {
       const res = await fetch(
         `${this.url}/themes/${this.themeId}/assets.json`,
@@ -100,12 +99,13 @@ class ShopifyAPI {
         }
       );
       const resJson = await res.json();
-
+    
       if (resJson.errors) {
         throw new Error(JSON.stringify(resJson.errors));
       }
       return true;
     } catch (e) {
+
       throw e;
     }
   }
@@ -144,11 +144,14 @@ class ShopifyAPI {
   }
 
   async fetchAllProducts() {
-    console.log(`this.url`, this.url)
+    console.log(`this.url`, this.url);
     try {
-      const jsonRes = await fetch(`https://turboboost-dev.myshopify.com/admin/api/2023-07/products.json`, {
-        headers: { "X-Shopify-Access-Token": this.accessToken },
-      }).then((res) => res.json());
+      const jsonRes = await fetch(
+        `https://turboboost-dev.myshopify.com/admin/api/2023-07/products.json`,
+        {
+          headers: { "X-Shopify-Access-Token": this.accessToken },
+        }
+      ).then((res) => res.json());
 
       this.products = jsonRes.products;
       return this.products;
@@ -157,22 +160,22 @@ class ShopifyAPI {
     }
   }
 
-
   async fetchSmartCollection() {
-
     try {
-      const jsonRes = await fetch(`https://turboboost-dev.myshopify.com/admin/api/2023-07/smart_collections.json`, {
-        headers: { "X-Shopify-Access-Token": this.accessToken },
-      }).then((res) => res.json());
+      const jsonRes = await fetch(
+        `https://turboboost-dev.myshopify.com/admin/api/2023-07/smart_collections.json`,
+        {
+          headers: { "X-Shopify-Access-Token": this.accessToken },
+        }
+      ).then((res) => res.json());
 
-      return jsonRes?.smart_collections
+      return jsonRes?.smart_collections;
     } catch (e) {
       throw e;
     }
   }
 
   async updateProductImages(productId = "", imageId = "", imageURL = "") {
-
     const data = JSON.stringify({
       query: `mutation productImageUpdate($image: ImageInput!, $productId: ID!) {
                 productImageUpdate(image: $image, productId: $productId) {
@@ -195,11 +198,7 @@ class ShopifyAPI {
       },
     });
 
-    return fetchAPI(
-      `${this.url}/graphql.json`,
-      "POST",
-      data,
-    );
+    return fetchAPI(`${this.url}/graphql.json`, "POST", data);
   }
 }
 

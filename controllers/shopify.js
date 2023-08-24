@@ -3,51 +3,52 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 /* eslint-disable no-useless-catch */
 const mongoose = require("mongoose"),
-    crypto = require("crypto"),
-    Axios = require("axios"),
-    fs = require("fs"),
-    ReplaceImagTag = require("../resources/scripts/replace-image-tag"),
-    cssbeautify = require("cssbeautify"),
-    Cheerio = require("cheerio"),
-    UglifyJS = require("uglify-es"),
-    minifyPageContent = require("../resources/scripts/minify-page-content"),
-    AssetsCaching = require("../resources/scripts/assets-caching"),
-    addDNSPrefetch = require("../resources/scripts/DNS-prefetch"),
-    CheckFontFaceExists = require("../resources/scripts/checking-font-face"),
-    AddingFontDisplayInCss = require("../resources/scripts/add-font-display"),
-    convertStylesheets = require("../resources/scripts/convert-stylesheets"),
-    DelayGoogleFontLoading = require("../resources/scripts/delay-google-font-loading"),
-    { addGoogleTagManager, checkForGoogleTagManager } = require("../resources/scripts/google-tag-manager"),
-    User = mongoose.model("user"),
-    ShopifyService = require("../services/apps/index"),
-    { getFetchConfig } = require("../utils/getFetchConfig"),
-    OauthState = mongoose.model("outhState"),
-    {
-        sendSuccessJSONResponse,
-        sendFailureJSONResponse,
-    } = require("../handlers/jsonResponseHandlers"),
-    {
-        SHOPIFY_API_KEY,
-        SHOPIFY_API_SECRET,
-        SHOPIFY_API_REDIRECT,
-        SHOPIFY_API_SCOPES,
-        SHOPIFY_BASE_URL,
+  crypto = require("crypto"),
+  Axios = require("axios"),
+  fs = require("fs"),
+  ReplaceImagTag = require("../resources/scripts/replace-image-tag"),
+  cssbeautify = require("cssbeautify"),
+  Cheerio = require("cheerio"),
+  UglifyJS = require("uglify-es"),
+  minifyPageContent = require("../resources/scripts/minify-page-content"),
+  AssetsCaching = require("../resources/scripts/assets-caching"),
+  addDNSPrefetch = require("../resources/scripts/DNS-prefetch"),
+  CheckFontFaceExists = require("../resources/scripts/checking-font-face"),
+  AddingFontDisplayInCss = require("../resources/scripts/add-font-display"),
+  convertStylesheets = require("../resources/scripts/convert-stylesheets"),
+  DelayGoogleFontLoading = require("../resources/scripts/delay-google-font-loading"),
+  {
+    addGoogleTagManager,
+    checkForGoogleTagManager,
+  } = require("../resources/scripts/google-tag-manager"),
+  User = mongoose.model("user"),
+  ShopifyService = require("../services/apps/index"),
+  { getFetchConfig } = require("../utils/getFetchConfig"),
+  OauthState = mongoose.model("outhState"),
+  {
+    sendSuccessJSONResponse,
+    sendFailureJSONResponse,
+  } = require("../handlers/jsonResponseHandlers"),
+  {
+    SHOPIFY_API_KEY,
+    SHOPIFY_API_SECRET,
+    SHOPIFY_API_REDIRECT,
+    SHOPIFY_API_SCOPES,
+    SHOPIFY_BASE_URL,
+  } = process.env;
 
-    } = process.env;
-
-    
 require("../utils/mongoose");
 
 const sharp = require("sharp");
 
 const {
-    losslessCompression,
-    lossyCompression,
+  losslessCompression,
+  lossyCompression,
 } = require("../resources/image-compression");
 
 const {
-    generateForShop,
-    uploadShopifySnippets,
+  generateForShop,
+  uploadShopifySnippets,
 } = require("../lib/shopify/critical-css/critical-css");
 const parseThemeLiquid = require("../lib/shopify/critical-css/parseThemeLiquid");
 const restoreThemeLiquid = require("../lib/shopify/critical-css/restoreThemeLiquid");
@@ -55,9 +56,9 @@ const restoreThemeLiquid = require("../lib/shopify/critical-css/restoreThemeLiqu
 const ShopifyAPI = require("../services/apps/shopify");
 
 const ShopifyAPIAndMethod = new ShopifyAPI({
-    accessToken: process.env.SHOPIFY_ACCESS_TOKEN,
-    shop: process.env.SHOP,
-    version: process.env.SHOPIFY_API_VERSION,
+  accessToken: process.env.SHOPIFY_ACCESS_TOKEN,
+  shop: process.env.SHOP,
+  version: process.env.SHOPIFY_API_VERSION,
 });
 
 const uploadToCloudinary = require("../utils/uploadToCloudinary");
@@ -68,179 +69,179 @@ const { createStorefrontClient, CachePolicy } = require("@shopify/hydrogen");
 const { createInMemoryCache } = require("@envelop/response-cache");
 
 exports.appInstallations = async (req, res) => {
-    try {
-        const { ["hmac"]: hmac, ...queryData } = req.query;
+  try {
+    const { ["hmac"]: hmac, ...queryData } = req.query;
 
-        const shop = queryData.shop,
-            host = queryData.host,
-            timestamp = queryData.timestamp;
+    const shop = queryData.shop,
+      host = queryData.host,
+      timestamp = queryData.timestamp;
 
-        if (!shop || !hmac || !host || !timestamp) {
-            return sendFailureJSONResponse(
-                res,
-                { message: "Unauthorized access" },
-                401
-            );
-        }
-
-        let keys = Object.keys(queryData),
-            message = "";
-
-        for (let x of keys) {
-            message += `&${x}=${queryData[x]}`; //remove hmac from query string and forming new query string from hmac check
-        }
-        message = message.slice(1, message.length);
-
-        // let message ={ ...req.query}
-        // delete message["hmac"];
-
-        const generatedHash = crypto
-            .createHmac("SHA256", SHOPIFY_API_SECRET)
-            .update(message, "utf8")
-            .digest("hex");
-
-        console.log(generatedHash);
-        console.log(hmac);
-        if (generatedHash != hmac)
-            return sendFailureJSONResponse(
-                res,
-                { message: "Unauthorized access" },
-                401
-            );
-
-        // creating OuthState for security checking
-        OauthState.create({
-            unique_key: "jahdga",
-            data: {
-                login: true,
-                hmac: hmac,
-                queryData: queryData,
-            },
-        })
-            .then((newOuthState) => {
-                if (newOuthState) {
-                    const redirect_url = `https://${shop}/admin/oauth/authorize?client_id=${SHOPIFY_API_KEY}&scope=${SHOPIFY_API_SCOPES}&state=${newOuthState?.unique_key}&redirect_uri=${SHOPIFY_API_REDIRECT}`;
-                    return res.redirect(redirect_url);
-                } else {
-                    return sendFailureJSONResponse(res, {
-                        message: "Something went wrong",
-                    });
-                }
-            })
-            .catch((err) => {
-                console.log(err);
-                return sendFailureJSONResponse(res, {
-                    message: "Something went wrong",
-                });
-            });
-    } catch (err) {
-        console.log(err);
-        return sendFailureJSONResponse(res, { message: "Something went wrong" });
+    if (!shop || !hmac || !host || !timestamp) {
+      return sendFailureJSONResponse(
+        res,
+        { message: "Unauthorized access" },
+        401
+      );
     }
+
+    let keys = Object.keys(queryData),
+      message = "";
+
+    for (let x of keys) {
+      message += `&${x}=${queryData[x]}`; //remove hmac from query string and forming new query string from hmac check
+    }
+    message = message.slice(1, message.length);
+
+    // let message ={ ...req.query}
+    // delete message["hmac"];
+
+    const generatedHash = crypto
+      .createHmac("SHA256", SHOPIFY_API_SECRET)
+      .update(message, "utf8")
+      .digest("hex");
+
+    console.log(generatedHash);
+    console.log(hmac);
+    if (generatedHash != hmac)
+      return sendFailureJSONResponse(
+        res,
+        { message: "Unauthorized access" },
+        401
+      );
+
+    // creating OuthState for security checking
+    OauthState.create({
+      unique_key: "jahdga",
+      data: {
+        login: true,
+        hmac: hmac,
+        queryData: queryData,
+      },
+    })
+      .then((newOuthState) => {
+        if (newOuthState) {
+          const redirect_url = `https://${shop}/admin/oauth/authorize?client_id=${SHOPIFY_API_KEY}&scope=${SHOPIFY_API_SCOPES}&state=${newOuthState?.unique_key}&redirect_uri=${SHOPIFY_API_REDIRECT}`;
+          return res.redirect(redirect_url);
+        } else {
+          return sendFailureJSONResponse(res, {
+            message: "Something went wrong",
+          });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        return sendFailureJSONResponse(res, {
+          message: "Something went wrong",
+        });
+      });
+  } catch (err) {
+    console.log(err);
+    return sendFailureJSONResponse(res, { message: "Something went wrong" });
+  }
 };
 
 exports.authCallback = async (req, res) => {
-    try {
-        const { shop, code, state: user_token, timestamp, host, hmac } = req.query;
+  try {
+    const { shop, code, state: user_token, timestamp, host, hmac } = req.query;
 
-        if (!shop || !hmac || !host || !timestamp || !user_token || !code) {
-            return sendFailureJSONResponse(
-                res,
-                { message: "unauthorized access" },
-                401
-            );
-        }
-
-        const message = `code=${code}&host=${host}&shop=${shop}&state=${user_token}&timestamp=${timestamp}`;
-
-        const generatedHash = crypto
-            .createHmac("SHA256", SHOPIFY_API_SECRET)
-            .update(message, "utf8")
-            .digest("hex");
-
-        if (generatedHash != hmac) {
-            return sendFailureJSONResponse(
-                res,
-                { message: "unauthorized access" },
-                401
-            );
-        }
-
-        const regexp1 = new RegExp(/^[a-zA-Z0-9][a-zA-Z0-9-]*.myshopify.com/); // Security checks for shop
-
-        if (!regexp1.test(shop))
-            return sendFailureJSONResponse(res, { message: "unauthorized access" });
-
-        OauthState.findOne({
-            unique_key: user_token,
-        })
-            .then(async (foundOauthState) => {
-                if (!foundOauthState)
-                    return sendFailureJSONResponse(res, {
-                        message: "Something went wrong",
-                    });
-                else {
-                    await OauthState.deleteOne({ _id: foundOauthState._id });
-
-                    const config = {
-                        method: "POST",
-                        url: `https://${shop}/admin/oauth/access_token`,
-                        data: {
-                            code: req.query.code,
-                            client_id: SHOPIFY_API_KEY,
-                            client_secret: SHOPIFY_API_SECRET,
-                        },
-                    };
-
-                    const response = await Axios(config);
-                    const data = response.data;
-                    console.log(data);
-
-                    let shopData = await ShopifyService.getShopDetails(
-                        shop,
-                        data.access_token
-                    );
-                    console.log(shopData);
-                    // const email = shopData?.shop?.email
-                    // let name = shopData?.shop?.shop_owner
-                    // const first_name = name.split(' ')[0]
-                    // const last_name = name.split(' ')[1]
-                    // const { email, first_name, last_name } = response.data.associated_user;
-                    // let scopes = data.scope
-                    // let webhook = await this.createUninstallWebHook(shop, data.access_token) //create webhook function
-
-                    User.create({
-                        app_token: {
-                            shopify: data?.access_token,
-                        },
-                    })
-                        .then((newUser) => {
-                            if (newUser)
-                                return sendSuccessJSONResponse(res, {
-                                    message: "Succesfull login",
-                                });
-                            else
-                                return sendFailureJSONResponse(res, {
-                                    message: "Something went wrong",
-                                });
-                        })
-                        .catch(() => {
-                            return sendFailureJSONResponse(res, {
-                                message: "Something went wrong",
-                            });
-                        });
-                }
-            })
-            .catch((err) => {
-                console.log(err);
-                return sendFailureJSONResponse(res, {
-                    message: "Something went wrong",
-                });
-            });
-    } catch (err) {
-        console.log(err);
-        return sendFailureJSONResponse(res, { message: "Something went wrong" });
+    if (!shop || !hmac || !host || !timestamp || !user_token || !code) {
+      return sendFailureJSONResponse(
+        res,
+        { message: "unauthorized access" },
+        401
+      );
     }
+
+    const message = `code=${code}&host=${host}&shop=${shop}&state=${user_token}&timestamp=${timestamp}`;
+
+    const generatedHash = crypto
+      .createHmac("SHA256", SHOPIFY_API_SECRET)
+      .update(message, "utf8")
+      .digest("hex");
+
+    if (generatedHash != hmac) {
+      return sendFailureJSONResponse(
+        res,
+        { message: "unauthorized access" },
+        401
+      );
+    }
+
+    const regexp1 = new RegExp(/^[a-zA-Z0-9][a-zA-Z0-9-]*.myshopify.com/); // Security checks for shop
+
+    if (!regexp1.test(shop))
+      return sendFailureJSONResponse(res, { message: "unauthorized access" });
+
+    OauthState.findOne({
+      unique_key: user_token,
+    })
+      .then(async (foundOauthState) => {
+        if (!foundOauthState)
+          return sendFailureJSONResponse(res, {
+            message: "Something went wrong",
+          });
+        else {
+          await OauthState.deleteOne({ _id: foundOauthState._id });
+
+          const config = {
+            method: "POST",
+            url: `https://${shop}/admin/oauth/access_token`,
+            data: {
+              code: req.query.code,
+              client_id: SHOPIFY_API_KEY,
+              client_secret: SHOPIFY_API_SECRET,
+            },
+          };
+
+          const response = await Axios(config);
+          const data = response.data;
+          console.log(data);
+
+          let shopData = await ShopifyService.getShopDetails(
+            shop,
+            data.access_token
+          );
+          console.log(shopData);
+          // const email = shopData?.shop?.email
+          // let name = shopData?.shop?.shop_owner
+          // const first_name = name.split(' ')[0]
+          // const last_name = name.split(' ')[1]
+          // const { email, first_name, last_name } = response.data.associated_user;
+          // let scopes = data.scope
+          // let webhook = await this.createUninstallWebHook(shop, data.access_token) //create webhook function
+
+          User.create({
+            app_token: {
+              shopify: data?.access_token,
+            },
+          })
+            .then((newUser) => {
+              if (newUser)
+                return sendSuccessJSONResponse(res, {
+                  message: "Succesfull login",
+                });
+              else
+                return sendFailureJSONResponse(res, {
+                  message: "Something went wrong",
+                });
+            })
+            .catch(() => {
+              return sendFailureJSONResponse(res, {
+                message: "Something went wrong",
+              });
+            });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        return sendFailureJSONResponse(res, {
+          message: "Something went wrong",
+        });
+      });
+  } catch (err) {
+    console.log(err);
+    return sendFailureJSONResponse(res, { message: "Something went wrong" });
+  }
 };
 
 // exports.fetchAllProduct = async (req, res, next) => {
@@ -288,8 +289,8 @@ exports.authCallback = async (req, res) => {
 // }
 
 exports.fetchAllProduct = async (req, res) => {
-    let data = JSON.stringify({
-        query: `mutation productImageUpdate($image: ImageInput!, $productId: ID!) {
+  let data = JSON.stringify({
+    query: `mutation productImageUpdate($image: ImageInput!, $productId: ID!) {
                   productImageUpdate(image: $image, productId: $productId) {
                     image {
                       id,src
@@ -300,34 +301,34 @@ exports.fetchAllProduct = async (req, res) => {
                     }
                   }
                 }`,
-        variables: {
-            image: {
-                altText: "test",
-                id: "gid://shopify/ProductImage/41962191454488",
-                src: "https://www.shutterstock.com/image-vector/example-red-square-grunge-stamp-260nw-327662909.jpg",
-            },
-            productId: "gid://shopify/Product/8406446014744",
-        },
+    variables: {
+      image: {
+        altText: "test",
+        id: "gid://shopify/ProductImage/41962191454488",
+        src: "https://www.shutterstock.com/image-vector/example-red-square-grunge-stamp-260nw-327662909.jpg",
+      },
+      productId: "gid://shopify/Product/8406446014744",
+    },
+  });
+
+  let config = {
+    method: "post",
+    maxBodyLength: Infinity,
+    url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/graphql.json",
+    headers: {
+      "X-Shopify-Access-Token": "shpua_92e1118272f4b9fd9af36af7fd2ec2d2",
+      "Content-Type": "application/json",
+    },
+    data: data,
+  };
+
+  Axios.request(config)
+    .then((response) => {
+      console.log(JSON.stringify(response.data));
+    })
+    .catch((error) => {
+      console.log(error);
     });
-
-    let config = {
-        method: "post",
-        maxBodyLength: Infinity,
-        url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/graphql.json",
-        headers: {
-            "X-Shopify-Access-Token": "shpua_92e1118272f4b9fd9af36af7fd2ec2d2",
-            "Content-Type": "application/json",
-        },
-        data: data,
-    };
-
-    Axios.request(config)
-        .then((response) => {
-            console.log(JSON.stringify(response.data));
-        })
-        .catch((error) => {
-            console.log(error);
-        });
 };
 
 // exports.createProductCreateWebHook = async (shop, accessToken) => { // call this on installing shopify app
@@ -359,75 +360,75 @@ exports.fetchAllProduct = async (req, res) => {
 // }
 
 exports.productCreateWebhook = async (req, res) => {
-    try {
-        const { id, name, api_client_id, shop_id, domain } = req.body;
-        const hmac = req.get("X-Shopify-Hmac-Sha256");
-        let key = SHOPIFY_API_SECRET.trim();
-        const generatedHash = crypto
-            .createHmac("SHA256", key)
-            .update(req.rawBody)
-            .digest("base64");
-        const headerData = req.headers;
-        console.log(
-            SHOPIFY_API_SECRET.length,
-            key.length,
-            headerData["x-shopify-hmac-sha256"],
-            generatedHash,
-            headerData
-        );
-        if (hmac !== generatedHash) {
-            return res.status(400).send({
-                success: false,
-                message: `Signature does not match`,
-            });
-        }
-        console.log(shop_id, name, id, api_client_id, shop_id, domain, "check1");
-        ///do what you want to perform on product create webhook
-
-        res.status(200).send("success");
-    } catch (e) {
-        console.log(e);
-        return res.status(500).send({
-            success: false,
-            message: `Signature does not match`,
-        });
+  try {
+    const { id, name, api_client_id, shop_id, domain } = req.body;
+    const hmac = req.get("X-Shopify-Hmac-Sha256");
+    let key = SHOPIFY_API_SECRET.trim();
+    const generatedHash = crypto
+      .createHmac("SHA256", key)
+      .update(req.rawBody)
+      .digest("base64");
+    const headerData = req.headers;
+    console.log(
+      SHOPIFY_API_SECRET.length,
+      key.length,
+      headerData["x-shopify-hmac-sha256"],
+      generatedHash,
+      headerData
+    );
+    if (hmac !== generatedHash) {
+      return res.status(400).send({
+        success: false,
+        message: `Signature does not match`,
+      });
     }
+    console.log(shop_id, name, id, api_client_id, shop_id, domain, "check1");
+    ///do what you want to perform on product create webhook
+
+    res.status(200).send("success");
+  } catch (e) {
+    console.log(e);
+    return res.status(500).send({
+      success: false,
+      message: `Signature does not match`,
+    });
+  }
 };
 
 exports.addingLazyLoadingScriptClient = async (req, res) => {
-    const fetchConfig = getFetchConfig();
+  const fetchConfig = getFetchConfig();
 
-    Axios({
+  Axios({
+    ...fetchConfig,
+    url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes.json?role=main`,
+  }).then(async (foundTheme) => {
+    const themeId = foundTheme?.data?.themes[0]?.id;
+
+    if (themeId) {
+      const responseq = await Axios({
         ...fetchConfig,
-        url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes.json?role=main`,
-    }).then(async (foundTheme) => {
-        const themeId = foundTheme?.data?.themes[0]?.id;
-
-        if (themeId) {
-            const responseq = await Axios({
-                ...fetchConfig,
-                method: "PUT",
-                url: `https://turboboost-dev.myshopify.com/admin/api/2023-01/themes/${themeId}/assets.json`,
-                data: JSON.stringify({
-                    asset: {
-                        key: "sections/main-product.liquid",
-                        value:
-                            "{%- for media in product.media -%}\n <img\n  alt=\"{{ media.alt }}\"\n data-sizes=\"auto\"\n data-srcset=\"{{ media.preview_image | img_url: '275x' }} 275w,\n  {{ media.preview_image | img_url: '320x' }} 320w,\n {{ media.preview_image | img_url: '500x' }} 500w,\n                     {{ media.preview_image | img_url: '640x' }} 640w,\n                     {{ media.preview_image | img_url: '1024x' }} 1024w\"\n        data-src=\"{{ media.preview_image | img_url: '416x' }}\"\n        src=\"{{ media.preview_image | img_url: '275x' }}\"\n        class=\"lazyloadssssss-manmohan\" />\n{%- endfor -%}",
-                    },
-                }),
-            });
-            const responseDatwa = responseq.data; // Extract the data from the response object
-            console.log(responseDatwa);
-        }
-        res.json({
-            themeId,
-        });
+        method: "PUT",
+        url: `https://turboboost-dev.myshopify.com/admin/api/2023-01/themes/${themeId}/assets.json`,
+        data: JSON.stringify({
+          asset: {
+            key: "sections/main-product.liquid",
+            value:
+              "{%- for media in product.media -%}\n <img\n  alt=\"{{ media.alt }}\"\n data-sizes=\"auto\"\n data-srcset=\"{{ media.preview_image | img_url: '275x' }} 275w,\n  {{ media.preview_image | img_url: '320x' }} 320w,\n {{ media.preview_image | img_url: '500x' }} 500w,\n                     {{ media.preview_image | img_url: '640x' }} 640w,\n                     {{ media.preview_image | img_url: '1024x' }} 1024w\"\n        data-src=\"{{ media.preview_image | img_url: '416x' }}\"\n        src=\"{{ media.preview_image | img_url: '275x' }}\"\n        class=\"lazyloadssssss-manmohan\" />\n{%- endfor -%}",
+          },
+        }),
+      });
+      const responseDatwa = responseq.data; // Extract the data from the response object
+      console.log(responseDatwa);
+    }
+    res.json({
+      themeId,
     });
+  });
 };
 
 exports.updatingHTMLAttribute = (req, res, next) => {
-    let data = JSON.stringify({
-        query: `mutation productImageUpdate($image: ImageInput!, $productId: ID!) {
+  let data = JSON.stringify({
+    query: `mutation productImageUpdate($image: ImageInput!, $productId: ID!) {
                   productImageUpdate(image: $image, productId: $productId) {
                     image {
                       id,src
@@ -438,71 +439,71 @@ exports.updatingHTMLAttribute = (req, res, next) => {
                     }
                   }
                 }`,
-        variables: {
-            image: {
-                altText: "test",
-                id: "gid://shopify/ProductImage/41962191454488",
-                src: "https://www.shutterstock.com/image-vector/example-red-square-grunge-stamp-260nw-327662909.jpg",
-            },
-            productId: "gid://shopify/Product/8406446014744",
-        },
+    variables: {
+      image: {
+        altText: "test",
+        id: "gid://shopify/ProductImage/41962191454488",
+        src: "https://www.shutterstock.com/image-vector/example-red-square-grunge-stamp-260nw-327662909.jpg",
+      },
+      productId: "gid://shopify/Product/8406446014744",
+    },
+  });
+
+  let config = {
+    method: "post",
+    maxBodyLength: Infinity,
+    url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/graphql.json",
+    headers: {
+      "X-Shopify-Access-Token": "shpua_92e1118272f4b9fd9af36af7fd2ec2d2",
+      "Content-Type": "application/json",
+      Cookie:
+        "__cf_bm=4SUrq29XCW4.ROWvgNsea_HYs4tpxw1hA1MqN_5016M-1687808384-0-AToLqgA5GmgslUR9bRyWh9X3U1/jWswRf2qbln1Qg7YZhPrH0njI6uY/nijxtVu1dhDjtdJh9Nde5SSbdLgXn4c=",
+    },
+    data: data,
+  };
+
+  Axios.request(config)
+    .then((response) => {
+      console.log(JSON.stringify(response.data));
+    })
+    .catch((error) => {
+      console.log(error);
     });
-
-    let config = {
-        method: "post",
-        maxBodyLength: Infinity,
-        url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/graphql.json",
-        headers: {
-            "X-Shopify-Access-Token": "shpua_92e1118272f4b9fd9af36af7fd2ec2d2",
-            "Content-Type": "application/json",
-            Cookie:
-                "__cf_bm=4SUrq29XCW4.ROWvgNsea_HYs4tpxw1hA1MqN_5016M-1687808384-0-AToLqgA5GmgslUR9bRyWh9X3U1/jWswRf2qbln1Qg7YZhPrH0njI6uY/nijxtVu1dhDjtdJh9Nde5SSbdLgXn4c=",
-        },
-        data: data,
-    };
-
-    Axios.request(config)
-        .then((response) => {
-            console.log(JSON.stringify(response.data));
-        })
-        .catch((error) => {
-            console.log(error);
-        });
 };
 
 exports.minifyJavascriptCode = (req, res, next) => {
-    function removeUnusedCodeFromHTML(html) {
-        const scriptRegex = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
-        const scriptTags = html.match(scriptRegex);
-        if (!scriptTags) {
-            console.log("No JavaScript code found in the HTML.");
-            return html;
-        }
-
-        scriptTags.forEach((scriptTag) => {
-            const jsRegex = /<script\b[^<]*>([\s\S]*?)<\/script>/i;
-            const jsMatch = scriptTag.match(jsRegex);
-            if (!jsMatch || !jsMatch[1]) return;
-
-            const jsCode = jsMatch[1];
-            const result = UglifyJS.minify(jsCode, {
-                compress: {
-                    unused: true, // Remove unused code
-                },
-            });
-
-            if (result.error) {
-                console.error(result.error);
-            } else {
-                const updatedJsCode = result.code;
-                html = html.replace(jsCode, updatedJsCode);
-            }
-        });
-
-        return html;
+  function removeUnusedCodeFromHTML(html) {
+    const scriptRegex = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
+    const scriptTags = html.match(scriptRegex);
+    if (!scriptTags) {
+      console.log("No JavaScript code found in the HTML.");
+      return html;
     }
 
-    const htmlString = `
+    scriptTags.forEach((scriptTag) => {
+      const jsRegex = /<script\b[^<]*>([\s\S]*?)<\/script>/i;
+      const jsMatch = scriptTag.match(jsRegex);
+      if (!jsMatch || !jsMatch[1]) return;
+
+      const jsCode = jsMatch[1];
+      const result = UglifyJS.minify(jsCode, {
+        compress: {
+          unused: true, // Remove unused code
+        },
+      });
+
+      if (result.error) {
+        console.error(result.error);
+      } else {
+        const updatedJsCode = result.code;
+        html = html.replace(jsCode, updatedJsCode);
+      }
+    });
+
+    return html;
+  }
+
+  const htmlString = `
       <html>
         <head>
           <script>
@@ -521,203 +522,152 @@ exports.minifyJavascriptCode = (req, res, next) => {
       </html>
       `;
 
-    const updatedHtmlString = removeUnusedCodeFromHTML(htmlString);
-    console.log(updatedHtmlString);
+  const updatedHtmlString = removeUnusedCodeFromHTML(htmlString);
+  console.log(updatedHtmlString);
 };
 
 exports.removeUnusedJavascriptCode = (req, res) => {
-    const fetchConfig = getFetchConfig();
+  const fetchConfig = getFetchConfig();
 
-    Axios({
-        ...fetchConfig,
-        url: `${SHOPIFY_BASE_URL}/themes.json?role=main`,
-    }).then(async (foundTheme) => {
-        const themeId = foundTheme?.data?.themes[0]?.id;
+  Axios({
+    ...fetchConfig,
+    url: `${SHOPIFY_BASE_URL}/themes.json?role=main`,
+  }).then(async (foundTheme) => {
+    const themeId = foundTheme?.data?.themes[0]?.id;
 
-        if (themeId) {
-            return res.json({
-                themeId,
-            });
+    if (themeId) {
+      return res.json({
+        themeId,
+      });
 
-            // const responseq = await Axios({
-            //     ...fetchConfig,
-            //     method: "PUT",
-            //     url: `https://turboboost-dev.myshopify.com/admin/api/2023-01/themes/${themeId}/assets.json`,
-            //     data: JSON.stringify({
-            //         "asset": {
-            //             "key": "sections/main-product.liquid",
-            //             "value": "{%- for media in product.media -%}\n <img\n  alt=\"{{ media.alt }}\"\n        data-sizes=\"auto\"\n        data-srcset=\"{{ media.preview_image | img_url: '275x' }} 275w,\n                     {{ media.preview_image | img_url: '320x' }} 320w,\n {{ media.preview_image | img_url: '500x' }} 500w,\n                     {{ media.preview_image | img_url: '640x' }} 640w,\n                     {{ media.preview_image | img_url: '1024x' }} 1024w\"\n        data-src=\"{{ media.preview_image | img_url: '416x' }}\"\n        src=\"{{ media.preview_image | img_url: '275x' }}\"\n        class=\"lazyloadssssss-manmohan\" />\n{%- endfor -%}"
-            //         }
-            //     })
+      // const responseq = await Axios({
+      //     ...fetchConfig,
+      //     method: "PUT",
+      //     url: `https://turboboost-dev.myshopify.com/admin/api/2023-01/themes/${themeId}/assets.json`,
+      //     data: JSON.stringify({
+      //         "asset": {
+      //             "key": "sections/main-product.liquid",
+      //             "value": "{%- for media in product.media -%}\n <img\n  alt=\"{{ media.alt }}\"\n        data-sizes=\"auto\"\n        data-srcset=\"{{ media.preview_image | img_url: '275x' }} 275w,\n                     {{ media.preview_image | img_url: '320x' }} 320w,\n {{ media.preview_image | img_url: '500x' }} 500w,\n                     {{ media.preview_image | img_url: '640x' }} 640w,\n                     {{ media.preview_image | img_url: '1024x' }} 1024w\"\n        data-src=\"{{ media.preview_image | img_url: '416x' }}\"\n        src=\"{{ media.preview_image | img_url: '275x' }}\"\n        class=\"lazyloadssssss-manmohan\" />\n{%- endfor -%}"
+      //         }
+      //     })
 
-            // });
-            // const responseDatwa = responseq.data; // Extract the data from the response object
-            // console.log(responseDatwa)
-        }
-    });
+      // });
+      // const responseDatwa = responseq.data; // Extract the data from the response object
+      // console.log(responseDatwa)
+    }
+  });
 
-    //     // console.log()
-    //     const esprima = require('esprima');
-    //     const estraverse = require('estraverse');
-    //     const escodegen = require('escodegen');
+  //     // console.log()
+  //     const esprima = require('esprima');
+  //     const estraverse = require('estraverse');
+  //     const escodegen = require('escodegen');
 
-    //     function removeUnusedCodeFromHTML(html) {
-    //         const scriptRegex = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
-    //         const scriptTags = html.match(scriptRegex);
-    //         if (!scriptTags) {
-    //             console.log("No JavaScript code found in the HTML.");
-    //             return html;
-    //         }
+  //     function removeUnusedCodeFromHTML(html) {
+  //         const scriptRegex = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
+  //         const scriptTags = html.match(scriptRegex);
+  //         if (!scriptTags) {
+  //             console.log("No JavaScript code found in the HTML.");
+  //             return html;
+  //         }
 
-    //         scriptTags.forEach((scriptTag) => {
-    //             const jsRegex = /<script\b[^<]*>([\s\S]*?)<\/script>/i;
-    //             const jsMatch = scriptTag.match(jsRegex);
-    //             if (!jsMatch || !jsMatch[1]) return;
+  //         scriptTags.forEach((scriptTag) => {
+  //             const jsRegex = /<script\b[^<]*>([\s\S]*?)<\/script>/i;
+  //             const jsMatch = scriptTag.match(jsRegex);
+  //             if (!jsMatch || !jsMatch[1]) return;
 
-    //             const jsCode = jsMatch[1];
+  //             const jsCode = jsMatch[1];
 
-    //             // Parse the JavaScript code
-    //             const ast = esprima.parseScript(jsCode);
+  //             // Parse the JavaScript code
+  //             const ast = esprima.parseScript(jsCode);
 
-    //             // Find the function declarations
-    //             const functionDeclarations = [];
-    //             estraverse.traverse(ast, {
-    //                 enter(node) {
-    //                     if (node.type === 'FunctionDeclaration') {
-    //                         functionDeclarations.push(node);
-    //                     }
-    //                 }
-    //             });
+  //             // Find the function declarations
+  //             const functionDeclarations = [];
+  //             estraverse.traverse(ast, {
+  //                 enter(node) {
+  //                     if (node.type === 'FunctionDeclaration') {
+  //                         functionDeclarations.push(node);
+  //                     }
+  //                 }
+  //             });
 
-    //             // Find the unused function names
-    //             const usedFunctionNames = new Set();
-    //             functionDeclarations.forEach((declaration) => {
-    //                 const funcName = declaration.id.name;
-    //                 const isUsed = new RegExp(`\\b${funcName}\\b`).test(html);
-    //                 if (isUsed) {
-    //                     usedFunctionNames.add(funcName);
-    //                 }
-    //             });
+  //             // Find the unused function names
+  //             const usedFunctionNames = new Set();
+  //             functionDeclarations.forEach((declaration) => {
+  //                 const funcName = declaration.id.name;
+  //                 const isUsed = new RegExp(`\\b${funcName}\\b`).test(html);
+  //                 if (isUsed) {
+  //                     usedFunctionNames.add(funcName);
+  //                 }
+  //             });
 
-    //             // Remove the unused functions from the AST
-    //             functionDeclarations.forEach((declaration) => {
-    //                 const funcName = declaration.id.name;
-    //                 if (!usedFunctionNames.has(funcName)) {
-    //                     estraverse.replace(declaration, {
-    //                         enter() {
-    //                             return estraverse.VisitorOption.Remove;
-    //                         }
-    //                     });
-    //                 }
-    //             });
+  //             // Remove the unused functions from the AST
+  //             functionDeclarations.forEach((declaration) => {
+  //                 const funcName = declaration.id.name;
+  //                 if (!usedFunctionNames.has(funcName)) {
+  //                     estraverse.replace(declaration, {
+  //                         enter() {
+  //                             return estraverse.VisitorOption.Remove;
+  //                         }
+  //                     });
+  //                 }
+  //             });
 
-    //             // Generate the updated JavaScript code
-    //             const updatedJsCode = escodegen.generate(ast);
+  //             // Generate the updated JavaScript code
+  //             const updatedJsCode = escodegen.generate(ast);
 
-    //             html = html.replace(jsCode, updatedJsCode);
-    //         });
+  //             html = html.replace(jsCode, updatedJsCode);
+  //         });
 
-    //         return html;
-    //     }
+  //         return html;
+  //     }
 
-    //     const htmlString = `
-    // <html>
-    //   <head>
-    //     <script>
-    //       function unusedFunction() {
-    //         console.log('This function is not used.');
-    //       }
+  //     const htmlString = `
+  // <html>
+  //   <head>
+  //     <script>
+  //       function unusedFunction() {
+  //         console.log('This function is not used.');
+  //       }
 
-    //       function usedFunction() {
-    //         console.log('This function is used.');
-    //       }
-    //     </script>
-    //   </head>
-    //   <body>
-    //     <h1>Hello, world!</h1>
-    //   </body>
-    // </html>
-    // `;
+  //       function usedFunction() {
+  //         console.log('This function is used.');
+  //       }
+  //     </script>
+  //   </head>
+  //   <body>
+  //     <h1>Hello, world!</h1>
+  //   </body>
+  // </html>
+  // `;
 
-    //     const updatedHtmlString = removeUnusedCodeFromHTML(htmlString);
-    //     console.log(updatedHtmlString);
+  //     const updatedHtmlString = removeUnusedCodeFromHTML(htmlString);
+  //     console.log(updatedHtmlString);
 };
 
-exports.eliminateRenderBlockingResources = async(req, res, next) => {
+exports.eliminateRenderBlockingResources = async (req, res, next) => {
 
     await ShopifyAPIAndMethod.init();
 
-    const  themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
+    const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
         htmlContent = themeLiquid?.value,
-        updatedHtmlContent = convertStylesheets(htmlContent);
-    
-    return res.json({updatedHtmlContent})
+        updatedThemeLiquid = convertStylesheets(htmlContent);
 
+    const resposne = await ShopifyAPIAndMethod.writeAsset({
+        name: "layout/theme.liquid",
+        value: updatedThemeLiquid,
+    });
 
-    // const axios = require("axios");
-    // let data = JSON.stringify({
-    //     page: {
-    //         id: 121769328920,
-    //         body_html:
-    //             "<p>Returns accepted if we receive the items <strong>14 days</strong> after purchase.</p>",
-    //         author: "Christopher Gorski",
-    //         title: "New warranty",
-    //         handle: "new-warranty",
-    //     },
-    // });
+    if(resposne)return sendSuccessJSONResponse(res,{message:"success"});
+    else return sendFailureJSONResponse(res,{message:"something went right"});
 
-    // let config = {
-    //     method: "put",
-    //     maxBodyLength: Infinity,
-    //     url: "https://turboboost-dev.myshopify.com/admin/api/2023-07/pages/121769328920.json",
-    //     headers: {
-    //         "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
-    //         "Content-Type": "application/json",
-    //     },
-    //     data: data,
-    // };
-
-    // axios
-    //     .request(config)
-    //     .then((response) => {
-    //         console.log(JSON.stringify(response.data));
-    //     })
-    //     .catch((error) => {
-    //         console.log(error);
-    //     });
-
-    // // updating html body
-
-    // const jsdom = require("jsdom");
-    // const { JSDOM } = jsdom;
-
-    // function addAriaLabelToAnchors(htmlString) {
-    //     const dom = new JSDOM(htmlString);
-    //     const document = dom.window.document;
-
-    //     const anchors = document.getElementsByTagName("a");
-
-    //     for (let i = 0; i < anchors.length; i++) {
-    //         const anchor = anchors[i];
-    //         anchor.setAttribute("aria-label", "Link");
-    //     }
-
-    //     return dom.serialize();
-    // }
-
-    // // Example usage
-    // const html =
-    //     '<div><a href="https://example.com">Link 1</a><a href="https://example.com">Link 2</a></div>';
-    // const modifiedHtml = addAriaLabelToAnchors(html);
-    // console.log(modifiedHtml);
 };
 
 exports.removingUnusedCSS = async (req, res) => {
-    // getThemeAssets();
+  // getThemeAssets();
 
-    // Example usage
-    // getThemeAssets()
-    const cssCode = `
+  // Example usage
+  // getThemeAssets()
+  const cssCode = `
       select option[disabled]{
       color: var(--red) !important;
       font-weight: bold !important
@@ -746,124 +696,124 @@ exports.removingUnusedCSS = async (req, res) => {
       font-size: .9rem;
   }`;
 
-    const unusedCss = [".option_text", ".required_field"];
+  const unusedCss = [".option_text", ".required_field"];
 
-    // const modifiedCss = removeUnusedCss(cssCode, unusedCss);
-    // console.log(modifiedCss);
-    const dd = getThemeAssets();
-    res.json({ dd });
-    // const cssContent = `
-    // select option[disabled] {
-    //     color: var(--red) !important;
-    //     font-weight: bold !important
-    // }
+  // const modifiedCss = removeUnusedCss(cssCode, unusedCss);
+  // console.log(modifiedCss);
+  const dd = getThemeAssets();
+  res.json({ dd });
+  // const cssContent = `
+  // select option[disabled] {
+  //     color: var(--red) !important;
+  //     font-weight: bold !important
+  // }
 
-    // .required_field {
-    //     color: var(--red);
-    // }
+  // .required_field {
+  //     color: var(--red);
+  // }
 
-    // .option_text{
-    //     font-size: .9rem;
-    // }
-    // `;
+  // .option_text{
+  //     font-size: .9rem;
+  // }
+  // `;
 
-    // const unusedCss = [".option_text"];
+  // const unusedCss = [".option_text"];
 
-    // const removeUnusedCSS = (cssContent, unusedCss) => {
-    //   const modifiedContent = [];
-    //   const lines = cssContent.split("\n");
+  // const removeUnusedCSS = (cssContent, unusedCss) => {
+  //   const modifiedContent = [];
+  //   const lines = cssContent.split("\n");
 
-    //   for (const line of lines) {
-    //     let found = false;
-    //     for (const selector of unusedCss) {
-    //       if (line.includes(selector)) {
-    //         found = true;
-    //         break;
-    //       }
-    //     }
+  //   for (const line of lines) {
+  //     let found = false;
+  //     for (const selector of unusedCss) {
+  //       if (line.includes(selector)) {
+  //         found = true;
+  //         break;
+  //       }
+  //     }
 
-    //     if (!found) {
-    //       modifiedContent.push(line);
-    //     }
-    //   }
+  //     if (!found) {
+  //       modifiedContent.push(line);
+  //     }
+  //   }
 
-    //   return modifiedContent.join("\n");
-    // };
+  //   return modifiedContent.join("\n");
+  // };
 
-    // const modifiedContent = removeUnusedCSS(cssContent, unusedCss);
+  // const modifiedContent = removeUnusedCSS(cssContent, unusedCss);
 
-    // console.log(modifiedContent);
+  // console.log(modifiedContent);
 };
 
 // fetching all assets or theme
 async function getThemeAssets() {
-    const fetchConfig = getFetchConfig();
+  const fetchConfig = getFetchConfig();
 
-    // Axios({
-    //   ...fetchConfig,
-    //   url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes.json?role=main`,
-    // }).then(async (foundTheme) => {
-    //   const themeId = foundTheme?.data?.themes[0]?.id;
+  // Axios({
+  //   ...fetchConfig,
+  //   url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes.json?role=main`,
+  // }).then(async (foundTheme) => {
+  //   const themeId = foundTheme?.data?.themes[0]?.id;
 
-    //   if (themeId) {
-    //     Axios({
-    //       ...fetchConfig,
-    //       url: `https://turboboost-dev.myshopify.com/admin/api/2023-07/themes/${themeId}/assets.json`,
-    //     }).then(async (assests) => {
-    //       const themeAssets = assests.data?.assets;
+  //   if (themeId) {
+  //     Axios({
+  //       ...fetchConfig,
+  //       url: `https://turboboost-dev.myshopify.com/admin/api/2023-07/themes/${themeId}/assets.json`,
+  //     }).then(async (assests) => {
+  //       const themeAssets = assests.data?.assets;
 
-    //       const cssAssets = themeAssets.filter((asset) => asset.content_type === 'text/css');
+  //       const cssAssets = themeAssets.filter((asset) => asset.content_type === 'text/css');
 
-    //       const cssAsset = cssAssets[0]; // Assuming you have only one CSS file
-    //       const cssContent = cssAsset.value;
-    //       console.log(`cssContent`, cssContent);
-    //     });
-    //   }
-    // });
+  //       const cssAsset = cssAssets[0]; // Assuming you have only one CSS file
+  //       const cssContent = cssAsset.value;
+  //       console.log(`cssContent`, cssContent);
+  //     });
+  //   }
+  // });
 
-    // https://turboboost-dev.myshopify.com/index.json
+  // https://turboboost-dev.myshopify.com/index.json
 
-    let config = {
-        method: "get",
-        maxBodyLength: Infinity,
-        url: "https://turboboost-dev.myshopify.com/index.json",
-        headers: {
-            "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
-        },
-    };
+  let config = {
+    method: "get",
+    maxBodyLength: Infinity,
+    url: "https://turboboost-dev.myshopify.com/index.json",
+    headers: {
+      "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
+    },
+  };
 
-    Axios.request(config)
-        .then((response) => {
-            console.log(response.data);
-            return response.data;
-        })
-        .catch((error) => {
-            console.log(error);
-        });
+  Axios.request(config)
+    .then((response) => {
+      console.log(response.data);
+      return response.data;
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 
-    // const response = await Axios.get(
-    //   `https://cdn.shopify.com/s/files/1/0780/8001/6664/t/5/assets/section-password.css?v=1688552832`
-    // );
+  // const response = await Axios.get(
+  //   `https://cdn.shopify.com/s/files/1/0780/8001/6664/t/5/assets/section-password.css?v=1688552832`
+  // );
 
-    // const minifiedCSS = '.man{color:red}body{background:#fff}.container{width:100%;padding:10px}';
-    // const beautifiedCSS = cssbeautify(response?.data);
+  // const minifiedCSS = '.man{color:red}body{background:#fff}.container{width:100%;padding:10px}';
+  // const beautifiedCSS = cssbeautify(response?.data);
 
-    // console.log(`beautifiedCSS`, beautifiedCSS);
-    // const beautifiedCSS = cssbeautify(minifiedCSS);
+  // console.log(`beautifiedCSS`, beautifiedCSS);
+  // const beautifiedCSS = cssbeautify(minifiedCSS);
 
-    // try {
-    //   const response = await Axios.get(`getThemeAssets/admin/api/2021-07/themes/${themeId}/assets.json`, {
-    //     auth: {
-    //       username: apiKey,
-    //       password: password,
-    //     },
-    //   });
+  // try {
+  //   const response = await Axios.get(`getThemeAssets/admin/api/2021-07/themes/${themeId}/assets.json`, {
+  //     auth: {
+  //       username: apiKey,
+  //       password: password,
+  //     },
+  //   });
 
-    //   return response.data.assets;
-    // } catch (error) {
-    //   console.error('Error fetching theme assets:', error.message);
-    //   return [];
-    // }
+  //   return response.data.assets;
+  // } catch (error) {
+  //   console.error('Error fetching theme assets:', error.message);
+  //   return [];
+  // }
 }
 
 // function removeUnusedCSS(cssContent, unusedSelectors) {
@@ -974,33 +924,33 @@ async function getThemeAssets() {
 
 // commenting unused css file(not completed yet)
 function removeUnusedCss(cssCode, unusedCss) {
-    // Create a regular expression pattern to match the selectors and their blocks
-    const pattern = new RegExp(
-        `(^|\\s|\\})(${unusedCss.join("|")})\\s*{[\\s\\S]*?\\}`,
-        "gm"
-    );
+  // Create a regular expression pattern to match the selectors and their blocks
+  const pattern = new RegExp(
+    `(^|\\s|\\})(${unusedCss.join("|")})\\s*{[\\s\\S]*?\\}`,
+    "gm"
+  );
 
-    // Comment out the matching CSS code
-    const modifiedCssCode = cssCode.replace(pattern, "/* $2 {\n$3\n} */");
+  // Comment out the matching CSS code
+  const modifiedCssCode = cssCode.replace(pattern, "/* $2 {\n$3\n} */");
 
-    return modifiedCssCode;
+  return modifiedCssCode;
 }
 
 // getting home page html
 async function getUsedSelectors() {
-    try {
-        const response = await Axios.get(
-            `https://turboboost-dev.myshopify.com/index.json`,
-            {
-                auth: {
-                    username: "apiKey",
-                    password: "TurBoost@2023",
-                },
-            }
-        );
+  try {
+    const response = await Axios.get(
+      `https://turboboost-dev.myshopify.com/index.json`,
+      {
+        auth: {
+          username: "apiKey",
+          password: "TurBoost@2023",
+        },
+      }
+    );
 
-        const html = response.data;
-        const $ = Cheerio.load(`
+    const html = response.data;
+    const $ = Cheerio.load(`
     <nav class="menu-drawer__navigation">
     <ul class="menu-drawer__menu has-submenu list-menu" role="list"><li><a
               id="HeaderDrawer-home"
@@ -1032,53 +982,53 @@ async function getUsedSelectors() {
             </a></li></ul>
   </nav>`);
 
-        const usedSelectors = new Set();
+    const usedSelectors = new Set();
 
-        $("*").each(function () {
-            const element = $(this);
-            const elementClasses = element.attr("class");
-            const elementIds = element.attr("id");
+    $("*").each(function () {
+      const element = $(this);
+      const elementClasses = element.attr("class");
+      const elementIds = element.attr("id");
 
-            if (elementClasses) {
-                elementClasses
-                    .split(" ")
-                    .forEach((className) => usedSelectors.add(`.${className}`));
-            }
+      if (elementClasses) {
+        elementClasses
+          .split(" ")
+          .forEach((className) => usedSelectors.add(`.${className}`));
+      }
 
-            if (elementIds) {
-                usedSelectors.add(`#${elementIds}`);
-            }
-        });
+      if (elementIds) {
+        usedSelectors.add(`#${elementIds}`);
+      }
+    });
 
-        console.log(`usedSelectors`, usedSelectors);
+    console.log(`usedSelectors`, usedSelectors);
 
-        return Array.from(usedSelectors);
-    } catch (error) {
-        console.error("Error fetching storefront:", error.message);
-        return [];
-    }
+    return Array.from(usedSelectors);
+  } catch (error) {
+    console.error("Error fetching storefront:", error.message);
+    return [];
+  }
 }
 
 // removing unused css code from index page
 exports.removingUnusedCssFromIndexPage = (req, res) => {
-    const fetchConfig = getFetchConfig();
+  const fetchConfig = getFetchConfig();
 
-    // finding theme
+  // finding theme
+  Axios({
+    ...fetchConfig,
+    url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes.json?role=main`,
+  }).then(async (foundTheme) => {
+    const themeId = foundTheme?.data?.themes[0]?.id;
+
+    // finding assets
     Axios({
-        ...fetchConfig,
-        url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes.json?role=main`,
-    }).then(async (foundTheme) => {
-        const themeId = foundTheme?.data?.themes[0]?.id;
+      ...fetchConfig,
+      url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/${themeId}/assets.json`,
+    }).then(async (foundAssets) => {
+      const { JSDOM } = require("jsdom");
+      const css = require("css");
 
-        // finding assets
-        Axios({
-            ...fetchConfig,
-            url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/${themeId}/assets.json`,
-        }).then(async (foundAssets) => {
-            const { JSDOM } = require("jsdom");
-            const css = require("css");
-
-            const dom = new JSDOM(`
+      const dom = new JSDOM(`
 </style><style data-shopify>
 .menu-drawer__utility-links
 {
@@ -1186,279 +1136,285 @@ exports.removingUnusedCssFromIndexPage = (req, res) => {
 </header-drawer>
 `);
 
-            const doc = dom.window.document;
-            const usedSelectors = [];
-            const elements = doc.querySelectorAll("*");
-            for (const element of elements) {
-                const classList = Array.from(element.classList);
-                const id = element.getAttribute("id");
-                usedSelectors.push(...classList, `#${id}`); // Add # before the ID selector
-            }
+      const doc = dom.window.document;
+      const usedSelectors = [];
+      const elements = doc.querySelectorAll("*");
+      for (const element of elements) {
+        const classList = Array.from(element.classList);
+        const id = element.getAttribute("id");
+        usedSelectors.push(...classList, `#${id}`); // Add # before the ID selector
+      }
 
-            // Remove unused CSS rules
-            const stylesheets = doc.querySelectorAll("style");
-            for (const stylesheet of stylesheets) {
-                const ast = css.parse(stylesheet.textContent);
-                const filteredRules = ast.stylesheet.rules.filter((rule) => {
-                    if (rule.type === "rule") {
-                        return rule.selectors.some((selector) => {
-                            if (selector.startsWith(".")) {
-                                // Match class selector
-                                const className = selector.slice(1);
-                                const regex = new RegExp(`^${className}$`, "i");
-                                return usedSelectors.some((usedSelector) =>
-                                    regex.test(usedSelector)
-                                );
-                            } else if (selector.startsWith("#")) {
-                                // Match ID selector
-                                const id = selector.slice(1);
-                                return usedSelectors.includes(`#${id}`);
-                            } else {
-                                // Match element selector
-                                return usedSelectors.includes(selector);
-                            }
-                        });
-                    }
-                    return true;
-                });
-                ast.stylesheet.rules = filteredRules;
-                stylesheet.textContent = css.stringify(ast);
-            }
-
-            // Generate the modified HTML code without the unused CSS
-            const modifiedHtmlCode = doc.documentElement.outerHTML;
-
-            console.log(modifiedHtmlCode);
-
-            console.log(foundAssets);
+      // Remove unused CSS rules
+      const stylesheets = doc.querySelectorAll("style");
+      for (const stylesheet of stylesheets) {
+        const ast = css.parse(stylesheet.textContent);
+        const filteredRules = ast.stylesheet.rules.filter((rule) => {
+          if (rule.type === "rule") {
+            return rule.selectors.some((selector) => {
+              if (selector.startsWith(".")) {
+                // Match class selector
+                const className = selector.slice(1);
+                const regex = new RegExp(`^${className}$`, "i");
+                return usedSelectors.some((usedSelector) =>
+                  regex.test(usedSelector)
+                );
+              } else if (selector.startsWith("#")) {
+                // Match ID selector
+                const id = selector.slice(1);
+                return usedSelectors.includes(`#${id}`);
+              } else {
+                // Match element selector
+                return usedSelectors.includes(selector);
+              }
+            });
+          }
+          return true;
         });
-    });
+        ast.stylesheet.rules = filteredRules;
+        stylesheet.textContent = css.stringify(ast);
+      }
 
-    res.json({
-        dd: `working`,
+      // Generate the modified HTML code without the unused CSS
+      const modifiedHtmlCode = doc.documentElement.outerHTML;
+
+      console.log(modifiedHtmlCode);
+
+      console.log(foundAssets);
     });
+  });
+
+  res.json({
+    dd: `working`,
+  });
 };
 
 exports.minifyPageContent = (req, res) => {
-    const fetchConfig = getFetchConfig();
+  const fetchConfig = getFetchConfig();
 
-    // finding theme
-    Axios({
-        ...fetchConfig,
-        url: `https://turboboost-dev.myshopify.com/admin/api/2023-07/pages.json`,
-    }).then(async (foundPages) => {
-        const pages = foundPages?.data?.pages;
+  // finding theme
+  Axios({
+    ...fetchConfig,
+    url: `https://turboboost-dev.myshopify.com/admin/api/2023-07/pages.json`,
+  }).then(async (foundPages) => {
+    const pages = foundPages?.data?.pages;
 
-        if (pages?.length) {
-            // minifyPageContent()
-            for (let i = pages.length - 1; i >= 0; i--) {
-                const pageContent = pages[i]?.body_html,
-                    pageId = pages[i]?.id;
+    if (pages?.length) {
+      // minifyPageContent()
+      for (let i = pages.length - 1; i >= 0; i--) {
+        const pageContent = pages[i]?.body_html,
+          pageId = pages[i]?.id;
 
-                if (pageContent) {
-                    const minifiedPageContent = minifyPageContent(pageContent);
-                    console.log(pageContent);
-                    console.log(minifiedPageContent);
+        if (pageContent) {
+          const minifiedPageContent = minifyPageContent(pageContent);
+          console.log(pageContent);
+          console.log(minifiedPageContent);
 
-                    let data = JSON.stringify({
-                        page: {
-                            id: pageId,
-                            body_html: minifiedPageContent,
-                        },
-                    });
+          let data = JSON.stringify({
+            page: {
+              id: pageId,
+              body_html: minifiedPageContent,
+            },
+          });
 
-                    let config = {
-                        method: "put",
-                        maxBodyLength: Infinity,
-                        url: `https://turboboost-dev.myshopify.com/admin/api/2023-07/pages/${pageId}.json`,
-                        headers: {
-                            "X-Shopify-Access-Token":
-                                "shpua_832b00f9f277821c02a70c5524402acd",
-                            "Content-Type": "application/json",
-                        },
-                        data: data,
-                    };
+          let config = {
+            method: "put",
+            maxBodyLength: Infinity,
+            url: `https://turboboost-dev.myshopify.com/admin/api/2023-07/pages/${pageId}.json`,
+            headers: {
+              "X-Shopify-Access-Token":
+                "shpua_832b00f9f277821c02a70c5524402acd",
+              "Content-Type": "application/json",
+            },
+            data: data,
+          };
 
-                    Axios.request(config)
-                        .then((response) => {
-                            console.log(response);
+          Axios.request(config)
+            .then((response) => {
+              console.log(response);
 
-                            if (response.status === 200) {
-                                res.json({
-                                    message: `success`,
-                                });
-                            }
-                            console.log(JSON.stringify(response.data));
-                        })
-                        .catch((error) => {
-                            console.log(error);
-                        });
-                }
-            }
+              if (response.status === 200) {
+                res.json({
+                  message: `success`,
+                });
+              }
+              console.log(JSON.stringify(response.data));
+            })
+            .catch((error) => {
+              console.log(error);
+            });
         }
-    });
+      }
+    }
+  });
 };
 
 exports.DNSPrefetching = (req, res) => {
-    let config = {
-        method: "get",
-        url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/152998740248/assets.json?asset[key]=layout/theme.liquid",
-        headers: {
-            "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
-        },
-    };
+  let config = {
+    method: "get",
+    url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/152998740248/assets.json?asset[key]=layout/theme.liquid",
+    headers: {
+      "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
+    },
+  };
 
-    axios
-        .request(config)
-        .then((response) => {
-            console.log(JSON.stringify(response.data));
-        })
-        .catch((error) => {
-            console.log(error);
-        });
-
-    // updating main theme page
-
-    let data = JSON.stringify({
-        asset: {
-            key: "layout/theme.liquid",
-            value:
-                '<!doctype html> manmohan updated\n<html class="no-js" lang="{{ request.locale.iso_code }}">\n  <head>\n    <meta charset="utf-8">\n    <meta http-equiv="X-UA-Compatible" manmohan content="IE=edge">\n    <meta name="viewport" content="width=device-width,initial-scale=1">\n    <meta name="theme-color" content="">\n    <link rel="canonical" href="{{ canonical_url }}">\n\n    {%- if settings.favicon != blank -%}\n      <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">\n    {%- endif -%}\n\n    {%- unless settings.type_header_font.system? and settings.type_body_font.system? -%}\n      <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>\n    {%- endunless -%}\n\n    <title>\n      {{ page_title }}\n      {%- if current_tags %} &ndash; tagged "{{ current_tags | join: \', \' }}"{% endif -%}\n      {%- if current_page != 1 %} &ndash; Page {{ current_page }}{% endif -%}\n      {%- unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless -%}\n    </title>\n\n    {% if page_description %}\n      <meta name="description" content="{{ page_description | escape }}">\n    {% endif %}\n\n    {% render \'meta-tags\' %}\n\n    <script src="{{ \'constants.js\' | asset_url }}" defer="defer"></script>\n    <script src="{{ \'pubsub.js\' | asset_url }}" defer="defer"></script>\n    <script src="{{ \'global.js\' | asset_url }}" defer="defer"></script>\n    {%- if settings.animations_reveal_on_scroll -%}\n      <script src="{{ \'animations.js\' | asset_url }}" defer="defer"></script>\n    {%- endif -%}\n\n    {{ content_for_header }} <!-- Add this line -->\n  </head>\n\n  <body class="gradient{% if settings.animations_hover_elements != \'none\' %} animate--hover-{{ settings.animations_hover_elements }}{% endif %}">\n    <a class="skip-to-content-link button visually-hidden" href="#MainContent">\n      {{ \'accessibility.skip_to_text\' | t }}\n    </a>\n\n    {%- if settings.cart_type == \'drawer\' -%}\n      {%- render \'cart-drawer\' -%}\n    {%- endif -%}\n\n    {% sections \'header-group\' %}\n\n    <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">\n      {{ content_for_layout }} <!-- Add this line -->\n    </main>\n\n    {% sections \'footer-group\' %}\n\n    <ul hidden>\n      <li id="a11y-refresh-page-message">{{ \'accessibility.refresh_page\' | t }}</li>\n      <li id="a11y-new-window-message">{{ \'accessibility.link_messages.new_window\' | t }}</li>\n    </ul>\n\n    <script>\n      window.shopUrl = \'{{ request.origin }}\';\n      window.routes = {\n        cart_add_url: \'{{ routes.cart_add_url }}\',\n        cart_change_url: \'{{ routes.cart_change_url }}\',\n        cart_update_url: \'{{ routes.cart_update_url }}\',\n        cart_url: \'{{ routes.cart_url }}\',\n        predictive_search_url: \'{{ routes.predictive_search_url }}\',\n      };\n\n      window.cartStrings = {\n        error: `{{ \'sections.cart.cart_error\' | t }}`,\n        quantityError: `{{ \'sections.cart.cart_quantity_error_html\' | t: quantity: \'[quantity]\' }}`,\n      };\n\n      window.variantStrings = {\n        addToCart: `{{ \'products.product.add_to_cart\' | t }}`,\n        soldOut: `{{ \'products.product.sold_out\' | t }}`,\n        unavailable: `{{ \'products.product.unavailable\' | t }}`,\n        unavailable_with_option: `{{ \'products.product.value_unavailable\' | t: option_value: \'[value]\' }}`,\n      };\n\n      window.accessibilityStrings = {\n        imageAvailable: `{{ \'products.product.media.image_available\' | t: index: \'[index]\' }}`,\n        shareSuccess: `{{ \'general.share.success_message\' | t }}`,\n        pauseSlideshow: `{{ \'sections.slideshow.pause_slideshow\' | t }}`,\n        playSlideshow: `{{ \'sections.slideshow.play_slideshow\' | t }}`,\n      };\n    </script>\n\n    {%- if settings.predictive_search_enabled -%}\n      <script src="{{ \'predictive-search.js\' | asset_url }}" defer="defer"></script>\n    {%- endif -%}\n  </body>\n</html>\n',
-        },
+  axios
+    .request(config)
+    .then((response) => {
+      console.log(JSON.stringify(response.data));
+    })
+    .catch((error) => {
+      console.log(error);
     });
 
-    let config1 = {
-        method: "put",
-        maxBodyLength: Infinity,
-        url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/152998740248/assets.json",
-        headers: {
-            "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
-            "Content-Type": "application/json",
-        },
-        data: data,
-    };
+  // updating main theme page
 
-    axios
-        .request(config1)
-        .then((response) => {
-            console.log();
-        })
-        .catch((error) => {
-            console.log(error);
-        });
+  let data = JSON.stringify({
+    asset: {
+      key: "layout/theme.liquid",
+      value:
+        '<!doctype html> manmohan updated\n<html class="no-js" lang="{{ request.locale.iso_code }}">\n  <head>\n    <meta charset="utf-8">\n    <meta http-equiv="X-UA-Compatible" manmohan content="IE=edge">\n    <meta name="viewport" content="width=device-width,initial-scale=1">\n    <meta name="theme-color" content="">\n    <link rel="canonical" href="{{ canonical_url }}">\n\n    {%- if settings.favicon != blank -%}\n      <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">\n    {%- endif -%}\n\n    {%- unless settings.type_header_font.system? and settings.type_body_font.system? -%}\n      <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>\n    {%- endunless -%}\n\n    <title>\n      {{ page_title }}\n      {%- if current_tags %} &ndash; tagged "{{ current_tags | join: \', \' }}"{% endif -%}\n      {%- if current_page != 1 %} &ndash; Page {{ current_page }}{% endif -%}\n      {%- unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless -%}\n    </title>\n\n    {% if page_description %}\n      <meta name="description" content="{{ page_description | escape }}">\n    {% endif %}\n\n    {% render \'meta-tags\' %}\n\n    <script src="{{ \'constants.js\' | asset_url }}" defer="defer"></script>\n    <script src="{{ \'pubsub.js\' | asset_url }}" defer="defer"></script>\n    <script src="{{ \'global.js\' | asset_url }}" defer="defer"></script>\n    {%- if settings.animations_reveal_on_scroll -%}\n      <script src="{{ \'animations.js\' | asset_url }}" defer="defer"></script>\n    {%- endif -%}\n\n    {{ content_for_header }} <!-- Add this line -->\n  </head>\n\n  <body class="gradient{% if settings.animations_hover_elements != \'none\' %} animate--hover-{{ settings.animations_hover_elements }}{% endif %}">\n    <a class="skip-to-content-link button visually-hidden" href="#MainContent">\n      {{ \'accessibility.skip_to_text\' | t }}\n    </a>\n\n    {%- if settings.cart_type == \'drawer\' -%}\n      {%- render \'cart-drawer\' -%}\n    {%- endif -%}\n\n    {% sections \'header-group\' %}\n\n    <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">\n      {{ content_for_layout }} <!-- Add this line -->\n    </main>\n\n    {% sections \'footer-group\' %}\n\n    <ul hidden>\n      <li id="a11y-refresh-page-message">{{ \'accessibility.refresh_page\' | t }}</li>\n      <li id="a11y-new-window-message">{{ \'accessibility.link_messages.new_window\' | t }}</li>\n    </ul>\n\n    <script>\n      window.shopUrl = \'{{ request.origin }}\';\n      window.routes = {\n        cart_add_url: \'{{ routes.cart_add_url }}\',\n        cart_change_url: \'{{ routes.cart_change_url }}\',\n        cart_update_url: \'{{ routes.cart_update_url }}\',\n        cart_url: \'{{ routes.cart_url }}\',\n        predictive_search_url: \'{{ routes.predictive_search_url }}\',\n      };\n\n      window.cartStrings = {\n        error: `{{ \'sections.cart.cart_error\' | t }}`,\n        quantityError: `{{ \'sections.cart.cart_quantity_error_html\' | t: quantity: \'[quantity]\' }}`,\n      };\n\n      window.variantStrings = {\n        addToCart: `{{ \'products.product.add_to_cart\' | t }}`,\n        soldOut: `{{ \'products.product.sold_out\' | t }}`,\n        unavailable: `{{ \'products.product.unavailable\' | t }}`,\n        unavailable_with_option: `{{ \'products.product.value_unavailable\' | t: option_value: \'[value]\' }}`,\n      };\n\n      window.accessibilityStrings = {\n        imageAvailable: `{{ \'products.product.media.image_available\' | t: index: \'[index]\' }}`,\n        shareSuccess: `{{ \'general.share.success_message\' | t }}`,\n        pauseSlideshow: `{{ \'sections.slideshow.pause_slideshow\' | t }}`,\n        playSlideshow: `{{ \'sections.slideshow.play_slideshow\' | t }}`,\n      };\n    </script>\n\n    {%- if settings.predictive_search_enabled -%}\n      <script src="{{ \'predictive-search.js\' | asset_url }}" defer="defer"></script>\n    {%- endif -%}\n  </body>\n</html>\n',
+    },
+  });
+
+  let config1 = {
+    method: "put",
+    maxBodyLength: Infinity,
+    url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/152998740248/assets.json",
+    headers: {
+      "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
+      "Content-Type": "application/json",
+    },
+    data: data,
+  };
+
+  axios
+    .request(config1)
+    .then((response) => {
+      console.log();
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 };
 
 // image adaptions login
 exports.imageSizeAdaptions = (req, res) => {
-    const fetchConfig = getFetchConfig();
+  const fetchConfig = getFetchConfig();
 
-    const reponsiveImageLiquid = fs.readFileSync(
-        "/Users/Dkr/Desktop/TurboBoost/resources/responsive-images/responsive-product-image.liquid",
-        "utf8"
+  const reponsiveImageLiquid = fs.readFileSync(
+      "/Users/Dkr/Desktop/TurboBoost/resources/responsive-images/responsive-product-image.liquid",
+      "utf8"
     ),
-        reponsiveImageJavascripts = fs.readFileSync(
-            "/Users/Dkr/Desktop/TurboBoost/resources/responsive-images/responsive-images.js",
-            "utf8"
-        );
+    reponsiveImageJavascripts = fs.readFileSync(
+      "/Users/Dkr/Desktop/TurboBoost/resources/responsive-images/responsive-images.js",
+      "utf8"
+    );
 
-    // creating new snippet
-    const newAssetsData = JSON.stringify({
+  // creating new snippet
+  const newAssetsData = JSON.stringify({
+    asset: {
+      key: "snippets/responsive-product-image.liquid",
+      value: reponsiveImageLiquid,
+    },
+  });
+
+  Axios({
+    ...fetchConfig,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "PUT",
+    url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
+    data: newAssetsData,
+  }).then(async (newAssets) => {
+    if (newAssets) {
+      // creating new assets for javascript assets
+
+      const newjavascriptAsset = JSON.stringify({
         asset: {
-            key: "snippets/responsive-product-image.liquid",
-            value: reponsiveImageLiquid,
+          key: "snippets/responsive-product-image.liquid",
+          value: reponsiveImageJavascripts,
         },
-    });
+      });
 
-    Axios({
+      await Axios({
         ...fetchConfig,
         headers: {
-            "Content-Type": "application/json",
+          "Content-Type": "application/json",
         },
         method: "PUT",
         url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
-        data: newAssetsData,
-    }).then(async (newAssets) => {
-        if (newAssets) {
-            // creating new assets for javascript assets
+        data: newjavascriptAsset,
+      });
 
-            const newjavascriptAsset = JSON.stringify({
-                asset: {
-                    key: "snippets/responsive-product-image.liquid",
-                    value: reponsiveImageJavascripts,
-                },
-            });
+      // getting  product card snippet content
+      Axios({
+        ...fetchConfig,
+        url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154354057496/assets.json?asset[key]=snippets/card-product.liquid`,
+      }).then(async (foundAssets) => {
+        console.log(`foundAssets`, foundAssets.data.asset.value);
 
-            await Axios({
-                ...fetchConfig,
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                method: "PUT",
-                url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
-                data: newjavascriptAsset,
-            });
+        const productCard = ReplaceImagTag(foundAssets.data.asset.value);
 
-            // getting  product card snippet content
-            Axios({
-                ...fetchConfig,
-                url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154354057496/assets.json?asset[key]=snippets/card-product.liquid`,
-            }).then(async (foundAssets) => {
-                console.log(`foundAssets`, foundAssets.data.asset.value);
+        const data = JSON.stringify({
+          asset: {
+            key: "snippets/card-product.liquid",
+            value: JSON.stringify(productCard),
+          },
+        });
 
-                const productCard = ReplaceImagTag(foundAssets.data.asset.value);
-
-                const data = JSON.stringify({
-                    asset: {
-                        key: "snippets/card-product.liquid",
-                        value: JSON.stringify(productCard),
-                    },
-                });
-
-                // update  product card snippet
-                Axios({
-                    ...fetchConfig,
-                    headers: { "Content-Type": "application/json" },
-                    method: "PUT",
-                    url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
-                    data: data,
-                }).then(async (updatedProductCard) => {
-                    console.log(`data`, updatedProductCard);
-                    return res.json({
-                        data: "rend",
-                    });
-                });
-            });
-        }
-    });
+        // update  product card snippet
+        Axios({
+          ...fetchConfig,
+          headers: { "Content-Type": "application/json" },
+          method: "PUT",
+          url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
+          data: data,
+        }).then(async (updatedProductCard) => {
+          console.log(`data`, updatedProductCard);
+          return res.json({
+            data: "rend",
+          });
+        });
+      });
+    }
+  });
 };
 
 exports.criticalCSS = async (req, res) => {
-    //step1: generate critical css
-    // step2: create new assets
-    // step3: add assets link to theme
-    // criticalCssGenerate();
-    // return res.json({
-    //   working: "fsdf",
-    // });
+  //step1: generate critical css
+  // step2: create new assets
+  // step3: add assets link to theme
+  // criticalCssGenerate();
+  // return res.json({
+  //   working: "fsdf",
+  // });
 
-    try {
-        const session = await Shopify.Utils.loadCurrentSession(ctx.req, ctx.res, true);
-        if (!session) {
-            ctx.body = JSON.stringify({ error: "could not find session" });
-            return;
-        }
-        console.log(`/generate for ${session.shop} with access token: ${session.accessToken}`)
-        const job = await workQueue.add({
-            type: 'generate',
-            shop: session.shop,
-            accessToken: session.accessToken
-        });
-        console.log(`created job ${job.id}`);
-        ctx.body = JSON.stringify({ id: job.id });
-    } catch (e) {
-        console.log(e);
-        ctx.body = JSON.stringify({ error: "could not find session" });
+  try {
+    const session = await Shopify.Utils.loadCurrentSession(
+      ctx.req,
+      ctx.res,
+      true
+    );
+    if (!session) {
+      ctx.body = JSON.stringify({ error: "could not find session" });
+      return;
     }
+    console.log(
+      `/generate for ${session.shop} with access token: ${session.accessToken}`
+    );
+    const job = await workQueue.add({
+      type: "generate",
+      shop: session.shop,
+      accessToken: session.accessToken,
+    });
+    console.log(`created job ${job.id}`);
+    ctx.body = JSON.stringify({ id: job.id });
+  } catch (e) {
+    console.log(e);
+    ctx.body = JSON.stringify({ error: "could not find session" });
+  }
 };
 
 // async function criticalCssGenerate(job, shopifyAdmin) {
@@ -1496,383 +1452,375 @@ exports.criticalCSS = async (req, res) => {
 // }
 
 exports.lossyImageCompression = async (req, res) => {
-    const products = await ShopifyAPIAndMethod.fetchAllProducts();
+  const products = await ShopifyAPIAndMethod.fetchAllProducts();
 
-    if (products?.length) {
-        // console.log(`jhdjwghejwghe`);
+  if (products?.length) {
+    // console.log(`jhdjwghejwghe`);
 
-        for (i = products.length - 1; i >= 0; i--) {
-            const productId = products[i]?.id,
-                imageId = products[i]?.image?.id,
-                imageURL = products[i]?.image?.src;
+    for (i = products.length - 1; i >= 0; i--) {
+      const productId = products[i]?.id,
+        imageId = products[i]?.image?.id,
+        imageURL = products[i]?.image?.src;
 
-            if (imageURL) {
-                const downloadedImgae = await downloadImage(Axios, imageURL);
-                const compressedImage = await lossyCompression(downloadedImgae);
-                const res = await uploadToCloudinary(compressedImage, (options = {}));
+      if (imageURL) {
+        const downloadedImgae = await downloadImage(Axios, imageURL);
+        const compressedImage = await lossyCompression(downloadedImgae);
+        const res = await uploadToCloudinary(compressedImage, (options = {}));
 
-                const productss = ShopifyAPIAndMethod.updateProductImages(
-                    productId,
-                    imageId,
-                    res.url
-                );
-            }
-        }
+        const productss = ShopifyAPIAndMethod.updateProductImages(
+          productId,
+          imageId,
+          res.url
+        );
+      }
     }
-    return res.json({
-        data: "success",
-    });
+  }
+  return res.json({
+    data: "success",
+  });
 };
 
 exports.losslessImageCompression = async (req, res) => {
-    // console.log(await performLosslessCompression(imageBuffer));
-    const products = await ShopifyAPIAndMethod.fetchAllProducts();
+  // console.log(await performLosslessCompression(imageBuffer));
+  const products = await ShopifyAPIAndMethod.fetchAllProducts();
 
-    if (products?.length) {
-        for (i = products.length - 1; i >= 0; i--) {
-            const productId = products[i]?.id,
-                imageId = products[i]?.image?.id,
-                imageURL = products[i]?.image?.src;
+  if (products?.length) {
+    for (i = products.length - 1; i >= 0; i--) {
+      const productId = products[i]?.id,
+        imageId = products[i]?.image?.id,
+        imageURL = products[i]?.image?.src;
 
-            if (imageURL) {
-                const downloadedImgae = await downloadImage(Axios, imageURL);
-                const compressedImage = await losslessCompression(downloadedImgae);
-                const res = await uploadToCloudinary(compressedImage, (options = {}));
+      if (imageURL) {
+        const downloadedImgae = await downloadImage(Axios, imageURL);
+        const compressedImage = await losslessCompression(downloadedImgae);
+        const res = await uploadToCloudinary(compressedImage, (options = {}));
 
-                const productss = ShopifyAPIAndMethod.updateProductImages(
-                    productId,
-                    imageId,
-                    res.url
-                );
-            }
-        }
+        const productss = ShopifyAPIAndMethod.updateProductImages(
+          productId,
+          imageId,
+          res.url
+        );
+      }
     }
+  }
 
-    return res.json({
-        data: "success",
-    });
+  return res.json({
+    data: "success",
+  });
 };
 
 exports.losslessCompCollection = async (req, res, next) => {
-    /* 
+  /* 
       1 = loassy compression
       2 = loassless compression
     */
-    const compressionType = req?.query?.compressionType;
+  const compressionType = req?.query?.compressionType;
 
-    if (!compressionType)
-        return sendFailureJSONResponse(res, {
-            message: `please provide compression type`,
+  if (!compressionType)
+    return sendFailureJSONResponse(res, {
+      message: `please provide compression type`,
+    });
+
+  const smartCollections = await ShopifyAPIAndMethod.fetchSmartCollection();
+
+  if (smartCollections?.length) {
+    for (i = smartCollections.length - 1; i >= 0; i--) {
+      const smartCollectionId = smartCollections[i]?.id,
+        imageURL = smartCollections[i]?.src;
+
+      const downloadedImgae = await downloadImage(Axios, imageURL);
+
+      let compressedImage;
+      if (compressionType === 1) {
+        compressedImage = await lossyCompression(downloadedImgae);
+      } else if (compressionType === 2) {
+        compressedImage = await losslessCompression(downloadedImgae);
+      }
+
+      const data = JSON.stringify({
+        smart_collection: {
+          id: smartCollectionId,
+          image: compressedImage,
+          admin_graphql_api_id: `gid://shopify/Collection/${smartCollectionId}`,
+        },
+      });
+
+      let config = {
+        method: "put",
+        url: `https://turboboost-dev.myshopify.com/admin/api/unstable/smart_collections/${smartCollectionId}.json`,
+        headers: {
+          "X-Shopify-Access-Token": process.env.SHOPIFY_ACCESS_TOKEN,
+          "Content-Type": "application/json",
+        },
+        data: data,
+      };
+
+      Axios.request(config)
+        .then((response) => {})
+        .catch((error) => {
+          console.log(error);
         });
-
-    const smartCollections = await ShopifyAPIAndMethod.fetchSmartCollection();
-
-    if (smartCollections?.length) {
-        for (i = smartCollections.length - 1; i >= 0; i--) {
-            const smartCollectionId = smartCollections[i]?.id,
-                imageURL = smartCollections[i]?.src;
-
-            const downloadedImgae = await downloadImage(Axios, imageURL);
-
-            let compressedImage;
-            if (compressionType === 1) {
-                compressedImage = await lossyCompression(downloadedImgae);
-            } else if (compressionType === 2) {
-                compressedImage = await losslessCompression(downloadedImgae);
-            }
-
-            const data = JSON.stringify({
-                smart_collection: {
-                    id: smartCollectionId,
-                    image: compressedImage,
-                    admin_graphql_api_id: `gid://shopify/Collection/${smartCollectionId}`,
-                },
-            });
-
-            let config = {
-                method: "put",
-                url: `https://turboboost-dev.myshopify.com/admin/api/unstable/smart_collections/${smartCollectionId}.json`,
-                headers: {
-                    "X-Shopify-Access-Token": process.env.SHOPIFY_ACCESS_TOKEN,
-                    "Content-Type": "application/json",
-                },
-                data: data,
-            };
-
-            Axios.request(config)
-                .then((response) => { })
-                .catch((error) => {
-                    console.log(error);
-                });
-        }
     }
+  }
 
-    return rsendSuccessJSONResponse(res, { message: `success` });
+  return rsendSuccessJSONResponse(res, { message: `success` });
 };
 
-exports.cachingProductDetail = (req, res) => { };
+exports.cachingProductDetail = (req, res) => {};
 
 exports.cachingThemeAssets = (req, res) => {
-    Axios({
-        ...fetchConfig,
-        url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154354057496/assets.json?asset[key]=layout/theme.liquid`,
-    }).then(async (foundTheme) => {
-        const theme = foundTheme?.data?.asset?.value;
-        const updatedTheme = AssetsCaching(theme);
+  Axios({
+    ...fetchConfig,
+    url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154354057496/assets.json?asset[key]=layout/theme.liquid`,
+  }).then(async (foundTheme) => {
+    const theme = foundTheme?.data?.asset?.value;
+    const updatedTheme = AssetsCaching(theme);
 
-        // updating main theme page
+    // updating main theme page
 
-        let data = JSON.stringify({
-            asset: {
-                key: "layout/theme.liquid",
-                value: updatedTheme,
-            },
-        });
-
-        let config1 = {
-            method: "put",
-            maxBodyLength: Infinity,
-            url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/152998740248/assets.json",
-            headers: {
-                "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
-                "Content-Type": "application/json",
-            },
-            data: data,
-        };
-
-        axios
-            .request(config1)
-            .then((response) => {
-                console.log();
-            })
-            .catch((error) => {
-                console.log(error);
-            });
+    let data = JSON.stringify({
+      asset: {
+        key: "layout/theme.liquid",
+        value: updatedTheme,
+      },
     });
+
+    let config1 = {
+      method: "put",
+      maxBodyLength: Infinity,
+      url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/152998740248/assets.json",
+      headers: {
+        "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
+        "Content-Type": "application/json",
+      },
+      data: data,
+    };
+
+    axios
+      .request(config1)
+      .then((response) => {
+        console.log();
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  });
 };
 
 exports.fontOptimization = async (req, res, next) => {
+  try {
+    const response = await Axios.get(
+      "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154780401944/assets.json?content_type=text/css",
+      {
+        headers: {
+          "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
+        },
+      }
+    );
 
-    try {
-        const response = await Axios.get(
-            "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154780401944/assets.json?content_type=text/css",
-            {
-                headers: {
-                    "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
-                },
-            }
-        );
+    const assets = response.data.assets;
+    const cssAssets = assets.filter(
+      (asset) => asset.content_type === "text/css"
+    );
 
-        const assets = response.data.assets;
-        const cssAssets = assets.filter(
-            (asset) => asset.content_type === "text/css"
-        );
+    for (const cssAsset of cssAssets) {
+      const assetPublicURL = cssAsset.public_url;
+      const key = cssAsset.key;
 
-        for (const cssAsset of cssAssets) {
-            const assetPublicURL = cssAsset.public_url;
-            const key = cssAsset.key;
+      const { fontExists, cssContent } = await CheckFontFaceExists(
+        assetPublicURL
+      );
 
-            const { fontExists, cssContent } = await CheckFontFaceExists(
-                assetPublicURL
-            );
+      if (fontExists) {
+        const updateCssContent = AddingFontDisplayInCss(cssContent);
 
-            if (fontExists) {
-                const updateCssContent = AddingFontDisplayInCss(cssContent);
-
-                const data = JSON.stringify({
-                    asset: {
-                        key: key,
-                        value: updateCssContent,
-                    },
-                });
-
-                await Axios.put(
-                    "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
-                    data,
-                    {
-                        headers: {
-                            "X-Shopify-Access-Token":
-                                "shpua_5251b9ea9543d66b17346f5857542659",
-                            "Content-Type": "application/json",
-                        },
-                    }
-                );
-            }
-        }
-
-        return res.json({
-            message: "success",
+        const data = JSON.stringify({
+          asset: {
+            key: key,
+            value: updateCssContent,
+          },
         });
-    } catch (error) {
-        console.error("Font optimization error:", error);
-        res.status(500).json({
-            message: "error",
-        });
+
+        await Axios.put(
+          "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
+          data,
+          {
+            headers: {
+              "X-Shopify-Access-Token":
+                "shpua_5251b9ea9543d66b17346f5857542659",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+      }
     }
+
+    return res.json({
+      message: "success",
+    });
+  } catch (error) {
+    console.error("Font optimization error:", error);
+    res.status(500).json({
+      message: "error",
+    });
+  }
 };
 
 exports.delayingGoogleFont = (req, res, next) => {
+  let config = {
+    method: "get",
+    url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154780401944/assets.json?asset[key]=layout/theme.liquid",
+    headers: {
+      "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
+    },
+  };
 
-    let config = {
-        method: "get",
-        url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154780401944/assets.json?asset[key]=layout/theme.liquid",
-        headers: {
-            "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
-        },
-    };
+  Axios.request(config)
+    .then((response) => {
+      const htmlContent = response.data.asset.value;
+      const updateLiquidTheme = DelayGoogleFontLoading(htmlContent);
 
-    Axios.request(config)
-        .then((response) => {
-            const htmlContent = response.data.asset.value;
-            const updateLiquidTheme = DelayGoogleFontLoading(htmlContent);
-
-            if (updateLiquidTheme.isModified) {
-                let data = JSON.stringify({
-                    asset: {
-                        key: "layout/theme.liquid",
-                        value: updateLiquidTheme?.modifiedHtml,
-                    },
-                });
-
-                let config2 = {
-                    method: "put",
-                    url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
-                    headers: {
-                        "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
-                        "Content-Type": "application/json",
-                    },
-                    data: data,
-                };
-
-                Axios
-                    .request(config2)
-                    .then((response) => {
-                        if (response) {
-                            return sendSuccessJSONResponse(res, {
-                                message: "success"
-                            })
-                        }
-                    })
-                    .catch((error) => {
-                        console.log(error);
-                    });
-            }
-
-        })
-        .catch((error) => {
-            console.log(error);
+      if (updateLiquidTheme.isModified) {
+        let data = JSON.stringify({
+          asset: {
+            key: "layout/theme.liquid",
+            value: updateLiquidTheme?.modifiedHtml,
+          },
         });
+
+        let config2 = {
+          method: "put",
+          url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
+          headers: {
+            "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
+            "Content-Type": "application/json",
+          },
+          data: data,
+        };
+
+        Axios.request(config2)
+          .then((response) => {
+            if (response) {
+              return sendSuccessJSONResponse(res, {
+                message: "success",
+              });
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 };
 
 exports.addingGoogleTagManager = (req, res) => {
+  const gtmKey = req.body.gtmKey;
 
-    const gtmKey = req.body.gtmKey;
+  let config = {
+    method: "get",
+    url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154780401944/assets.json?asset[key]=layout/theme.liquid",
+    headers: {
+      "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
+    },
+  };
 
-    let config = {
-        method: "get",
-        url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154780401944/assets.json?asset[key]=layout/theme.liquid",
-        headers: {
-            "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
-        },
-    };
+  Axios.request(config)
+    .then((response) => {
+      const htmlContent = response.data.asset.value;
 
-    Axios.request(config)
-        .then((response) => {
-            const htmlContent = response.data.asset.value;
+      const isExist = checkForGoogleTagManager(htmlContent);
 
-            const isExist = checkForGoogleTagManager(htmlContent);
-
-            if (!isExist) {
-
-                const updateLiquidTheme = addGoogleTagManager(htmlContent, gtmKey);
-                let data = JSON.stringify({
-                    asset: {
-                        key: "layout/theme.liquid",
-                        value: updateLiquidTheme
-                    },
-                });
-
-                let config2 = {
-                    method: "put",
-                    url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
-                    headers: {
-                        "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
-                        "Content-Type": "application/json",
-                    },
-                    data: data,
-                };
-
-                Axios
-                    .request(config2)
-                    .then((response) => {
-                        if (response) {
-                            return sendSuccessJSONResponse(res, {
-                                message: "success"
-                            })
-                        }
-                    })
-                    .catch((error) => {
-                        console.log(error);
-                    });
-            }
-
-        })
-        .catch((error) => {
-            console.log(error);
+      if (!isExist) {
+        const updateLiquidTheme = addGoogleTagManager(htmlContent, gtmKey);
+        let data = JSON.stringify({
+          asset: {
+            key: "layout/theme.liquid",
+            value: updateLiquidTheme,
+          },
         });
-}
+
+        let config2 = {
+          method: "put",
+          url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
+          headers: {
+            "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
+            "Content-Type": "application/json",
+          },
+          data: data,
+        };
+
+        Axios.request(config2)
+          .then((response) => {
+            if (response) {
+              return sendSuccessJSONResponse(res, {
+                message: "success",
+              });
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
 
 exports.restoreCriticalCss = async (req, res, next) => {
-
-    await criticalCssRestore(shopifyAdmin, redisStore)
-}
+  await criticalCssRestore(shopifyAdmin, redisStore);
+};
 
 /**
-* Turn OFF critical css for the shop
-* @param {Object} shopifyAdmin
-*/
+ * Turn OFF critical css for the shop
+ * @param {Object} shopifyAdmin
+ */
 async function criticalCssRestore(shopifyAdmin, redisStore) {
-    // const p = [];
-    // p.push(shopifyAdmin.deleteAsset("snippets/critical-css.liquid"));
-    // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-index.liquid"));
-    // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-collection.liquid"));
-    // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-list-collections.liquid"));
-    // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-product.liquid"));
-    // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-blog.liquid"));
-    // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-article.liquid"));
-    // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-search.liquid"));
-    // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-page.liquid"));
-    // await Promise.all(p);
+  // const p = [];
+  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css.liquid"));
+  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-index.liquid"));
+  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-collection.liquid"));
+  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-list-collections.liquid"));
+  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-product.liquid"));
+  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-blog.liquid"));
+  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-article.liquid"));
+  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-search.liquid"));
+  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-page.liquid"));
+  // await Promise.all(p);
 
+  // const themeLiquid = await shopifyAdmin.getThemeLiquid();
+  // const updatedThemeLiquid = await restoreThemeLiquid(themeLiquid.value, redisStore, shopifyAdmin.shop);
+  // // Diff and Only write if different
+  // await shopifyAdmin.writeAsset({
+  //   name: 'layout/theme.liquid',
+  //   value: updatedThemeLiquid
+  // });
 
-    // const themeLiquid = await shopifyAdmin.getThemeLiquid();
-    // const updatedThemeLiquid = await restoreThemeLiquid(themeLiquid.value, redisStore, shopifyAdmin.shop);
-    // // Diff and Only write if different
-    // await shopifyAdmin.writeAsset({
-    //   name: 'layout/theme.liquid',
-    //   value: updatedThemeLiquid
-    // });
-
-    try {
-        const session = await Shopify.Utils.loadCurrentSession(ctx.req, ctx.res, true);
-        if (!session) {
-            ctx.body = JSON.stringify({ error: "could not find session" });
-            return;
-        }
-        const job = await workQueue.add({
-            type: 'restore',
-            shop: session.shop,
-            accessToken: session.accessToken,
-        });
-        console.log(`created job ${job.id}`);
-        ctx.body = JSON.stringify({ id: job.id });
-    } catch (e) {
-        console.log(e);
-        ctx.body = JSON.stringify({ error: "could not find session" });
+  try {
+    const session = await Shopify.Utils.loadCurrentSession(
+      ctx.req,
+      ctx.res,
+      true
+    );
+    if (!session) {
+      ctx.body = JSON.stringify({ error: "could not find session" });
+      return;
     }
-
+    const job = await workQueue.add({
+      type: "restore",
+      shop: session.shop,
+      accessToken: session.accessToken,
+    });
+    console.log(`created job ${job.id}`);
+    ctx.body = JSON.stringify({ id: job.id });
+  } catch (e) {
+    console.log(e);
+    ctx.body = JSON.stringify({ error: "could not find session" });
+  }
 }
-
 
 // Create cache strategies for product details, user data, and configuration data
 const productCache = createInMemoryCache();
@@ -1881,120 +1829,120 @@ const configCache = createInMemoryCache();
 
 // Cache strategy for product details
 const productCacheStrategy = {
-    getProductFromCache: async (productId) => {
-        return await productCache.get(`product-${productId}`);
-    },
-    setProductInCache: async (productId, product) => {
-        await productCache.set(`product-${productId}`, product);
-    },
-    clearProductCache: async (productId) => {
-        await productCache.delete(`product-${productId}`);
-    },
+  getProductFromCache: async (productId) => {
+    return await productCache.get(`product-${productId}`);
+  },
+  setProductInCache: async (productId, product) => {
+    await productCache.set(`product-${productId}`, product);
+  },
+  clearProductCache: async (productId) => {
+    await productCache.delete(`product-${productId}`);
+  },
 };
 
 // Cache strategy for user data
 const userCacheStrategy = {
-    getUserFromCache: async (userId) => {
-        return await userCache.get(`user-${userId}`);
-    },
-    setUserInCache: async (userId, user) => {
-        await userCache.set(`user-${userId}`, user);
-    },
-    clearUserCache: async (userId) => {
-        await userCache.delete(`user-${userId}`);
-    },
+  getUserFromCache: async (userId) => {
+    return await userCache.get(`user-${userId}`);
+  },
+  setUserInCache: async (userId, user) => {
+    await userCache.set(`user-${userId}`, user);
+  },
+  clearUserCache: async (userId) => {
+    await userCache.delete(`user-${userId}`);
+  },
 };
 
 // Cache strategy for configuration data
 const configCacheStrategy = {
-    getConfigFromCache: async () => {
-        return await configCache.get("config");
-    },
-    setConfigInCache: async (config) => {
-        await configCache.set("config", config);
-    },
-    clearConfigCache: async () => {
-        await configCache.delete("config");
-    },
+  getConfigFromCache: async () => {
+    return await configCache.get("config");
+  },
+  setConfigInCache: async (config) => {
+    await configCache.set("config", config);
+  },
+  clearConfigCache: async () => {
+    await configCache.delete("config");
+  },
 };
 
 // Create the Storefront client with caching for all data types
 async function createClientWithCaching() {
-    const { storefront } = await createStorefrontClient({
-        cache: {
-            async get(request) {
-                // Use the appropriate cache strategy based on the cache key
-                if (request.key.startsWith("product-")) {
-                    return productCacheStrategy.getProductFromCache(request.key);
-                } else if (request.key.startsWith("user-")) {
-                    return userCacheStrategy.getUserFromCache(request.key);
-                } else if (request.key === "config") {
-                    return configCacheStrategy.getConfigFromCache();
-                }
-                // Add more cache strategies for other data types if needed
-            },
-            async set(request, response) {
-                // Use the appropriate cache strategy based on the cache key
-                if (request.key.startsWith("product-")) {
-                    await productCacheStrategy.setProductInCache(request.key, response);
-                } else if (request.key.startsWith("user-")) {
-                    await userCacheStrategy.setUserInCache(request.key, response);
-                } else if (request.key === "config") {
-                    await configCacheStrategy.setConfigInCache(response);
-                }
-                // Add more cache strategies for other data types if needed
-            },
-            async delete(request) {
-                // Use the appropriate cache strategy based on the cache key
-                if (request.key.startsWith("product-")) {
-                    await productCacheStrategy.clearProductCache(request.key);
-                } else if (request.key.startsWith("user-")) {
-                    await userCacheStrategy.clearUserCache(request.key);
-                } else if (request.key === "config") {
-                    await configCacheStrategy.clearConfigCache();
-                }
-                // Add more cache strategies for other data types if needed
-            },
-            // Cache policies for different queries...
-        },
-        // Other configuration options...
-    });
+  const { storefront } = await createStorefrontClient({
+    cache: {
+      async get(request) {
+        // Use the appropriate cache strategy based on the cache key
+        if (request.key.startsWith("product-")) {
+          return productCacheStrategy.getProductFromCache(request.key);
+        } else if (request.key.startsWith("user-")) {
+          return userCacheStrategy.getUserFromCache(request.key);
+        } else if (request.key === "config") {
+          return configCacheStrategy.getConfigFromCache();
+        }
+        // Add more cache strategies for other data types if needed
+      },
+      async set(request, response) {
+        // Use the appropriate cache strategy based on the cache key
+        if (request.key.startsWith("product-")) {
+          await productCacheStrategy.setProductInCache(request.key, response);
+        } else if (request.key.startsWith("user-")) {
+          await userCacheStrategy.setUserInCache(request.key, response);
+        } else if (request.key === "config") {
+          await configCacheStrategy.setConfigInCache(response);
+        }
+        // Add more cache strategies for other data types if needed
+      },
+      async delete(request) {
+        // Use the appropriate cache strategy based on the cache key
+        if (request.key.startsWith("product-")) {
+          await productCacheStrategy.clearProductCache(request.key);
+        } else if (request.key.startsWith("user-")) {
+          await userCacheStrategy.clearUserCache(request.key);
+        } else if (request.key === "config") {
+          await configCacheStrategy.clearConfigCache();
+        }
+        // Add more cache strategies for other data types if needed
+      },
+      // Cache policies for different queries...
+    },
+    // Other configuration options...
+  });
 
-    return storefront;
+  return storefront;
 }
 
 // Example usage:
 async function fetchAndCacheData() {
-    const client = await createClientWithCaching();
+  const client = await createClientWithCaching();
 
-    // Fetch product details and cache the result
-    const productResult = await client.query(/* ... */);
-    await productCacheStrategy.setProductInCache("product-id-123", productResult);
+  // Fetch product details and cache the result
+  const productResult = await client.query(/* ... */);
+  await productCacheStrategy.setProductInCache("product-id-123", productResult);
 
-    // Fetch user data and cache the result
-    const userResult = await client.query(/* ... */);
-    await userCacheStrategy.setUserInCache("user-id-456", userResult);
+  // Fetch user data and cache the result
+  const userResult = await client.query(/* ... */);
+  await userCacheStrategy.setUserInCache("user-id-456", userResult);
 
-    // Fetch configuration data and cache the result
-    const configResult = await client.query(/* ... */);
-    await configCacheStrategy.setConfigInCache(configResult);
+  // Fetch configuration data and cache the result
+  const configResult = await client.query(/* ... */);
+  await configCacheStrategy.setConfigInCache(configResult);
 }
 
 // // Example usage:
 async function fetchDataFromCache() {
-    const client = await createClientWithCaching();
+  const client = await createClientWithCaching();
 
-    // Fetch product details from the cache
-    const cachedProduct = await productCacheStrategy.getProductFromCache(
-        "product-id-123"
-    );
-    console.log("Cached product:", cachedProduct);
+  // Fetch product details from the cache
+  const cachedProduct = await productCacheStrategy.getProductFromCache(
+    "product-id-123"
+  );
+  console.log("Cached product:", cachedProduct);
 
-    // Fetch user data from the cache
-    const cachedUser = await userCacheStrategy.getUserFromCache("user-id-456");
-    console.log("Cached user:", cachedUser);
+  // Fetch user data from the cache
+  const cachedUser = await userCacheStrategy.getUserFromCache("user-id-456");
+  console.log("Cached user:", cachedUser);
 
-    // Fetch configuration data from the cache
-    const cachedConfig = await configCacheStrategy.getConfigFromCache();
-    console.log("Cached config:", cachedConfig);
+  // Fetch configuration data from the cache
+  const cachedConfig = await configCacheStrategy.getConfigFromCache();
+  console.log("Cached config:", cachedConfig);
 }
