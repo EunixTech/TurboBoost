@@ -15,6 +15,7 @@ const mongoose = require("mongoose"),
     addDNSPrefetch = require("../resources/scripts/DNS-prefetch"),
     CheckFontFaceExists = require("../resources/scripts/checking-font-face"),
     AddingFontDisplayInCss = require("../resources/scripts/add-font-display"),
+    convertStylesheets = require("../resources/scripts/convert-stylesheets"),
     DelayGoogleFontLoading = require("../resources/scripts/delay-google-font-loading"),
     { addGoogleTagManager, checkForGoogleTagManager } = require("../resources/scripts/google-tag-manager"),
     User = mongoose.model("user"),
@@ -645,8 +646,12 @@ exports.removeUnusedJavascriptCode = (req, res) => {
 exports.eliminateRenderBlockingResources = async(req, res, next) => {
 
     await ShopifyAPIAndMethod.init();
-    const  dd = await ShopifyAPIAndMethod.getThemeLiquid();
-    console.log(dd)
+
+    const  themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
+        htmlContent = themeLiquid?.value,
+        updatedHtmlContent = convertStylesheets(htmlContent);
+    
+    return res.json({updatedHtmlContent})
 
 
     // const axios = require("axios");
