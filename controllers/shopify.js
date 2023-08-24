@@ -1772,6 +1772,10 @@ exports.addingGoogleTagManager = (req, res) => {
 
 // restoration api started
 
+exports.restoringFontOptimization = (req, res, next) =>{
+    res.json("asda")
+}
+
 exports.restoreCriticalCss = async (req, res, next) => {
     await criticalCssRestore(shopifyAdmin, redisStore);
 };

@@ -49,6 +49,8 @@ router.post("/adding-google-tag-manager", controllers.addingGoogleTagManager);
 
 router.get("/restore-critical-css", controllers.restoreCriticalCss)
 
+router.get("/restore-font-optimization", controllers.restoringFontOptimization)
+
 
 
 module.exports = router;
