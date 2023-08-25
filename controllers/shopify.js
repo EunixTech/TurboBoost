@@ -38,6 +38,8 @@ const mongoose = require("mongoose"),
     SHOPIFY_BASE_URL,
   } = process.env;
 
+const { googleApiDisplaySwap } = require("../utils/commenRegrex");
+
 require("../utils/mongoose");
 
 const sharp = require("sharp");
@@ -1644,7 +1646,6 @@ exports.fontOptimization = async (req, res, next) => {
 };
 
 exports.delayingGoogleFont = async (req, res, next) => {
-
   const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
     htmlContent = themeLiquid?.value,
     updatedThemeLiquid = DelayGoogleFontLoading(htmlContent);
@@ -1653,7 +1654,6 @@ exports.delayingGoogleFont = async (req, res, next) => {
     name: "layout/theme.liquid",
     value: updatedThemeLiquid,
   });
-
 };
 
 exports.addingGoogleTagManager = async (req, res, next) => {
@@ -1731,11 +1731,30 @@ exports.restoringFontOptimization = async (req, res, next) => {
   }
 };
 
-
 exports.restoreGoogleFontDelay = async (req, res, next) => {
-  res.json("qwdqw")
-};
+  try {
+    const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid();
+    const themeContent = themeLiquid?.value;
 
+    const modifiedContent = themeContent.replace(
+      googleApiDisplaySwap,
+      (match) => match.replace("&display=swap", "")
+    );
+
+    const res = await ShopifyAPIAndMethod.writeAsset({
+      name: "layout/theme.liquid",
+      value: modifiedContent,
+    });
+
+    if (!res)
+      return sendFailureJSONResponse(res, { message: "something went wrong" });
+    else {
+      return sendSuccessJSONResponse(res, { message: "success" });
+    }
+  } catch (error) {
+    return sendErrorJSONResponse(res, { message: "something went wrong" });
+  }
+};
 
 exports.restoreCriticalCss = async (req, res, next) => {
   await criticalCssRestore(shopifyAdmin, redisStore);
