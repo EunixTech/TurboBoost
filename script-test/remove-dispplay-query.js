@@ -1,10 +1,12 @@
+const {
+    googleApiDisplaySwap
+} =  require("../utils/commenRegrex");
+
 
 function removeDisplaySwapQuery(htmlContent) {
-    // Regular expression to match Google Font API links with display=swap query parameter
-    const pattern = /<link\s+href="https:\/\/fonts.googleapis.com\/css2[^"]+display=swap"[^>]*>/g;
-
+  
     // Replace display=swap with an empty string in each match
-    const modifiedContent = htmlContent.replace(pattern, match => match.replace('&display=swap', ''));
+    const modifiedContent = htmlContent.replace(googleApiDisplaySwap, match => match.replace('&display=swap', ''));
 
     return modifiedContent;
 }
