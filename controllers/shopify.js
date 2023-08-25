@@ -1744,7 +1744,6 @@ exports.restoreCriticalCss = async (req, res, next) => {
   await criticalCssRestore(shopifyAdmin, redisStore);
 };
 
-
 /**
  * Turn OFF critical css for the shop
  * @param {Object} shopifyAdmin
