@@ -28,6 +28,7 @@ const mongoose = require("mongoose"),
   {
     sendSuccessJSONResponse,
     sendFailureJSONResponse,
+    sendErrorJSONResponse,
   } = require("../handlers/jsonResponseHandlers"),
   {
     SHOPIFY_API_KEY,
@@ -61,7 +62,6 @@ const ShopifyAPIAndMethod = new ShopifyAPI({
   version: process.env.SHOPIFY_API_VERSION,
 });
 ShopifyAPIAndMethod.init();
-
 
 const uploadToCloudinary = require("../utils/uploadToCloudinary");
 
@@ -647,19 +647,19 @@ exports.removeUnusedJavascriptCode = (req, res) => {
 };
 
 exports.eliminateRenderBlockingResources = async (req, res, next) => {
-    await ShopifyAPIAndMethod.init();
+  await ShopifyAPIAndMethod.init();
 
-    const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
-        htmlContent = themeLiquid?.value,
-        updatedThemeLiquid = convertStylesheets(htmlContent);
+  const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
+    htmlContent = themeLiquid?.value,
+    updatedThemeLiquid = convertStylesheets(htmlContent);
 
-    const resposne = await ShopifyAPIAndMethod.writeAsset({
-        name: "layout/theme.liquid",
-        value: updatedThemeLiquid,
-    });
+  const resposne = await ShopifyAPIAndMethod.writeAsset({
+    name: "layout/theme.liquid",
+    value: updatedThemeLiquid,
+  });
 
-    if (resposne) return sendSuccessJSONResponse(res, { message: "success" });
-    else return sendFailureJSONResponse(res, { message: "something went right" });
+  if (resposne) return sendSuccessJSONResponse(res, { message: "success" });
+  else return sendFailureJSONResponse(res, { message: "something went right" });
 };
 
 exports.removingUnusedCSS = async (req, res) => {
@@ -1611,7 +1611,9 @@ exports.fontOptimization = async (req, res, next) => {
   try {
     const themeAssets = await ShopifyAPIAndMethod.getAssets();
     const assets = themeAssets.assets;
-    const cssAssets = assets.filter((asset) => asset.content_type === "text/css");
+    const cssAssets = assets.filter(
+      (asset) => asset.content_type === "text/css"
+    );
 
     for (const cssAsset of cssAssets) {
       const publicURL = cssAsset?.public_url;
@@ -1626,7 +1628,7 @@ exports.fontOptimization = async (req, res, next) => {
           await ShopifyAPIAndMethod.writeAsset({
             name: name,
             value: value,
-        });
+          });
         } catch (error) {
           console.log(`Error occurred while writing asset:`, error);
           continue; // Continue to the next iteration of the loop
@@ -1641,99 +1643,78 @@ exports.fontOptimization = async (req, res, next) => {
   }
 };
 
-exports.delayingGoogleFont = async(req, res, next) => {
+exports.delayingGoogleFont = async (req, res, next) => {
+  const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
+    htmlContent = themeLiquid?.value,
+    updatedThemeLiquid = DelayGoogleFontLoading(htmlContent);
 
-    const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
-        htmlContent = themeLiquid?.value,
-        updatedThemeLiquid = DelayGoogleFontLoading(htmlContent);
-
-    await ShopifyAPIAndMethod.writeAsset({
-        name: "layout/theme.liquid",
-        value: updatedThemeLiquid,
-    });
-
+  await ShopifyAPIAndMethod.writeAsset({
+    name: "layout/theme.liquid",
+    value: updatedThemeLiquid,
+  });
 };
 
+exports.addingGoogleTagManager = async (req, res, next) => {
+  try {
+    const gtmKey = req.body.gtmKey;
 
-exports.addingGoogleTagManager = (req, res) => {
-  const gtmKey = req.body.gtmKey;
+    const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid();
+    const themeContent = themeLiquid?.value;
 
-  let config = {
-    method: "get",
-    url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154780401944/assets.json?asset[key]=layout/theme.liquid",
-    headers: {
-      "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
-    },
-  };
+    const isExist = checkForGoogleTagManager(themeContent);
 
-  Axios.request(config)
-    .then((response) => {
-      const htmlContent = response.data.asset.value;
+    if (!isExist) {
+      const updatedContent = addGoogleTagManager(htmlContent, gtmKey);
 
-      const isExist = checkForGoogleTagManager(htmlContent);
+      const updatedTheme = await ShopifyAPIAndMethod.writeAsset({
+        name: "layout/theme.liquid",
+        value: updatedContent,
+      });
 
-      if (!isExist) {
-        const updateLiquidTheme = addGoogleTagManager(htmlContent, gtmKey);
-        let data = JSON.stringify({
-          asset: {
-            key: "layout/theme.liquid",
-            value: updateLiquidTheme,
-          },
+      if (updatedTheme) {
+        return sendSuccessJSONResponse(res, {
+          message: "success",
         });
-
-        let config2 = {
-          method: "put",
-          url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
-          headers: {
-            "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
-            "Content-Type": "application/json",
-          },
-          data: data,
-        };
-
-        Axios.request(config2)
-          .then((response) => {
-            if (response) {
-              return sendSuccessJSONResponse(res, {
-                message: "success",
-              });
-            }
-          })
-          .catch((error) => {
-            console.log(error);
-          });
+      } else {
+        return sendFailureJSONResponse(res, {
+          message: "Something went wrong",
+        });
       }
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+    } else {
+      return sendFailureJSONResponse(res, { message: "Something went wrong" });
+    }
+  } catch (error) {
+    return sendErrorJSONResponse(res, { message: "Something went wrong" });
+  }
 };
 
 // restoration api started
 
-exports.restoringFontOptimization = async(req, res, next) => {
-
+exports.restoringFontOptimization = async (req, res, next) => {
   try {
     const themeAssets = await ShopifyAPIAndMethod.getAssets();
     const assets = themeAssets.assets;
-    const cssAssets = assets.filter((asset) => asset.content_type === "text/css");
+    const cssAssets = assets.filter(
+      (asset) => asset.content_type === "text/css"
+    );
 
     for (const cssAsset of cssAssets) {
       const publicURL = cssAsset?.public_url;
       const name = cssAsset?.key;
 
       const { fontExists, cssContent } = await CheckFontFaceExists(publicURL);
-function removeFontDisplay(cssContent) {  return cssContent.replace(/(font-display\s*:\s*[^;]+;)/g, ''); }
+      function removeFontDisplay(cssContent) {
+        return cssContent.replace(/(font-display\s*:\s*[^;]+;)/g, "");
+      }
 
       if (fontExists) {
-
-        const value = cssContent.replace(/(font-display\s*:\s*[^;]+;)/g, '');
+        const value = cssContent.replace(/(font-display\s*:\s*[^;]+;)/g, "");
 
         try {
           await ShopifyAPIAndMethod.writeAsset({
             name: name,
             value: value,
-        });
+          });
         } catch (error) {
           console.log(`Error occurred while writing asset:`, error);
           continue; // Continue to the next iteration of the loop
