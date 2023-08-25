@@ -60,6 +60,8 @@ const ShopifyAPIAndMethod = new ShopifyAPI({
   shop: process.env.SHOP,
   version: process.env.SHOPIFY_API_VERSION,
 });
+ShopifyAPIAndMethod.init();
+
 
 const uploadToCloudinary = require("../utils/uploadToCloudinary");
 
@@ -645,7 +647,6 @@ exports.removeUnusedJavascriptCode = (req, res) => {
 };
 
 exports.eliminateRenderBlockingResources = async (req, res, next) => {
-
     await ShopifyAPIAndMethod.init();
 
     const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
@@ -657,9 +658,8 @@ exports.eliminateRenderBlockingResources = async (req, res, next) => {
         value: updatedThemeLiquid,
     });
 
-    if(resposne)return sendSuccessJSONResponse(res,{message:"success"});
-    else return sendFailureJSONResponse(res,{message:"something went right"});
-
+    if (resposne) return sendSuccessJSONResponse(res, { message: "success" });
+    else return sendFailureJSONResponse(res, { message: "something went right" });
 };
 
 exports.removingUnusedCSS = async (req, res) => {
@@ -1666,55 +1666,19 @@ exports.fontOptimization = async (req, res, next) => {
   }
 };
 
-exports.delayingGoogleFont = (req, res, next) => {
-  let config = {
-    method: "get",
-    url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154780401944/assets.json?asset[key]=layout/theme.liquid",
-    headers: {
-      "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
-    },
-  };
+exports.delayingGoogleFont = async(req, res, next) => {
 
-  Axios.request(config)
-    .then((response) => {
-      const htmlContent = response.data.asset.value;
-      const updateLiquidTheme = DelayGoogleFontLoading(htmlContent);
+    const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
+        htmlContent = themeLiquid?.value,
+        updatedThemeLiquid = DelayGoogleFontLoading(htmlContent);
 
-      if (updateLiquidTheme.isModified) {
-        let data = JSON.stringify({
-          asset: {
-            key: "layout/theme.liquid",
-            value: updateLiquidTheme?.modifiedHtml,
-          },
-        });
-
-        let config2 = {
-          method: "put",
-          url: "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
-          headers: {
-            "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
-            "Content-Type": "application/json",
-          },
-          data: data,
-        };
-
-        Axios.request(config2)
-          .then((response) => {
-            if (response) {
-              return sendSuccessJSONResponse(res, {
-                message: "success",
-              });
-            }
-          })
-          .catch((error) => {
-            console.log(error);
-          });
-      }
-    })
-    .catch((error) => {
-      console.log(error);
+    const resposne = await ShopifyAPIAndMethod.writeAsset({
+        name: "layout/theme.liquid",
+        value: updatedThemeLiquid,
     });
+
 };
+
 
 exports.addingGoogleTagManager = (req, res) => {
   const gtmKey = req.body.gtmKey;
@@ -1772,15 +1736,13 @@ exports.addingGoogleTagManager = (req, res) => {
 
 // restoration api started
 
-exports.restoringFontOptimization = (req, res, next) =>{
-    res.json("asda")
-}
-
-exports.restoreCriticalCss = async (req, res, next) => {
-    await criticalCssRestore(shopifyAdmin, redisStore);
+exports.restoringFontOptimization = (req, res, next) => {
+  res.json("asda");
 };
 
-exports.resta
+exports.restoreCriticalCss = async (req, res, next) => {
+  await criticalCssRestore(shopifyAdmin, redisStore);
+};
 
 
 /**
@@ -1830,8 +1792,6 @@ async function criticalCssRestore(shopifyAdmin, redisStore) {
     ctx.body = JSON.stringify({ error: "could not find session" });
   }
 }
-
-
 
 // Create cache strategies for product details, user data, and configuration data
 const productCache = createInMemoryCache();

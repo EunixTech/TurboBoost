@@ -1,3 +1,9 @@
+/**
+ * Delays the loading of Google Fonts by modifying the HTML content.
+ * 
+ * @param {string} htmlContent - The HTML content to be modified.
+ * @returns {Object} An object containing a boolean indicating whether the HTML was modified and the modified HTML content.
+ */
 const DelayGoogleFontLoading = (htmlContent) => {
 
     const fontPattern = /https:\/\/fonts\.googleapis\.com\/css2\?[^"]+/g,
@@ -24,3 +30,4 @@ const DelayGoogleFontLoading = (htmlContent) => {
 };
 
 module.exports = DelayGoogleFontLoading;
+
