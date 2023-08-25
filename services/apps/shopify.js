@@ -104,9 +104,9 @@ class ShopifyAPI {
    * @param {string} asset.value - The asset value.
    * @return {Promise} The response data.
    */
-  async getAssets({ name, value }) {
+  async getAssets() {
     try {
-      const res = await this.fetch(
+      const res = await fetch(
         `${this.url}/themes/${this.themeId}/assets.json`,
         {
           method: "GET",
@@ -118,7 +118,8 @@ class ShopifyAPI {
       if (resJson.errors) {
         throw new Error(JSON.stringify(resJson.errors));
       }
-      return true;
+
+      return resJson;
     } catch (e) {
       throw e;
     }

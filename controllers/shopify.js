@@ -1609,14 +1609,16 @@ exports.cachingThemeAssets = (req, res) => {
 
 exports.fontOptimization = async (req, res, next) => {
   try {
-    const response = await Axios.get(
-      "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154780401944/assets.json?content_type=text/css",
-      {
-        headers: {
-          "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
-        },
-      }
-    );
+    // const response = await Axios.get(
+    //   "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154780401944/assets.json?content_type=text/css",
+    //   {
+    //     headers: {
+    //       "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
+    //     },
+    //   }
+    // );
+    const themeAssets = await ShopifyAPIAndMethod.getAssets();
+    return themeAssets
 
     const assets = response.data.assets;
     const cssAssets = assets.filter(
