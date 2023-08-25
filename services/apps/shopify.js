@@ -113,13 +113,14 @@ class ShopifyAPI {
           headers: { "X-Shopify-Access-Token": this.accessToken },
         }
       );
+
       const resJson = await res.json();
 
       if (resJson.errors) {
         throw new Error(JSON.stringify(resJson.errors));
       }
-
       return resJson;
+
     } catch (e) {
       throw e;
     }
@@ -133,31 +134,31 @@ class ShopifyAPI {
    * @return {Promise} The response data.
    */
   async writeAsset({ name, value }) {
+    console.log(`name`, name);
+    console.log(`value`, value);
     try {
-      const res = await fetch(
-        `${this.url}/themes/${this.themeId}/assets.json`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Shopify-Access-Token": this.accessToken,
+      const res = await fetch(`${this.url}/themes/${this.themeId}/assets.json`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Shopify-Access-Token": this.accessToken,
+        },
+        body: JSON.stringify({
+          asset: {
+            key: name,
+            value: value,
           },
-          body: JSON.stringify({
-            asset: {
-              key: name,
-              value: value,
-            },
-          }),
-        }
-      );
+        }),
+      });
       const resJson = await res.json();
-
+  
       if (resJson.errors) {
         throw new Error(JSON.stringify(resJson.errors));
       }
       return true;
     } catch (e) {
-      throw e;
+      console.log(`Error occurred while writing asset:`, e);
+      return false; // Return false to indicate that an error occurred
     }
   }
 

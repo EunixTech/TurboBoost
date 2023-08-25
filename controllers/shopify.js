@@ -1609,62 +1609,35 @@ exports.cachingThemeAssets = (req, res) => {
 
 exports.fontOptimization = async (req, res, next) => {
   try {
-    // const response = await Axios.get(
-    //   "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/154780401944/assets.json?content_type=text/css",
-    //   {
-    //     headers: {
-    //       "X-Shopify-Access-Token": "shpua_5251b9ea9543d66b17346f5857542659",
-    //     },
-    //   }
-    // );
     const themeAssets = await ShopifyAPIAndMethod.getAssets();
-    return themeAssets
-
-    const assets = response.data.assets;
-    const cssAssets = assets.filter(
-      (asset) => asset.content_type === "text/css"
-    );
+    const assets = themeAssets.assets;
+    const cssAssets = assets.filter((asset) => asset.content_type === "text/css");
 
     for (const cssAsset of cssAssets) {
-      const assetPublicURL = cssAsset.public_url;
-      const key = cssAsset.key;
+      const publicURL = cssAsset?.public_url;
+      const name = cssAsset?.key;
 
-      const { fontExists, cssContent } = await CheckFontFaceExists(
-        assetPublicURL
-      );
+      const { fontExists, cssContent } = await CheckFontFaceExists(publicURL);
 
       if (fontExists) {
-        const updateCssContent = addingFontDisplayInCss(cssContent);
+        const value = await addingFontDisplayInCss(cssContent);
 
-        const data = JSON.stringify({
-          asset: {
-            key: key,
-            value: updateCssContent,
-          },
+        try {
+          await ShopifyAPIAndMethod.writeAsset({
+            name: name,
+            value: value,
         });
-
-        await Axios.put(
-          "https://turboboost-dev.myshopify.com/admin/api/2022-10/themes/153666224408/assets.json",
-          data,
-          {
-            headers: {
-              "X-Shopify-Access-Token":
-                "shpua_5251b9ea9543d66b17346f5857542659",
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        } catch (error) {
+          console.log(`Error occurred while writing asset:`, error);
+          continue; // Continue to the next iteration of the loop
+        }
       }
     }
 
-    return res.json({
-      message: "success",
-    });
+    return sendSuccessJSONResponse(res, { message: "success" });
   } catch (error) {
-    console.error("Font optimization error:", error);
-    res.status(500).json({
-      message: "error",
-    });
+    console.log(`error`, error);
+    return sendFailureJSONResponse(res, { message: "Something went wrong" });
   }
 };
 
