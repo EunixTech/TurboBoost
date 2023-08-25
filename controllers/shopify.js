@@ -1644,6 +1644,7 @@ exports.fontOptimization = async (req, res, next) => {
 };
 
 exports.delayingGoogleFont = async (req, res, next) => {
+
   const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
     htmlContent = themeLiquid?.value,
     updatedThemeLiquid = DelayGoogleFontLoading(htmlContent);
@@ -1652,6 +1653,7 @@ exports.delayingGoogleFont = async (req, res, next) => {
     name: "layout/theme.liquid",
     value: updatedThemeLiquid,
   });
+
 };
 
 exports.addingGoogleTagManager = async (req, res, next) => {
@@ -1728,6 +1730,12 @@ exports.restoringFontOptimization = async (req, res, next) => {
     return sendFailureJSONResponse(res, { message: "Something went wrong" });
   }
 };
+
+
+exports.restoreGoogleFontDelay = async (req, res, next) => {
+  res.json("qwdqw")
+};
+
 
 exports.restoreCriticalCss = async (req, res, next) => {
   await criticalCssRestore(shopifyAdmin, redisStore);

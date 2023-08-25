@@ -47,5 +47,7 @@ router.get("/restore-critical-css", controllers.restoreCriticalCss);
 
 router.get("/restore-font-optimization", controllers.restoringFontOptimization);
 
+router.get("/restore-google-font-delay", controllers.restoreGoogleFontDelay);
+
 
 module.exports = router;
