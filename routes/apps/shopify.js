@@ -37,8 +37,6 @@ router.get("/lossless-image-compression", controllers.losslessImageCompression);
 
 router.get("/lossless-comp-collection-image", controllers.losslessCompCollection);
 
-router.get("/caching-product-detail", controllers.cachingProductDetail);
-
 router.get("/caching-theme-assets", controllers.cachingThemeAssets);
 
 router.get("/delay-google-font", controllers.delayingGoogleFont);

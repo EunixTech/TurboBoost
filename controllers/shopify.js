@@ -1249,7 +1249,7 @@ exports.minifyPageContent = (req, res) => {
   });
 };
 
-exports.DNSPrefetching = (req, res) => {
+exports.DNSPrefetching = (req, res, next) => {
   let config = {
     method: "get",
     url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/152998740248/assets.json?asset[key]=layout/theme.liquid",
@@ -1647,7 +1647,7 @@ exports.delayingGoogleFont = async(req, res, next) => {
         htmlContent = themeLiquid?.value,
         updatedThemeLiquid = DelayGoogleFontLoading(htmlContent);
 
-    const resposne = await ShopifyAPIAndMethod.writeAsset({
+    await ShopifyAPIAndMethod.writeAsset({
         name: "layout/theme.liquid",
         value: updatedThemeLiquid,
     });
@@ -1711,8 +1711,41 @@ exports.addingGoogleTagManager = (req, res) => {
 
 // restoration api started
 
-exports.restoringFontOptimization = (req, res, next) => {
-  res.json("asda");
+exports.restoringFontOptimization = async(req, res, next) => {
+
+  try {
+    const themeAssets = await ShopifyAPIAndMethod.getAssets();
+    const assets = themeAssets.assets;
+    const cssAssets = assets.filter((asset) => asset.content_type === "text/css");
+
+    for (const cssAsset of cssAssets) {
+      const publicURL = cssAsset?.public_url;
+      const name = cssAsset?.key;
+
+      const { fontExists, cssContent } = await CheckFontFaceExists(publicURL);
+function removeFontDisplay(cssContent) {  return cssContent.replace(/(font-display\s*:\s*[^;]+;)/g, ''); }
+
+      if (fontExists) {
+
+        const value = cssContent.replace(/(font-display\s*:\s*[^;]+;)/g, '');
+
+        try {
+          await ShopifyAPIAndMethod.writeAsset({
+            name: name,
+            value: value,
+        });
+        } catch (error) {
+          console.log(`Error occurred while writing asset:`, error);
+          continue; // Continue to the next iteration of the loop
+        }
+      }
+    }
+
+    return sendSuccessJSONResponse(res, { message: "success" });
+  } catch (error) {
+    console.log(`error`, error);
+    return sendFailureJSONResponse(res, { message: "Something went wrong" });
+  }
 };
 
 exports.restoreCriticalCss = async (req, res, next) => {
