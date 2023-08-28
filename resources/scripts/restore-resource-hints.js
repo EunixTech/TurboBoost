@@ -1,28 +1,21 @@
-const { JSDOM } = require("jsdom");
+/**
+  * Replaces link tags in the provided HTML with modified link tags.
+  *
+  * @param {string} html - The HTML string to modify.
+  * @returns {string} The modified HTML string.
+*/
+module.exports = (htmlContent) => {
 
-module.exports = (html) => {
-    const dom = new JSDOM(html);
-    const doc = dom.window.document;
-
-    const links = doc.getElementsByTagName("link");
-    for (let i = 0; i < links.length; i++) {
-        const link = links[i];
-        if (link.hasAttribute("rel")) {
-        const relValue = link.getAttribute("rel");
-        const relAttributes = relValue.split(/\s+/);
-        for (const attribute of ["dns-prefetch", "preconnect", "preload"]) {
-            const index = relAttributes.indexOf(attribute);
-            if (index !== -1) {
-            relAttributes.splice(index, 1);
-            }
+    const linkTagRegex = /<link.*?>/g;
+    const withLinkTagsReplaced = htmlContent.replace(linkTagRegex, match => {
+        const hrefMatches = match.trim().match(/<link\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1/);
+        
+        if (hrefMatches && hrefMatches.length === 3) {
+            const assetUrl = hrefMatches[2];
+            return `<link rel="stylesheet" href="${assetUrl}" as="style" media="none" onload="this.onload=null;this.media='all'">`;
         }
-        if (relAttributes.length === 0) {
-            link.removeAttribute("rel");
-        } else {
-            link.setAttribute("rel", relAttributes.join(" "));
-        }
-        }
-    }
-
-    return doc.documentElement.outerHTML;
-};
+        return match;
+    });
+ 
+    return withLinkTagsReplaced;
+}
