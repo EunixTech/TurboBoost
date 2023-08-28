@@ -398,7 +398,8 @@ exports.productCreateWebhook = async (req, res) => {
   }
 };
 
-exports.addingLazyLoadingScriptClient = async (req, res) => {
+exports.addingLazyLoadingScriptClient = async (req, res, next) => {
+
   const fetchConfig = getFetchConfig();
 
   Axios({
@@ -1697,8 +1698,8 @@ exports.addingGoogleTagManager = async (req, res, next) => {
   }
 };
 
-// restoration api started
 
+// restoration api started
 exports.restoringFontOptimization = async (req, res, next) => {
   try {
     const themeAssets = await ShopifyAPIAndMethod.getAssets();
@@ -1785,9 +1786,17 @@ exports.restoreDNSPrefetching = async (req, res, next) => {
   }
 };
 
+exports.restoreAdvancedLazyLoading = async(ewq, res, next) =>{
+  res.json({ddd: "working"})
+}
+
 exports.restoreCriticalCss = async (req, res, next) => {
   await criticalCssRestore(shopifyAdmin, redisStore);
 };
+
+exports.restoreAdvancedLazyLoading = (req, res, next) =>{
+  res.json("dasda")
+}
 
 /**
  * Turn OFF critical css for the shop

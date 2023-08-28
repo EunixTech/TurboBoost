@@ -51,5 +51,7 @@ router.get("/restore-google-font-delay", controllers.restoreGoogleFontDelay);
 
 router.get("/restore-dns-prefetch", controllers.restoreDNSPrefetching);
 
+router.get("/restore-advanced-lazy-loading", controllers.restoreAdvancedLazyLoading);
+
 
 module.exports = router;
