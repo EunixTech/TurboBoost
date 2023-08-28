@@ -475,7 +475,16 @@ exports.updatingHTMLAttribute = (req, res, next) => {
     });
 };
 
-exports.minifyJavascriptCode = (req, res, next) => {
+exports.minifyJavascriptCode = async (req, res, next) => {
+  const themeAssets = await ShopifyAPIAndMethod.getAssets();
+  const assets = themeAssets.assets;
+
+  const cssAssets = assets.filter(
+    (asset) => asset.content_type === "application/javascript"
+  );
+
+  return res.json({});
+
   function removeUnusedCodeFromHTML(html) {
     const scriptRegex = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
     const scriptTags = html.match(scriptRegex);
@@ -1646,14 +1655,24 @@ exports.fontOptimization = async (req, res, next) => {
 };
 
 exports.delayingGoogleFont = async (req, res, next) => {
-  const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
-    htmlContent = themeLiquid?.value,
-    updatedThemeLiquid = DelayGoogleFontLoading(htmlContent);
+  try {
+    const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
+      htmlContent = themeLiquid?.value,
+      updatedThemeContent = DelayGoogleFontLoading(htmlContent);
 
-  await ShopifyAPIAndMethod.writeAsset({
-    name: "layout/theme.liquid",
-    value: updatedThemeLiquid,
-  });
+    const updateTheme = await ShopifyAPIAndMethod.writeAsset({
+      name: "layout/theme.liquid",
+      value: updatedThemeContent,
+    });
+
+    if (!updateTheme) {
+      return sendFailureJSONResponse(res, { message: "something went wrong" });
+    } else {
+      return sendSuccessJSONResponse(res, { message: "success" });
+    }
+  } catch (error) {
+    return sendErrorJSONResponse(res, { message: "something went wrong" });
+  }
 };
 
 exports.addingGoogleTagManager = async (req, res, next) => {
@@ -1755,6 +1774,11 @@ exports.restoreGoogleFontDelay = async (req, res, next) => {
     return sendErrorJSONResponse(res, { message: "something went wrong" });
   }
 };
+
+
+exports.restoreDNSPrefetching = (req, res, next) =>{
+  return res.json("dsjnkds");
+}
 
 exports.restoreCriticalCss = async (req, res, next) => {
   await criticalCssRestore(shopifyAdmin, redisStore);

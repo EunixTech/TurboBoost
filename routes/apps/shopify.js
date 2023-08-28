@@ -49,4 +49,7 @@ router.get("/restore-font-optimization", controllers.restoringFontOptimization);
 
 router.get("/restore-google-font-delay", controllers.restoreGoogleFontDelay);
 
+router.get("/restore-dns-prefetch", controllers.restoreDNSPrefetching);
+
+
 module.exports = router;
