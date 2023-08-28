@@ -15,6 +15,7 @@ const mongoose = require("mongoose"),
   addDNSPrefetch = require("../resources/scripts/DNS-prefetch"),
   CheckFontFaceExists = require("../resources/scripts/checking-font-face"),
   addingFontDisplayInCss = require("../resources/scripts/add-font-display"),
+  restoreResourceHints = require("../resources/scripts/restore-resource-hints"),
   convertStylesheets = require("../resources/scripts/convert-stylesheets"),
   DelayGoogleFontLoading = require("../resources/scripts/delay-google-font-loading"),
   {
@@ -1772,13 +1773,21 @@ exports.restoreDNSPrefetching = async (req, res, next) => {
     const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
       htmlContent = themeLiquid?.value;
 
+    const updateThemeContent = restoreResourceHints(htmlContent);
+
     const resposne = await ShopifyAPIAndMethod.writeAsset({
       name: "layout/theme.liquid",
-      value: htmlContent,
+      value: updateThemeContent,
     });
 
-    return res.json("dsjnkds");
-  } catch (error) {}
+    if (!resposne) {
+      return sendFailureJSONResponse(res, { message: "Something went wrong" });
+    } else {
+      return sendSuccessJSONResponse(res, { message: "message" });
+    }
+  } catch (error) {
+    return sendFailureJSONResponse(res, { message: "Something went wrong" });
+  }
 };
 
 exports.restoreCriticalCss = async (req, res, next) => {
