@@ -1,7 +1,4 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable no-undef */
-/* eslint-disable no-mixed-spaces-and-tabs */
-/* eslint-disable no-useless-catch */
+
 const mongoose = require("mongoose"),
   crypto = require("crypto"),
   Axios = require("axios"),
@@ -481,9 +478,7 @@ exports.minifyJavascriptCode = async (req, res, next) => {
   const themeAssets = await ShopifyAPIAndMethod.getAssets();
   const assets = themeAssets.assets;
 
-  const cssAssets = assets.filter(
-    (asset) => asset.content_type === "application/javascript"
-  );
+  const cssAssets = assets.filter((asset) => asset.content_type === "application/javascript");
 
   return res.json({});
 
@@ -1775,12 +1770,12 @@ exports.restoreDNSPrefetching = async (req, res, next) => {
 
     const updateThemeContent = restoreResourceHints(htmlContent);
 
-    const resposne = await ShopifyAPIAndMethod.writeAsset({
+    const res = await ShopifyAPIAndMethod.writeAsset({
       name: "layout/theme.liquid",
       value: updateThemeContent,
     });
 
-    if (!resposne) {
+    if (!res) {
       return sendFailureJSONResponse(res, { message: "Something went wrong" });
     } else {
       return sendSuccessJSONResponse(res, { message: "message" });
