@@ -53,6 +53,7 @@ const {
   generateForShop,
   uploadShopifySnippets,
 } = require("../lib/shopify/critical-css/critical-css");
+
 const parseThemeLiquid = require("../lib/shopify/critical-css/parseThemeLiquid");
 const restoreThemeLiquid = require("../lib/shopify/critical-css/restoreThemeLiquid");
 
@@ -1260,23 +1261,14 @@ exports.minifyPageContent = (req, res) => {
   });
 };
 
-exports.DNSPrefetching = (req, res, next) => {
-  let config = {
-    method: "get",
-    url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/themes/152998740248/assets.json?asset[key]=layout/theme.liquid",
-    headers: {
-      "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
-    },
-  };
+exports.DNSPrefetching = async (req, res, next) => {
+  const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
+    htmlContent = themeLiquid?.value;
 
-  axios
-    .request(config)
-    .then((response) => {
-      console.log(JSON.stringify(response.data));
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+  await ShopifyAPIAndMethod.writeAsset({
+    name: name,
+    value: value,
+  });
 
   // updating main theme page
 
@@ -1775,10 +1767,19 @@ exports.restoreGoogleFontDelay = async (req, res, next) => {
   }
 };
 
+exports.restoreDNSPrefetching = async (req, res, next) => {
+  try {
+    const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
+      htmlContent = themeLiquid?.value;
 
-exports.restoreDNSPrefetching = (req, res, next) =>{
-  return res.json("dsjnkds");
-}
+    const resposne = await ShopifyAPIAndMethod.writeAsset({
+      name: "layout/theme.liquid",
+      value: htmlContent,
+    });
+
+    return res.json("dsjnkds");
+  } catch (error) {}
+};
 
 exports.restoreCriticalCss = async (req, res, next) => {
   await criticalCssRestore(shopifyAdmin, redisStore);
