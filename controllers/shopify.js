@@ -1793,6 +1793,12 @@ exports.restoreAdvancedLazyLoading = async (req, res, next) => {
 
     const updateThemeContent = commentOutIncludes(htmlContent);
 
+    const p = [];
+    p.push(shopifyAdmin.deleteAsset('snippets/responsive-image.liquid'));
+    p.push(shopifyAdmin.deleteAsset('snippets/Bgset.liquid'));
+    p.push(shopifyAdmin.deleteAsset('assets/lazyloading.js'));
+    await Promise.all(p);
+
     const res =  await ShopifyAPIAndMethod.writeAsset({
       name: "layout/theme.liquid",
       value: updateThemeContent,
@@ -1820,17 +1826,7 @@ exports.restoreAdvancedLazyLoading = (req, res, next) => {
  * @param {Object} shopifyAdmin
  */
 async function criticalCssRestore(shopifyAdmin, redisStore) {
-  // const p = [];
-  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css.liquid"));
-  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-index.liquid"));
-  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-collection.liquid"));
-  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-list-collections.liquid"));
-  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-product.liquid"));
-  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-blog.liquid"));
-  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-article.liquid"));
-  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-search.liquid"));
-  // p.push(shopifyAdmin.deleteAsset("snippets/critical-css-page.liquid"));
-  // await Promise.all(p);
+
 
   // const themeLiquid = await shopifyAdmin.getThemeLiquid();
   // const updatedThemeLiquid = await restoreThemeLiquid(themeLiquid.value, redisStore, shopifyAdmin.shop);
