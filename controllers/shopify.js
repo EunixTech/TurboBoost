@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose"),
   crypto = require("crypto"),
   Axios = require("axios"),
@@ -399,7 +398,6 @@ exports.productCreateWebhook = async (req, res) => {
 };
 
 exports.addingLazyLoadingScriptClient = async (req, res, next) => {
-
   const fetchConfig = getFetchConfig();
 
   Axios({
@@ -479,7 +477,9 @@ exports.minifyJavascriptCode = async (req, res, next) => {
   const themeAssets = await ShopifyAPIAndMethod.getAssets();
   const assets = themeAssets.assets;
 
-  const cssAssets = assets.filter((asset) => asset.content_type === "application/javascript");
+  const cssAssets = assets.filter(
+    (asset) => asset.content_type === "application/javascript"
+  );
 
   return res.json({});
 
@@ -1698,7 +1698,6 @@ exports.addingGoogleTagManager = async (req, res, next) => {
   }
 };
 
-
 // restoration api started
 exports.restoringFontOptimization = async (req, res, next) => {
   try {
@@ -1786,17 +1785,35 @@ exports.restoreDNSPrefetching = async (req, res, next) => {
   }
 };
 
-exports.restoreAdvancedLazyLoading = async(ewq, res, next) =>{
-  res.json({ddd: "working"})
+exports.restoreAdvancedLazyLoading = async (req, res, next) => {
+
+  try {
+    const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
+      htmlContent = themeLiquid?.value;
+
+    const updateThemeContent = commentOutIncludes(htmlContent);
+
+    const res =  await ShopifyAPIAndMethod.writeAsset({
+      name: "layout/theme.liquid",
+      value: updateThemeContent,
+    });
+  } catch (error) {
+    return sendFailureJSONResponse(res,{message:"Something went wrong"})
+  }
+};
+
+function commentOutIncludes(html) {
+  const includePattern = /{%\s*include\s*'responsive-image'.*?%}/g;
+  return html.replace(includePattern, (match) => `<!-- ${match} -->`);
 }
 
 exports.restoreCriticalCss = async (req, res, next) => {
   await criticalCssRestore(shopifyAdmin, redisStore);
 };
 
-exports.restoreAdvancedLazyLoading = (req, res, next) =>{
-  res.json("dasda")
-}
+exports.restoreAdvancedLazyLoading = (req, res, next) => {
+  res.json("dasda");
+};
 
 /**
  * Turn OFF critical css for the shop

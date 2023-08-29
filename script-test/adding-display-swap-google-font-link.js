@@ -1,4 +1,6 @@
+
 const AddDisplayProperties = (htmlContent) => {
+    
     const fontPattern = /https:\/\/fonts\.googleapis\.com\/css2\?[^"]+/g;
     const fontLinks = htmlContent.match(fontPattern);
   
