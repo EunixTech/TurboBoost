@@ -107,7 +107,7 @@ class ShopifyAPI {
       }
   
       try {
-        const themeLiquid = await fetch(
+        const jsonRes = await fetch(
           `${this.url}/themes/${this.themeId}/assets.json?asset[key]=${assetName}`,
           {
             headers: {
@@ -116,7 +116,7 @@ class ShopifyAPI {
           }
         ).then((res) => res.json());
   
-        this.assets.theme = themeLiquid.asset;
+        this.assets.theme = jsonRes.asset;
         return this.assets.theme;
       } catch (e) {
         throw e;
