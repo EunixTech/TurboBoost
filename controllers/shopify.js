@@ -13,6 +13,7 @@ const mongoose = require("mongoose"),
   addingFontDisplayInCss = require("../resources/scripts/add-font-display"),
   restoreResourceHints = require("../resources/scripts/restore-resource-hints"),
   convertStylesheets = require("../resources/scripts/convert-stylesheets"),
+  removeWidthSizeAttribute = require("../resources/scripts/remove-width-attributes-Imgtag"),
   DelayGoogleFontLoading = require("../resources/scripts/delay-google-font-loading"),
   {
     addGoogleTagManager,
@@ -398,12 +399,10 @@ exports.productCreateWebhook = async (req, res) => {
 };
 
 exports.addingLazyLoading = async (req, res, next) => {
-  
   const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
-      htmlContent = themeLiquid?.value;
+    htmlContent = themeLiquid?.value;
 
-    const updateThemeContent = restoreResourceHints(htmlContent);
-
+  const updateThemeContent = restoreResourceHints(htmlContent);
 };
 
 exports.updatingHTMLAttribute = (req, res, next) => {
@@ -1658,7 +1657,6 @@ exports.restoreDNSPrefetching = async (req, res, next) => {
 };
 
 exports.restoreAdvancedLazyLoading = async (req, res, next) => {
-
   try {
     const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
       htmlContent = themeLiquid?.value;
@@ -1666,18 +1664,18 @@ exports.restoreAdvancedLazyLoading = async (req, res, next) => {
     const updateThemeContent = commentOutIncludes(htmlContent);
 
     const p = [];
-      p.push(shopifyAdmin.deleteAsset('snippets/responsive-image.liquid'));
-      p.push(shopifyAdmin.deleteAsset('snippets/Bgset.liquid'));
-      p.push(shopifyAdmin.deleteAsset('assets/lazyloading.js'));
+    p.push(shopifyAdmin.deleteAsset("snippets/responsive-image.liquid"));
+    p.push(shopifyAdmin.deleteAsset("snippets/Bgset.liquid"));
+    p.push(shopifyAdmin.deleteAsset("assets/lazyloading.js"));
     await Promise.all(p);
 
     await ShopifyAPIAndMethod.writeAsset({
       name: "layout/theme.liquid",
       value: updateThemeContent,
     });
-    return sendSuccessJSONResponse(res,{message:"success"})
+    return sendSuccessJSONResponse(res, { message: "success" });
   } catch (error) {
-    return sendFailureJSONResponse(res,{message:"Something went wrong"})
+    return sendFailureJSONResponse(res, { message: "Something went wrong" });
   }
 };
 
@@ -1690,12 +1688,28 @@ exports.restoreCriticalCss = async (req, res, next) => {
   await criticalCssRestore(shopifyAdmin, redisStore);
 };
 
-exports.restoreImageSizeAdaption = async(req, res, next) => {
-  const themeLiquid = await ShopifyAPIAndMethod.getAssetByName(""),
-    htmlContent = themeLiquid?.value;
+exports.restoreImageSizeAdaption = async (req, res, next) => {
+  try {
+    const snippets = await ShopifyAPIAndMethod.getAssetByName(
+        "snippets/responsive-image.liquid"
+      ),
+      snippetsContent = snippets?.value;
 
-  const updateThemeContent = commentOutIncludes(htmlContent);
+    const updateSnippetsContent = removeWidthSizeAttribute(snippetsContent);
 
+    const res = await ShopifyAPIAndMethod.writeAsset({
+      name: "snippets/responsive-image.liquid",
+      value: updateSnippetsContent,
+    });
+
+    if(!res) {
+      return sendFailureJSONResponse(res,{message:"Something went wrong"});
+    } else{
+      return sendSuccessJSONResponse(res,{message:"success"});
+    }
+  } catch (error) {
+    return sendErrorJSONResponse(res,{message:"Something went wrong"});
+  }
 };
 
 /**
@@ -1703,8 +1717,6 @@ exports.restoreImageSizeAdaption = async(req, res, next) => {
  * @param {Object} shopifyAdmin
  */
 async function criticalCssRestore(shopifyAdmin, redisStore) {
-
-
   // const themeLiquid = await shopifyAdmin.getThemeLiquid();
   // const updatedThemeLiquid = await restoreThemeLiquid(themeLiquid.value, redisStore, shopifyAdmin.shop);
   // // Diff and Only write if different
