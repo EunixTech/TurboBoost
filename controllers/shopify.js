@@ -1690,8 +1690,12 @@ exports.restoreCriticalCss = async (req, res, next) => {
   await criticalCssRestore(shopifyAdmin, redisStore);
 };
 
-exports.restoreImageSizeAdaption = (req, res, next) => {
-  res.json("dasda");
+exports.restoreImageSizeAdaption = async(req, res, next) => {
+  const themeLiquid = await ShopifyAPIAndMethod.getAssetByName(""),
+    htmlContent = themeLiquid?.value;
+
+  const updateThemeContent = commentOutIncludes(htmlContent);
+
 };
 
 /**

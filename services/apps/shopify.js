@@ -97,6 +97,33 @@ class ShopifyAPI {
     }
   }
 
+    /**
+   * Get the theme liquid.
+   * @return {Promise} The theme liquid.
+   */
+    async getAssetByName(assetName) {
+      if (this.assets.theme) {
+        return this.assets.theme;
+      }
+  
+      try {
+        const themeLiquid = await fetch(
+          `${this.url}/themes/${this.themeId}/assets.json?asset[key]=${assetName}`,
+          {
+            headers: {
+              "X-Shopify-Access-Token": this.accessToken,
+            },
+          }
+        ).then((res) => res.json());
+  
+        this.assets.theme = themeLiquid.asset;
+        return this.assets.theme;
+      } catch (e) {
+        throw e;
+      }
+    }
+  
+
   /**
    * read all an asset.
    * @param {Object} asset - The asset object.
