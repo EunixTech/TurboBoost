@@ -397,35 +397,13 @@ exports.productCreateWebhook = async (req, res) => {
   }
 };
 
-exports.addingLazyLoadingScriptClient = async (req, res, next) => {
-  const fetchConfig = getFetchConfig();
+exports.addingLazyLoading = async (req, res, next) => {
+  
+  const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
+      htmlContent = themeLiquid?.value;
 
-  Axios({
-    ...fetchConfig,
-    url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes.json?role=main`,
-  }).then(async (foundTheme) => {
-    const themeId = foundTheme?.data?.themes[0]?.id;
+    const updateThemeContent = restoreResourceHints(htmlContent);
 
-    if (themeId) {
-      const responseq = await Axios({
-        ...fetchConfig,
-        method: "PUT",
-        url: `https://turboboost-dev.myshopify.com/admin/api/2023-01/themes/${themeId}/assets.json`,
-        data: JSON.stringify({
-          asset: {
-            key: "sections/main-product.liquid",
-            value:
-              "{%- for media in product.media -%}\n <img\n  alt=\"{{ media.alt }}\"\n data-sizes=\"auto\"\n data-srcset=\"{{ media.preview_image | img_url: '275x' }} 275w,\n  {{ media.preview_image | img_url: '320x' }} 320w,\n {{ media.preview_image | img_url: '500x' }} 500w,\n                     {{ media.preview_image | img_url: '640x' }} 640w,\n                     {{ media.preview_image | img_url: '1024x' }} 1024w\"\n        data-src=\"{{ media.preview_image | img_url: '416x' }}\"\n        src=\"{{ media.preview_image | img_url: '275x' }}\"\n        class=\"lazyloadssssss-manmohan\" />\n{%- endfor -%}",
-          },
-        }),
-      });
-      const responseDatwa = responseq.data; // Extract the data from the response object
-      console.log(responseDatwa);
-    }
-    res.json({
-      themeId,
-    });
-  });
 };
 
 exports.updatingHTMLAttribute = (req, res, next) => {
@@ -1037,113 +1015,7 @@ exports.removingUnusedCssFromIndexPage = (req, res) => {
       const { JSDOM } = require("jsdom");
       const css = require("css");
 
-      const dom = new JSDOM(`
-</style><style data-shopify>
-.menu-drawer__utility-links
-{
-    font: red;
-}
-
-.demo:{
-    qwdjhqwjdhgqj:qwdqw
-}
-#header {
-    padding-top: 10px;
-    padding-bottom: 10px;
-  }
-
-  .section-header {
-    position: sticky; /* This is for fixing a Safari z-index issue. PR #2147 */
-    margin-bottom: 18px;
-  }
-
-  @media screen and (min-width: 750px) {
-    .section-header {
-      margin-bottom: 24px;
-    }
-  }
-
-  @media screen and (min-width: 990px) {
-    .header {
-      padding-top: 20px;
-      padding-bottom: 20px;
-    }
-  }</style>
-
-<header-drawer data-breakpoint="tablet">
-  <details id="Details-menu-drawer-container" class="menu-drawer-container">
-    <summary
-      class="header__icon header__icon--menu header__icon--summary link focus-inset"
-      aria-label="Menu"
-    >
-      <span>
-        <svg
-    xmlns="http://www.w3.org/2000/svg"
-    aria-hidden="true"
-    focusable="false"
-    class="icon icon-hamburger"
-    fill="none"
-    viewBox="0 0 18 16"
->
-  <path d="M1 .5a.5.5 0 100 1h15.71a.5.5 0 000-1H1zM.5 8a.5.5 0 01.5-.5h15.71a.5.5 0 010 1H1A.5.5 0 01.5 8zm0 7a.5.5 0 01.5-.5h15.71a.5.5 0 010 1H1a.5.5 0 01-.5-.5z" fill="currentColor">
-</svg>
-
-        <svg
-  xmlns="http://www.w3.org/2000/svg"
-  aria-hidden="true"
-  focusable="false"
-  class="icon icon-close"
-  fill="none"
-  viewBox="0 0 18 17"
->
-  <path d="M.865 15.978a.5.5 0 00.707.707l7.433-7.431 7.579 7.282a.501.501 0 00.846-.37.5.5 0 00-.153-.351L9.712 8.546l7.417-7.416a.5.5 0 10-.707-.708L8.991 7.853 1.413.573a.5.5 0 10-.693.72l7.563 7.268-7.418 7.417z" fill="currentColor">
-</svg>
-
-      </span>
-    </summary>
-    <div id="menu-drawer "  class="gradient menu-drawer motion-reduce">
-      <div class="menu-drawer__inner-container">
-        <div class="menu-drawer__navigation-container">
-          <nav class="menu-drawer__navigation">
-            <ul class="menu-drawer__menu has-submenu list-menu" role="list"><li><a
-                      id="HeaderDrawer-home"
-                      href="/"
-                      class="menu-drawer__menu-item list-menu__item link link--text focus-inset menu-drawer__menu-item--active"
-                      
-                        aria-current="page"
-                      
-                    >
-                      Home
-                    </a></li><li><a
-                      id="HeaderDrawer-catalog"
-                      href="/collections/all"
-                      class="menu-drawer__menu-item list-menu__item link link--text focus-inset"
-                      
-                    >
-                      Catalog
-                    </a></li><li><a
-                      id="HeaderDrawer-contact"
-                      href="/pages/contact"
-                      class="menu-drawer__menu-item list-menu__item link link--text focus-inset"
-                    >
-                      Contact
-                    </a></li><li><a
-                      id="HeaderDrawer-testing"
-                      href="/pages/new-warranty"
-                      class="menu-drawer__menu-item list-menu__item link link--text focus-inset"
-                      
-                    >
-                      testing
-                    </a></li></ul>
-          </nav>
-          <div class="menu-drawer__utility-links demo"><ul class="list list-social list-unstyled" role="list"></ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  </details>
-</header-drawer>
-`);
+      const dom = new JSDOM();
 
       const doc = dom.window.document;
       const usedSelectors = [];
@@ -1794,15 +1666,16 @@ exports.restoreAdvancedLazyLoading = async (req, res, next) => {
     const updateThemeContent = commentOutIncludes(htmlContent);
 
     const p = [];
-    p.push(shopifyAdmin.deleteAsset('snippets/responsive-image.liquid'));
-    p.push(shopifyAdmin.deleteAsset('snippets/Bgset.liquid'));
-    p.push(shopifyAdmin.deleteAsset('assets/lazyloading.js'));
+      p.push(shopifyAdmin.deleteAsset('snippets/responsive-image.liquid'));
+      p.push(shopifyAdmin.deleteAsset('snippets/Bgset.liquid'));
+      p.push(shopifyAdmin.deleteAsset('assets/lazyloading.js'));
     await Promise.all(p);
 
-    const res =  await ShopifyAPIAndMethod.writeAsset({
+    await ShopifyAPIAndMethod.writeAsset({
       name: "layout/theme.liquid",
       value: updateThemeContent,
     });
+    return sendSuccessJSONResponse(res,{message:"success"})
   } catch (error) {
     return sendFailureJSONResponse(res,{message:"Something went wrong"})
   }
@@ -1817,7 +1690,7 @@ exports.restoreCriticalCss = async (req, res, next) => {
   await criticalCssRestore(shopifyAdmin, redisStore);
 };
 
-exports.restoreAdvancedLazyLoading = (req, res, next) => {
+exports.restoreImageSizeAdaption = (req, res, next) => {
   res.json("dasda");
 };
 

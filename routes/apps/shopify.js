@@ -7,7 +7,7 @@ router.get("/auth-callback", controllers.authCallback);
 
 router.get("/fetch-product", controllers.fetchAllProduct);
 
-router.get("/adding-lazy-loading", controllers.addingLazyLoadingScriptClient);
+router.get("/adding-lazy-loading", controllers.addingLazyLoading);
 
 router.get("/updating-html-attributes", controllers.updatingHTMLAttribute);
 
@@ -52,6 +52,8 @@ router.get("/restore-google-font-delay", controllers.restoreGoogleFontDelay);
 router.get("/restore-dns-prefetch", controllers.restoreDNSPrefetching);
 
 router.get("/restore-advanced-lazy-loading", controllers.restoreAdvancedLazyLoading);
+
+router.get("/restore-restore-image-adaption", controllers.restoreImageSizeAdaption);
 
 
 module.exports = router;
