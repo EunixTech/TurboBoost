@@ -112,6 +112,29 @@ class ShopifyAPI {
     }
   }
 
+  async getAllProducts() {
+
+    try {
+      const res = await fetch(
+        `${this.url}/products.json`,
+        {
+          method: "GET",
+          headers: { "X-Shopify-Access-Token": this.accessToken },
+        }
+      );
+
+      const resJson = await res.json();
+
+      if (resJson.errors) {
+        throw new Error(JSON.stringify(resJson.errors));
+      }
+      return resJson?.products;
+    } catch (e) {
+      throw e;
+    }
+  }
+
+
   async writeAsset({ name, value }) {
     try {
       const res = await fetch(`${this.url}/themes/${this.themeId}/assets.json`, {

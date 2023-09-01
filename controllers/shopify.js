@@ -1266,8 +1266,10 @@ exports.restoreImageSizeAdaption = async (req, res, next) => {
   }
 };
 
-exports.restoreImageCompression = (req, res, next) => {
-  res.json("asd");
+exports.restoreImageCompression = async(req, res, next) => {
+  const data = await ShopifyAPIAndMethod.getAllProducts();
+
+  res.json(data);
 };
 
 /**
