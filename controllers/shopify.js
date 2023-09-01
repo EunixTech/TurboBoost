@@ -32,7 +32,6 @@ const mongoose = require("mongoose"),
     losslessCompression,
     lossyCompression,
   } = require("../resources/image-compression"),
-  
   {
     SHOPIFY_API_KEY,
     SHOPIFY_API_SECRET,
@@ -44,7 +43,6 @@ const mongoose = require("mongoose"),
 const { googleApiDisplaySwap } = require("../utils/commenRegrex");
 
 require("../utils/mongoose");
-
 
 const ShopifyAPI = require("../services/apps/shopify");
 
@@ -236,92 +234,50 @@ exports.authCallback = async (req, res) => {
   }
 };
 
-// exports.fetchAllProduct = async (req, res, next) => {
 
-//     // const config = {
-//     //     method: 'GET',
-//     //     url: 'https://turboboost-dev.myshopify.com/admin/api/2023-04/products.json',
-//     //     headers: {
-//     //         'X-Shopify-Access-Token': 'shpua_92e1118272f4b9fd9af36af7fd2ec2d2'
-//     //     }
-//     // };
 
-//     // try {
-//     //     const response = await Axios(config);
-//     //     const responseData = response.data; // Extract the data from the response object
+// exports.fetchAllProduct = async (req, res) => {
+//   let data = JSON.stringify({
+//     query: `mutation productImageUpdate($image: ImageInput!, $productId: ID!) {
+//                   productImageUpdate(image: $image, productId: $productId) {
+//                     image {
+//                       id,src
+//                     }
+//                     userErrors {
+//                       field
+//                       message
+//                     }
+//                   }
+//                 }`,
+//     variables: {
+//       image: {
+//         altText: "test",
+//         id: "gid://shopify/ProductImage/41962191454488",
+//         src: "https://www.shutterstock.com/image-vector/example-red-square-grunge-stamp-260nw-327662909.jpg",
+//       },
+//       productId: "gid://shopify/Product/8406446014744",
+//     },
+//   });
 
-//     //     const ProductData = response?.data?.products;
+//   let config = {
+//     method: "post",
+//     maxBodyLength: Infinity,
+//     url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/graphql.json",
+//     headers: {
+//       "X-Shopify-Access-Token": "shpua_92e1118272f4b9fd9af36af7fd2ec2d2",
+//       "Content-Type": "application/json",
+//     },
+//     data: data,
+//   };
 
-//     //     for (var i = ProductData.length - 1; i >= 0; i--) {
-//     //         console.log(ProductData[i].id);
-
-//     //         const config1 = {
-//     //             method: 'GET',
-//     //             url:`https://turboboost-dev.myshopify.com/admin/api/2023-04/products/8406445752600/images.json`,
-//     //             headers: {
-//     //                 'X-Shopify-Access-Token': 'shpua_92e1118272f4b9fd9af36af7fd2ec2d2'
-//     //             }
-//     //         };
-
-//     //         const responseq = await Axios(config1);
-//     //         const responseDatwa = responseq.data; // Extract the data from the response object
-
-//     //         console.log(responseDatwa)
-
-//     //     }
-//     //     // updateImageSource();
-
-//     //     return res.json({ data: ProductData });
-//     // } catch (error) {
-//     //     // Handle the error appropriately
-//     //     next(error);
-//     // }
-
-//     updateImageSource(req, res, next)
-// }
-
-exports.fetchAllProduct = async (req, res) => {
-  let data = JSON.stringify({
-    query: `mutation productImageUpdate($image: ImageInput!, $productId: ID!) {
-                  productImageUpdate(image: $image, productId: $productId) {
-                    image {
-                      id,src
-                    }
-                    userErrors {
-                      field
-                      message
-                    }
-                  }
-                }`,
-    variables: {
-      image: {
-        altText: "test",
-        id: "gid://shopify/ProductImage/41962191454488",
-        src: "https://www.shutterstock.com/image-vector/example-red-square-grunge-stamp-260nw-327662909.jpg",
-      },
-      productId: "gid://shopify/Product/8406446014744",
-    },
-  });
-
-  let config = {
-    method: "post",
-    maxBodyLength: Infinity,
-    url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/graphql.json",
-    headers: {
-      "X-Shopify-Access-Token": "shpua_92e1118272f4b9fd9af36af7fd2ec2d2",
-      "Content-Type": "application/json",
-    },
-    data: data,
-  };
-
-  Axios.request(config)
-    .then((response) => {
-      console.log(JSON.stringify(response.data));
-    })
-    .catch((error) => {
-      console.log(error);
-    });
-};
+//   Axios.request(config)
+//     .then((response) => {
+//       console.log(JSON.stringify(response.data));
+//     })
+//     .catch((error) => {
+//       console.log(error);
+//     });
+// };
 
 // exports.createProductCreateWebHook = async (shop, accessToken) => { // call this on installing shopify app
 //     let uuid = crypto.randomUUID()
@@ -392,51 +348,6 @@ exports.addingLazyLoading = async (req, res, next) => {
     htmlContent = themeLiquid?.value;
 
   const updateThemeContent = restoreResourceHints(htmlContent);
-};
-
-exports.updatingHTMLAttribute = (req, res, next) => {
-  let data = JSON.stringify({
-    query: `mutation productImageUpdate($image: ImageInput!, $productId: ID!) {
-                  productImageUpdate(image: $image, productId: $productId) {
-                    image {
-                      id,src
-                    }
-                    userErrors {
-                      field
-                      message
-                    }
-                  }
-                }`,
-    variables: {
-      image: {
-        altText: "test",
-        id: "gid://shopify/ProductImage/41962191454488",
-        src: "https://www.shutterstock.com/image-vector/example-red-square-grunge-stamp-260nw-327662909.jpg",
-      },
-      productId: "gid://shopify/Product/8406446014744",
-    },
-  });
-
-  let config = {
-    method: "post",
-    maxBodyLength: Infinity,
-    url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/graphql.json",
-    headers: {
-      "X-Shopify-Access-Token": "shpua_92e1118272f4b9fd9af36af7fd2ec2d2",
-      "Content-Type": "application/json",
-      Cookie:
-        "__cf_bm=4SUrq29XCW4.ROWvgNsea_HYs4tpxw1hA1MqN_5016M-1687808384-0-AToLqgA5GmgslUR9bRyWh9X3U1/jWswRf2qbln1Qg7YZhPrH0njI6uY/nijxtVu1dhDjtdJh9Nde5SSbdLgXn4c=",
-    },
-    data: data,
-  };
-
-  Axios.request(config)
-    .then((response) => {
-      console.log(JSON.stringify(response.data));
-    })
-    .catch((error) => {
-      console.log(error);
-    });
 };
 
 exports.minifyJavascriptCode = async (req, res, next) => {
@@ -637,352 +548,6 @@ exports.eliminateRenderBlockingResources = async (req, res, next) => {
   else return sendFailureJSONResponse(res, { message: "something went right" });
 };
 
-exports.removingUnusedCSS = async (req, res) => {
-  // getThemeAssets();
-
-  // Example usage
-  // getThemeAssets()
-  const cssCode = `
-      select option[disabled]{
-      color: var(--red) !important;
-      font-weight: bold !important
-      }
-
-  .required_field{
-      color: var(--red);
-  }
-
-  @media only screen and (max-width: 749px) {
-    .option_text {
-        margin-bottom: 1.8rem;
-        margin-top: 1rem
-    }
-    .option_text1{
-      font-size: .9rem;
-  }
-  }
-}
-
-  .option_text{
-    font-size: .9rem;
-  }
-
-  .option_text1 .option_text{
-      font-size: .9rem;
-  }`;
-
-  const unusedCss = [".option_text", ".required_field"];
-
-  // const modifiedCss = removeUnusedCss(cssCode, unusedCss);
-  // console.log(modifiedCss);
-  const dd = getThemeAssets();
-  res.json({ dd });
-  // const cssContent = `
-  // select option[disabled] {
-  //     color: var(--red) !important;
-  //     font-weight: bold !important
-  // }
-
-  // .required_field {
-  //     color: var(--red);
-  // }
-
-  // .option_text{
-  //     font-size: .9rem;
-  // }
-  // `;
-
-  // const unusedCss = [".option_text"];
-
-  // const removeUnusedCSS = (cssContent, unusedCss) => {
-  //   const modifiedContent = [];
-  //   const lines = cssContent.split("\n");
-
-  //   for (const line of lines) {
-  //     let found = false;
-  //     for (const selector of unusedCss) {
-  //       if (line.includes(selector)) {
-  //         found = true;
-  //         break;
-  //       }
-  //     }
-
-  //     if (!found) {
-  //       modifiedContent.push(line);
-  //     }
-  //   }
-
-  //   return modifiedContent.join("\n");
-  // };
-
-  // const modifiedContent = removeUnusedCSS(cssContent, unusedCss);
-
-  // console.log(modifiedContent);
-};
-
-// fetching all assets or theme
-async function getThemeAssets() {
-  const fetchConfig = getFetchConfig();
-
-  // Axios({
-  //   ...fetchConfig,
-  //   url: `https://turboboost-dev.myshopify.com/admin/api/2023-04/themes.json?role=main`,
-  // }).then(async (foundTheme) => {
-  //   const themeId = foundTheme?.data?.themes[0]?.id;
-
-  //   if (themeId) {
-  //     Axios({
-  //       ...fetchConfig,
-  //       url: `https://turboboost-dev.myshopify.com/admin/api/2023-07/themes/${themeId}/assets.json`,
-  //     }).then(async (assests) => {
-  //       const themeAssets = assests.data?.assets;
-
-  //       const cssAssets = themeAssets.filter((asset) => asset.content_type === 'text/css');
-
-  //       const cssAsset = cssAssets[0]; // Assuming you have only one CSS file
-  //       const cssContent = cssAsset.value;
-  //       console.log(`cssContent`, cssContent);
-  //     });
-  //   }
-  // });
-
-  // https://turboboost-dev.myshopify.com/index.json
-
-  let config = {
-    method: "get",
-    maxBodyLength: Infinity,
-    url: "https://turboboost-dev.myshopify.com/index.json",
-    headers: {
-      "X-Shopify-Access-Token": "shpua_832b00f9f277821c02a70c5524402acd",
-    },
-  };
-
-  Axios.request(config)
-    .then((response) => {
-      console.log(response.data);
-      return response.data;
-    })
-    .catch((error) => {
-      console.log(error);
-    });
-
-  // const response = await Axios.get(
-  //   `https://cdn.shopify.com/s/files/1/0780/8001/6664/t/5/assets/section-password.css?v=1688552832`
-  // );
-
-  // const minifiedCSS = '.man{color:red}body{background:#fff}.container{width:100%;padding:10px}';
-  // const beautifiedCSS = cssbeautify(response?.data);
-
-  // console.log(`beautifiedCSS`, beautifiedCSS);
-  // const beautifiedCSS = cssbeautify(minifiedCSS);
-
-  // try {
-  //   const response = await Axios.get(`getThemeAssets/admin/api/2021-07/themes/${themeId}/assets.json`, {
-  //     auth: {
-  //       username: apiKey,
-  //       password: password,
-  //     },
-  //   });
-
-  //   return response.data.assets;
-  // } catch (error) {
-  //   console.error('Error fetching theme assets:', error.message);
-  //   return [];
-  // }
-}
-
-// function removeUnusedCSS(cssContent, unusedSelectors) {
-//   let modifiedContent = cssContent;
-
-//   unusedSelectors.forEach((selector) => {
-//     const regex = new RegExp(`\\b${selector}\\s*{[^}]*}`, 'g');
-//     modifiedContent = modifiedContent.replace(regex, '');
-//   });
-
-//   return modifiedContent;
-// }
-
-// async function updateThemeAssets(updatedAssets) {
-//   try {
-//     const response = await axios.put(`https://${shopifyStoreDomain}/admin/api/2021-07/themes/${themeId}/assets.json`, {
-//       asset: updatedAssets,
-//     }, {
-//       auth: {
-//         username: apiKey,
-//         password: password,
-//       },
-//     });
-
-//     console.log('Theme assets updated successfully:', response.data.asset);
-//   } catch (error) {
-//     console.error('Error updating theme assets:', error.message);
-//   }
-// }
-
-// async function main() {
-//   try {
-//     const themeAssets = await getThemeAssets();
-//     const cssAssets = themeAssets.filter((asset) => asset.content_type === 'text/css');
-
-//     if (cssAssets.length === 0) {
-//       console.log('No CSS files found in the theme assets.');
-//       return;
-//     }
-
-//     const cssAsset = cssAssets[0]; // Assuming you have only one CSS file
-//     const cssContent = cssAsset.value;
-
-//     // Collect and identify unused selectors
-//     const usedSelectors = await getUsedSelectors();
-//     const allSelectors = ['selector1', 'selector2', 'selector3', 'selector4', 'selector5']; // Replace with all selectors from your theme
-//     const unusedSelectors = allSelectors.filter((selector) => !usedSelectors.includes(selector));
-
-//     // Remove unused CSS rules
-//     const modifiedCSS = removeUnusedCSS(cssContent, unusedSelectors);
-
-//     // Update the theme assets
-//     const updatedAssets = {
-//       key: cssAsset.key,
-//       value: modifiedCSS,
-//     };
-
-//     await updateThemeAssets(updatedAssets);
-//   } catch (error) {
-//     console.error('Error:', error.message);
-//   }
-// }
-
-// main();
-
-// const postcss = require('postcss');
-// const selectorParser = require('postcss-selector-parser');
-
-// function removeUnusedCSS(cssContent = '.man:{font:red} .man1:{font:red} .man2:{font:red} .man9:{font:red}', unusedSelectors = ['.man', '.man2', '.man4', '.man5', '.man6']) {
-
-//   const ast = postcss.parse(cssContent);
-
-//   ast.walkRules((rule) => {
-//     const processedSelectors = [];
-
-//     selectorParser((selectors) => {
-//       selectors.walk((selector) => {
-//         const isUnusedSelector = unusedSelectors.includes(selector.toString());
-
-//         if (!isUnusedSelector) {
-//           processedSelectors.push(selector);
-//         }
-//       });
-//     }).processSync(rule.selector);
-
-//     rule.selector = processedSelectors.map((selector) => selector.toString()).join(', ');
-//   });
-
-//   const modifiedContent = ast.toString();
-
-//   console.log('modifiedContent:', modifiedContent);
-
-//   return modifiedContent;
-// }
-
-// function removeUnusedCss(cssCode, unusedCss) {
-//   // Create a regular expression pattern to match the selectors and their blocks
-//   const pattern = new RegExp(
-//     `(^|\\})\\s*(${unusedCss.join("|")})\\s*{[\\s\\S]*?\\}`,
-//     "gm"
-//   );
-
-//   // Remove the matching CSS code
-//   const modifiedCssCode = cssCode.replace(pattern, "");
-
-//   return modifiedCssCode;
-// }
-
-// commenting unused css file(not completed yet)
-function removeUnusedCss(cssCode, unusedCss) {
-  // Create a regular expression pattern to match the selectors and their blocks
-  const pattern = new RegExp(
-    `(^|\\s|\\})(${unusedCss.join("|")})\\s*{[\\s\\S]*?\\}`,
-    "gm"
-  );
-
-  // Comment out the matching CSS code
-  const modifiedCssCode = cssCode.replace(pattern, "/* $2 {\n$3\n} */");
-
-  return modifiedCssCode;
-}
-
-// getting home page html
-async function getUsedSelectors() {
-  try {
-    const response = await Axios.get(
-      `https://turboboost-dev.myshopify.com/index.json`,
-      {
-        auth: {
-          username: "apiKey",
-          password: "TurBoost@2023",
-        },
-      }
-    );
-
-    const html = response.data;
-    const $ = Cheerio.load(`
-    <nav class="menu-drawer__navigation">
-    <ul class="menu-drawer__menu has-submenu list-menu" role="list"><li><a
-              id="HeaderDrawer-home"
-              href="/"
-              class="menu-drawer__menu-item list-menu__item link link--text focus-inset"
-            >
-              Home
-            </a></li><li><a
-              id="HeaderDrawer-catalog"
-              href="/collections/all"
-              class="menu-drawer__menu-item list-menu__item link link--text focus-inset"
-              
-            >
-              Catalog
-            </a></li><li><a
-              id="HeaderDrawer-contact"
-              href="/pages/contact"
-              class="menu-drawer__menu-item list-menu__item link link--text focus-inset"
-              
-            >
-              Contact
-            </a></li><li><a
-              id="HeaderDrawer-testing"
-              href="/pages/new-warranty"
-              class="menu-drawer__menu-item list-menu__item link link--text focus-inset"
-              
-            >
-              testing
-            </a></li></ul>
-  </nav>`);
-
-    const usedSelectors = new Set();
-
-    $("*").each(function () {
-      const element = $(this);
-      const elementClasses = element.attr("class");
-      const elementIds = element.attr("id");
-
-      if (elementClasses) {
-        elementClasses
-          .split(" ")
-          .forEach((className) => usedSelectors.add(`.${className}`));
-      }
-
-      if (elementIds) {
-        usedSelectors.add(`#${elementIds}`);
-      }
-    });
-
-    console.log(`usedSelectors`, usedSelectors);
-
-    return Array.from(usedSelectors);
-  } catch (error) {
-    console.error("Error fetching storefront:", error.message);
-    return [];
-  }
-}
 
 // removing unused css code from index page
 exports.removingUnusedCssFromIndexPage = (req, res) => {
@@ -1691,19 +1256,19 @@ exports.restoreImageSizeAdaption = async (req, res, next) => {
       value: updateSnippetsContent,
     });
 
-    if(!res) {
-      return sendFailureJSONResponse(res,{message:"Something went wrong"});
-    } else{
-      return sendSuccessJSONResponse(res,{message:"success"});
+    if (!res) {
+      return sendFailureJSONResponse(res, { message: "Something went wrong" });
+    } else {
+      return sendSuccessJSONResponse(res, { message: "success" });
     }
   } catch (error) {
-    return sendErrorJSONResponse(res,{message:"Something went wrong"});
+    return sendErrorJSONResponse(res, { message: "Something went wrong" });
   }
 };
 
-exports.restoreImageCompression = (req, res, next) =>{
-  res.json("asd")
-}
+exports.restoreImageCompression = (req, res, next) => {
+  res.json("asd");
+};
 
 /**
  * Turn OFF critical css for the shop
@@ -1740,4 +1305,3 @@ async function criticalCssRestore(shopifyAdmin, redisStore) {
     ctx.body = JSON.stringify({ error: "could not find session" });
   }
 }
-

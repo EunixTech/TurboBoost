@@ -5,11 +5,7 @@ router.get("/app-installations", controllers.appInstallations);
 
 router.get("/auth-callback", controllers.authCallback);
 
-router.get("/fetch-product", controllers.fetchAllProduct);
-
 router.get("/adding-lazy-loading", controllers.addingLazyLoading);
-
-router.get("/updating-html-attributes", controllers.updatingHTMLAttribute);
 
 router.get("/remove-unused-javascript-code", controllers.removeUnusedJavascriptCode);
 
