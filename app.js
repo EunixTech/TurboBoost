@@ -34,6 +34,24 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 app.use(cors());
 
+
+app.post('/customers/redact', (req, res, next) => {
+    // No customeer or shop data is stored, so we only log the request
+    console.log('new /customers/redact request with data');
+    req.body = "Request received successfully"
+});
+
+app.post('/shop/redact', (req, res, next) => {
+    // No customeer or shop data is stored, so we only log the request
+    console.log('new /shop/redact request with data');
+    req.body = "Request received successfully"
+});
+app.post('/customers/data-request', (req, res, next) => {
+    // No customeer or shop data is stored, so we only log the request
+    console.log('new /customers/data-request request with data');
+    req.body = "Request received successfully"
+});
+
 const allRoutes = require("./routes/all");
 app.use(allRoutes)
 
