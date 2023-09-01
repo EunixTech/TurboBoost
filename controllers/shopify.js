@@ -29,6 +29,11 @@ const mongoose = require("mongoose"),
     sendErrorJSONResponse,
   } = require("../handlers/jsonResponseHandlers"),
   {
+    losslessCompression,
+    lossyCompression,
+  } = require("../resources/image-compression"),
+  
+  {
     SHOPIFY_API_KEY,
     SHOPIFY_API_SECRET,
     SHOPIFY_API_REDIRECT,
@@ -40,20 +45,6 @@ const { googleApiDisplaySwap } = require("../utils/commenRegrex");
 
 require("../utils/mongoose");
 
-const sharp = require("sharp");
-
-const {
-  losslessCompression,
-  lossyCompression,
-} = require("../resources/image-compression");
-
-const {
-  generateForShop,
-  uploadShopifySnippets,
-} = require("../lib/shopify/critical-css/critical-css");
-
-const parseThemeLiquid = require("../lib/shopify/critical-css/parseThemeLiquid");
-const restoreThemeLiquid = require("../lib/shopify/critical-css/restoreThemeLiquid");
 
 const ShopifyAPI = require("../services/apps/shopify");
 
@@ -62,14 +53,12 @@ const ShopifyAPIAndMethod = new ShopifyAPI({
   shop: process.env.SHOP,
   version: process.env.SHOPIFY_API_VERSION,
 });
+
 ShopifyAPIAndMethod.init();
 
 const uploadToCloudinary = require("../utils/uploadToCloudinary");
 
 const downloadImage = require("../resources/downloadImage");
-
-const { createStorefrontClient, CachePolicy } = require("@shopify/hydrogen");
-const { createInMemoryCache } = require("@envelop/response-cache");
 
 exports.appInstallations = async (req, res) => {
   try {
@@ -1752,127 +1741,3 @@ async function criticalCssRestore(shopifyAdmin, redisStore) {
   }
 }
 
-// Create cache strategies for product details, user data, and configuration data
-const productCache = createInMemoryCache();
-const userCache = createInMemoryCache();
-const configCache = createInMemoryCache();
-
-// Cache strategy for product details
-const productCacheStrategy = {
-  getProductFromCache: async (productId) => {
-    return await productCache.get(`product-${productId}`);
-  },
-  setProductInCache: async (productId, product) => {
-    await productCache.set(`product-${productId}`, product);
-  },
-  clearProductCache: async (productId) => {
-    await productCache.delete(`product-${productId}`);
-  },
-};
-
-// Cache strategy for user data
-const userCacheStrategy = {
-  getUserFromCache: async (userId) => {
-    return await userCache.get(`user-${userId}`);
-  },
-  setUserInCache: async (userId, user) => {
-    await userCache.set(`user-${userId}`, user);
-  },
-  clearUserCache: async (userId) => {
-    await userCache.delete(`user-${userId}`);
-  },
-};
-
-// Cache strategy for configuration data
-const configCacheStrategy = {
-  getConfigFromCache: async () => {
-    return await configCache.get("config");
-  },
-  setConfigInCache: async (config) => {
-    await configCache.set("config", config);
-  },
-  clearConfigCache: async () => {
-    await configCache.delete("config");
-  },
-};
-
-// Create the Storefront client with caching for all data types
-async function createClientWithCaching() {
-  const { storefront } = await createStorefrontClient({
-    cache: {
-      async get(request) {
-        // Use the appropriate cache strategy based on the cache key
-        if (request.key.startsWith("product-")) {
-          return productCacheStrategy.getProductFromCache(request.key);
-        } else if (request.key.startsWith("user-")) {
-          return userCacheStrategy.getUserFromCache(request.key);
-        } else if (request.key === "config") {
-          return configCacheStrategy.getConfigFromCache();
-        }
-        // Add more cache strategies for other data types if needed
-      },
-      async set(request, response) {
-        // Use the appropriate cache strategy based on the cache key
-        if (request.key.startsWith("product-")) {
-          await productCacheStrategy.setProductInCache(request.key, response);
-        } else if (request.key.startsWith("user-")) {
-          await userCacheStrategy.setUserInCache(request.key, response);
-        } else if (request.key === "config") {
-          await configCacheStrategy.setConfigInCache(response);
-        }
-        // Add more cache strategies for other data types if needed
-      },
-      async delete(request) {
-        // Use the appropriate cache strategy based on the cache key
-        if (request.key.startsWith("product-")) {
-          await productCacheStrategy.clearProductCache(request.key);
-        } else if (request.key.startsWith("user-")) {
-          await userCacheStrategy.clearUserCache(request.key);
-        } else if (request.key === "config") {
-          await configCacheStrategy.clearConfigCache();
-        }
-        // Add more cache strategies for other data types if needed
-      },
-      // Cache policies for different queries...
-    },
-    // Other configuration options...
-  });
-
-  return storefront;
-}
-
-// Example usage:
-async function fetchAndCacheData() {
-  const client = await createClientWithCaching();
-
-  // Fetch product details and cache the result
-  const productResult = await client.query(/* ... */);
-  await productCacheStrategy.setProductInCache("product-id-123", productResult);
-
-  // Fetch user data and cache the result
-  const userResult = await client.query(/* ... */);
-  await userCacheStrategy.setUserInCache("user-id-456", userResult);
-
-  // Fetch configuration data and cache the result
-  const configResult = await client.query(/* ... */);
-  await configCacheStrategy.setConfigInCache(configResult);
-}
-
-// // Example usage:
-async function fetchDataFromCache() {
-  const client = await createClientWithCaching();
-
-  // Fetch product details from the cache
-  const cachedProduct = await productCacheStrategy.getProductFromCache(
-    "product-id-123"
-  );
-  console.log("Cached product:", cachedProduct);
-
-  // Fetch user data from the cache
-  const cachedUser = await userCacheStrategy.getUserFromCache("user-id-456");
-  console.log("Cached user:", cachedUser);
-
-  // Fetch configuration data from the cache
-  const cachedConfig = await configCacheStrategy.getConfigFromCache();
-  console.log("Cached config:", cachedConfig);
-}

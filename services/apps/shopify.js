@@ -1,17 +1,6 @@
-/**
- * Disables the eslint rule for no-useless-catch
- */
-/* eslint-disable no-useless-catch */
 const fetchAPI = require("../../utils/fetchAPI");
 
 class ShopifyAPI {
-  /**
-   * Create a Shopify API instance.
-   * @param {Object} options - The configuration object.
-   * @param {string} options.shop - The shop name.
-   * @param {string} options.accessToken - The access token.
-   * @param {string} options.version - The API version.
-   */
   constructor({ shop, accessToken, version }) {
     if (!shop || !accessToken || !version) {
       throw new Error(
@@ -25,12 +14,6 @@ class ShopifyAPI {
     this.url = `https://${this.shop}/admin/api/${this.version}`;
   }
 
-  /**
-   * Fetch data from the Shopify API.
-   * @param {string} endpoint - The API endpoint.
-   * @param {string} method - The HTTP method (default is "GET").
-   * @param {Object} data - The request body (default is null).
-   */
   fetch(endpoint, method = "GET", data = null) {
     const options = {
       headers: { "X-Shopify-Access-Token": this.accessToken },
@@ -43,9 +26,6 @@ class ShopifyAPI {
     return fetch(`${this.url}/${endpoint}`, options).then((res) => res.json());
   }
 
-  /**
-   * Initialize the Shopify API instance.
-   */
   async init() {
     try {
       const themesRes = await fetch(`${this.url}/themes.json`, {
@@ -71,10 +51,6 @@ class ShopifyAPI {
     }
   }
 
-  /**
-   * Get the theme liquid.
-   * @return {Promise} The theme liquid.
-   */
   async getThemeLiquid() {
     if (this.assets.theme) {
       return this.assets.theme;
@@ -97,40 +73,24 @@ class ShopifyAPI {
     }
   }
 
-    /**
-   * Get the theme liquid.
-   * @return {Promise} The theme liquid.
-   */
-    async getAssetByName(assetName) {
-      if (this.assets.theme) {
-        return this.assets.theme;
-      }
-  
-      try {
-        const jsonRes = await fetch(
-          `${this.url}/themes/${this.themeId}/assets.json?asset[key]=${assetName}`,
-          {
-            headers: {
-              "X-Shopify-Access-Token": this.accessToken,
-            },
-          }
-        ).then((res) => res.json());
-  
-        this.assets.theme = jsonRes.asset;
-        return this.assets.theme;
-      } catch (e) {
-        throw e;
-      }
-    }
-  
+  async getAssetByName(assetName) {
+    try {
+      const jsonRes = await fetch(
+        `${this.url}/themes/${this.themeId}/assets.json?asset[key]=${assetName}`,
+        {
+          headers: {
+            "X-Shopify-Access-Token": this.accessToken,
+          },
+        }
+      ).then((res) => res.json());
 
-  /**
-   * read all an asset.
-   * @param {Object} asset - The asset object.
-   * @param {string} asset.name - The asset name.
-   * @param {string} asset.value - The asset value.
-   * @return {Promise} The response data.
-   */
+      this.assets.theme = jsonRes.asset;
+      return this.assets.theme;
+    } catch (e) {
+      throw e;
+    }
+  }
+
   async getAssets() {
     try {
       const res = await fetch(
@@ -147,22 +107,12 @@ class ShopifyAPI {
         throw new Error(JSON.stringify(resJson.errors));
       }
       return resJson;
-
     } catch (e) {
       throw e;
     }
   }
 
-  /**
-   * Write an asset.
-   * @param {Object} asset - The asset object.
-   * @param {string} asset.name - The asset name.
-   * @param {string} asset.value - The asset value.
-   * @return {Promise} The response data.
-   */
   async writeAsset({ name, value }) {
-    console.log(`name`, name);
-    console.log(`value`, value);
     try {
       const res = await fetch(`${this.url}/themes/${this.themeId}/assets.json`, {
         method: "PUT",
@@ -178,22 +128,17 @@ class ShopifyAPI {
         }),
       });
       const resJson = await res.json();
-  
+
       if (resJson.errors) {
         throw new Error(JSON.stringify(resJson.errors));
       }
       return true;
     } catch (e) {
       console.log(`Error occurred while writing asset:`, e);
-      return false; // Return false to indicate that an error occurred
+      return false;
     }
   }
 
-  /**
-   * Delete an asset.
-   * @param {string} assetKey - The asset key.
-   * @return {Promise} The response data.
-   */
   async deleteAsset(assetKey) {
     try {
       await fetch(
@@ -306,3 +251,4 @@ class ShopifyAPI {
 }
 
 module.exports = ShopifyAPI;
+
