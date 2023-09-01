@@ -1267,7 +1267,7 @@ exports.restoreImageSizeAdaption = async (req, res, next) => {
 };
 
 exports.restoreImageCompression = async(req, res, next) => {
-  const data = await ShopifyAPIAndMethod.getAllProducts();
+  const data = await ShopifyAPIAndMethod.getAllProductImages("8406445752600");
 
   res.json(data);
 };

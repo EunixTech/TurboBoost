@@ -134,6 +134,28 @@ class ShopifyAPI {
     }
   }
 
+  async getAllProductImages(productId) {
+
+    try {
+      const res = await fetch(
+        `${this.url}/products/${productId}/images.json`,
+        {
+          method: "GET",
+          headers: { "X-Shopify-Access-Token": this.accessToken },
+        }
+      );
+
+      const resJson = await res.json();
+
+      if (resJson.errors) {
+        throw new Error(JSON.stringify(resJson.errors));
+      }
+      return resJson?.images;
+    } catch (e) {
+      throw e;
+    }
+  }
+
 
   async writeAsset({ name, value }) {
     try {
