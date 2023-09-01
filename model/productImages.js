@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { defaultStringConfig } = require("../../utils/mongoose");
+const { defaultStringConfig } = require("../utils/mongoose");
 
 const productImageSchema = new mongoose.Schema({
     

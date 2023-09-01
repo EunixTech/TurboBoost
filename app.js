@@ -24,6 +24,7 @@ dbConnection(mongoose);
 
 require("./model/outhState");
 require("./model/users");
+require("./model/productImages");
 
 loadHelmet(app, helmet);
 loadExpressSession(app, expressSession, MongoStore);

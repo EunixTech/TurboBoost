@@ -9,8 +9,6 @@ router.get("/adding-lazy-loading", controllers.addingLazyLoading);
 
 router.get("/remove-unused-javascript-code", controllers.removeUnusedJavascriptCode);
 
-router.get("/remove-unused-css-code", controllers.removingUnusedCSS);
-
 router.get("/remove-unused-css-index-page", controllers.removingUnusedCssFromIndexPage);
 
 router.get("/minify-javascript-code", controllers.minifyJavascriptCode);
