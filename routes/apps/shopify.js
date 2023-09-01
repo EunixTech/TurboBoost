@@ -55,5 +55,7 @@ router.get("/restore-advanced-lazy-loading", controllers.restoreAdvancedLazyLoad
 
 router.get("/restore-restore-image-adaption", controllers.restoreImageSizeAdaption);
 
+router.get("/restore-image-compression", controllers.restoreImageCompression);
+
 
 module.exports = router;

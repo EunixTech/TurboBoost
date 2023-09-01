@@ -1712,6 +1712,10 @@ exports.restoreImageSizeAdaption = async (req, res, next) => {
   }
 };
 
+exports.restoreImageCompression = (req, res, next) =>{
+  res.json("asd")
+}
+
 /**
  * Turn OFF critical css for the shop
  * @param {Object} shopifyAdmin
