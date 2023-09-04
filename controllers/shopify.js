@@ -904,13 +904,18 @@ exports.restoreImageSizeAdaption = async (req, res, next) => {
 };
 
 exports.restoreImageCompression = async (req, res, next) => {
-  const products = await ShopifyAPIAndMethod.getAllProducts();
+  try {
+    const products = await ShopifyAPIAndMethod.getAllProducts();
 
-  for (let i = products.length - 1; i >= 0; i--) {
-    console.log(`products[i]`, products[i]);
+    for (let i = products.length - 1; i >= 0; i--) {
+      console.log(`products[i]`, products[i]);
+    }
+
+    res.json(data);
+    
+  } catch (error) {
+    return sendErrorJSONResponse(res, { message: "Something went wrong" });
   }
-
-  res.json(data);
 };
 
 /**
