@@ -905,14 +905,30 @@ exports.restoreImageSizeAdaption = async (req, res, next) => {
 
 exports.restoreImageCompression = async (req, res, next) => {
   try {
-    const products = await ShopifyAPIAndMethod.getAllProducts();
 
-    for (let i = products.length - 1; i >= 0; i--) {
-      console.log(`products[i]`, products[i]);
-    }
+    ProductImage.find({})
+    .then(async (images)=>{
 
-    res.json(data);
-    
+      for (let i = images.length - 1; i >= 0; i--) {
+
+        const imageURL = images[i]?.url,
+          productId = images[i]?.product_id,
+          imageId = images[i]?.image_id,
+          imagePosition = images[i]?.position;
+
+          await ShopifyAPIAndMethod.updateProductImages({
+          productId,
+          imageId,
+          imageURL,
+          imagePosition
+        });
+      }
+
+    })
+
+    return sendSuccessJSONResponse(res, {message: "success "})
+  
+
   } catch (error) {
     return sendErrorJSONResponse(res, { message: "Something went wrong" });
   }
