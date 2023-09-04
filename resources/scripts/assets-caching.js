@@ -1,4 +1,5 @@
 function AssetsCaching(htmlContent, cacheDuration) {
+  
     // Versioned CSS with Cache-Control
     htmlContent = htmlContent.replace(/<link rel="stylesheet" href="(.*?\.css)">/g, (match, url) => {
       const versionedUrl = `${url}?v=${Math.floor(Date.now() / 1000)}`;
