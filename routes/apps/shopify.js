@@ -31,8 +31,6 @@ router.get("/lossless-image-compression", controllers.losslessImageCompression);
 
 router.get("/lossless-comp-collection-image", controllers.losslessCompCollection);
 
-router.get("/caching-theme-assets", controllers.cachingThemeAssets);
-
 router.get("/delay-google-font", controllers.delayingGoogleFont);
 
 router.post("/adding-google-tag-manager", controllers.addingGoogleTagManager);
