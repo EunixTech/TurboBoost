@@ -428,20 +428,7 @@ exports.removeUnusedJavascriptCode = (req, res) => {
         themeId,
       });
 
-      // const responseq = await Axios({
-      //     ...fetchConfig,
-      //     method: "PUT",
-      //     url: `https://turboboost-dev.myshopify.com/admin/api/2023-01/themes/${themeId}/assets.json`,
-      //     data: JSON.stringify({
-      //         "asset": {
-      //             "key": "sections/main-product.liquid",
-      //             "value": "{%- for media in product.media -%}\n <img\n  alt=\"{{ media.alt }}\"\n        data-sizes=\"auto\"\n        data-srcset=\"{{ media.preview_image | img_url: '275x' }} 275w,\n                     {{ media.preview_image | img_url: '320x' }} 320w,\n {{ media.preview_image | img_url: '500x' }} 500w,\n                     {{ media.preview_image | img_url: '640x' }} 640w,\n                     {{ media.preview_image | img_url: '1024x' }} 1024w\"\n        data-src=\"{{ media.preview_image | img_url: '416x' }}\"\n        src=\"{{ media.preview_image | img_url: '275x' }}\"\n        class=\"lazyloadssssss-manmohan\" />\n{%- endfor -%}"
-      //         }
-      //     })
 
-      // });
-      // const responseDatwa = responseq.data; // Extract the data from the response object
-      // console.log(responseDatwa)
     }
   });
 
@@ -641,9 +628,7 @@ exports.minifyPageContent = (req, res) => {
 
         if (pageContent) {
           const minifiedPageContent = minifyPageContent(pageContent);
-          console.log(pageContent);
-          console.log(minifiedPageContent);
-
+       
           let data = JSON.stringify({
             page: {
               id: pageId,
@@ -808,13 +793,6 @@ exports.imageSizeAdaptions = (req, res) => {
 };
 
 exports.criticalCSS = async (req, res) => {
-  //step1: generate critical css
-  // step2: create new assets
-  // step3: add assets link to theme
-  // criticalCssGenerate();
-  // return res.json({
-  //   working: "fsdf",
-  // });
 
   try {
     const session = await Shopify.Utils.loadCurrentSession(
@@ -1267,7 +1245,11 @@ exports.restoreImageSizeAdaption = async (req, res, next) => {
 };
 
 exports.restoreImageCompression = async(req, res, next) => {
-  const data = await ShopifyAPIAndMethod.getAllProductImages("8406445752600");
+  const products = await ShopifyAPIAndMethod.getAllProducts();
+
+  for(let i=products.length - 1; i >= 0; i--){
+    console.log(`products[i]`,products[i])
+  }
 
   res.json(data);
 };
@@ -1277,13 +1259,6 @@ exports.restoreImageCompression = async(req, res, next) => {
  * @param {Object} shopifyAdmin
  */
 async function criticalCssRestore(shopifyAdmin, redisStore) {
-  // const themeLiquid = await shopifyAdmin.getThemeLiquid();
-  // const updatedThemeLiquid = await restoreThemeLiquid(themeLiquid.value, redisStore, shopifyAdmin.shop);
-  // // Diff and Only write if different
-  // await shopifyAdmin.writeAsset({
-  //   name: 'layout/theme.liquid',
-  //   value: updatedThemeLiquid
-  // });
 
   try {
     const session = await Shopify.Utils.loadCurrentSession(
