@@ -112,6 +112,55 @@ class ShopifyAPI {
     }
   }
 
+
+
+  async writeAsset({ name, value }) {
+    try {
+      const res = await fetch(`${this.url}/themes/${this.themeId}/assets.json`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Shopify-Access-Token": this.accessToken,
+        },
+        body: JSON.stringify({
+          asset: {
+            key: name,
+            value: value,
+          },
+        }),
+      });
+      const resJson = await res.json();
+
+      if (resJson.errors) {
+        throw new Error(JSON.stringify(resJson.errors));
+      }
+      return true;
+    } catch (e) {
+      console.log(`Error occurred while writing asset:`, e);
+      return false;
+    }
+  }
+
+  async deleteAsset(assetKey) {
+    try {
+      await fetch(
+        `${this.url}/themes/${this.themeId}/assets.json?asset[key]=${assetKey}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Shopify-Access-Token": this.accessToken,
+          },
+        }
+      ).then((res) => res.json());
+      return true;
+    } catch (e) {
+      throw e;
+    }
+  }
+
+
+
   async getAllProducts() {
 
     try {
@@ -157,46 +206,53 @@ class ShopifyAPI {
   }
 
 
-  async writeAsset({ name, value }) {
+  async getAllPages() {
+
     try {
-      const res = await fetch(`${this.url}/themes/${this.themeId}/assets.json`, {
+      const res = await fetch(
+        `${this.url}/pages.json`,
+        {
+          method: "GET",
+          headers: { "X-Shopify-Access-Token": this.accessToken },
+        }
+      );
+
+      const resJson = await res.json();
+
+      if (resJson.errors) {
+        throw new Error(JSON.stringify(resJson.errors));
+      }
+      return resJson?.pages;
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  async updatePageContent({ pageId, htmlContent }) {
+
+    try {
+ 
+      const res = await fetch(`${this.url}/pages/${pageId}.json`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           "X-Shopify-Access-Token": this.accessToken,
         },
         body: JSON.stringify({
-          asset: {
-            key: name,
-            value: value,
+          page: {
+            id: pageId,
+            body_html: htmlContent,
           },
         }),
       });
+
       const resJson = await res.json();
 
       if (resJson.errors) {
         throw new Error(JSON.stringify(resJson.errors));
       }
       return true;
-    } catch (e) {
-      console.log(`Error occurred while writing asset:`, e);
-      return false;
-    }
-  }
-
-  async deleteAsset(assetKey) {
-    try {
-      await fetch(
-        `${this.url}/themes/${this.themeId}/assets.json?asset[key]=${assetKey}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Shopify-Access-Token": this.accessToken,
-          },
-        }
-      ).then((res) => res.json());
-      return true;
+      
     } catch (e) {
       throw e;
     }

@@ -234,51 +234,6 @@ exports.authCallback = async (req, res) => {
   }
 };
 
-
-
-// exports.fetchAllProduct = async (req, res) => {
-//   let data = JSON.stringify({
-//     query: `mutation productImageUpdate($image: ImageInput!, $productId: ID!) {
-//                   productImageUpdate(image: $image, productId: $productId) {
-//                     image {
-//                       id,src
-//                     }
-//                     userErrors {
-//                       field
-//                       message
-//                     }
-//                   }
-//                 }`,
-//     variables: {
-//       image: {
-//         altText: "test",
-//         id: "gid://shopify/ProductImage/41962191454488",
-//         src: "https://www.shutterstock.com/image-vector/example-red-square-grunge-stamp-260nw-327662909.jpg",
-//       },
-//       productId: "gid://shopify/Product/8406446014744",
-//     },
-//   });
-
-//   let config = {
-//     method: "post",
-//     maxBodyLength: Infinity,
-//     url: "https://turboboost-dev.myshopify.com/admin/api/2023-04/graphql.json",
-//     headers: {
-//       "X-Shopify-Access-Token": "shpua_92e1118272f4b9fd9af36af7fd2ec2d2",
-//       "Content-Type": "application/json",
-//     },
-//     data: data,
-//   };
-
-//   Axios.request(config)
-//     .then((response) => {
-//       console.log(JSON.stringify(response.data));
-//     })
-//     .catch((error) => {
-//       console.log(error);
-//     });
-// };
-
 // exports.createProductCreateWebHook = async (shop, accessToken) => { // call this on installing shopify app
 //     let uuid = crypto.randomUUID()
 //     const registerWebhookOptions = {
@@ -414,23 +369,9 @@ exports.minifyJavascriptCode = async (req, res, next) => {
   console.log(updatedHtmlString);
 };
 
-exports.removeUnusedJavascriptCode = (req, res) => {
-  const fetchConfig = getFetchConfig();
-
-  Axios({
-    ...fetchConfig,
-    url: `${SHOPIFY_BASE_URL}/themes.json?role=main`,
-  }).then(async (foundTheme) => {
-    const themeId = foundTheme?.data?.themes[0]?.id;
-
-    if (themeId) {
-      return res.json({
-        themeId,
-      });
-
-
-    }
-  });
+exports.removeUnusedJavascriptCode = async (req, res, next) => {
+  const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
+    htmlContent = themeLiquid?.value;
 
   //     // console.log()
   //     const esprima = require('esprima');
@@ -535,7 +476,6 @@ exports.eliminateRenderBlockingResources = async (req, res, next) => {
   else return sendFailureJSONResponse(res, { message: "something went right" });
 };
 
-
 // removing unused css code from index page
 exports.removingUnusedCssFromIndexPage = (req, res) => {
   const fetchConfig = getFetchConfig();
@@ -610,15 +550,10 @@ exports.removingUnusedCssFromIndexPage = (req, res) => {
   });
 };
 
-exports.minifyPageContent = (req, res) => {
-  const fetchConfig = getFetchConfig();
-
-  // finding theme
-  Axios({
-    ...fetchConfig,
-    url: `https://turboboost-dev.myshopify.com/admin/api/2023-07/pages.json`,
-  }).then(async (foundPages) => {
-    const pages = foundPages?.data?.pages;
+exports.minifyPageContent = async (req, res, next) => {
+  
+  try {
+    const pages = await ShopifyAPIAndMethod.getAllPages();
 
     if (pages?.length) {
       // minifyPageContent()
@@ -627,45 +562,20 @@ exports.minifyPageContent = (req, res) => {
           pageId = pages[i]?.id;
 
         if (pageContent) {
-          const minifiedPageContent = minifyPageContent(pageContent);
-       
-          let data = JSON.stringify({
-            page: {
-              id: pageId,
-              body_html: minifiedPageContent,
-            },
+          const minifiedPageContent = await minifyPageContent(pageContent);
+
+          await ShopifyAPIAndMethod.updatePageContent({
+            pageId,
+            pageContent: minifiedPageContent,
           });
-
-          let config = {
-            method: "put",
-            maxBodyLength: Infinity,
-            url: `https://turboboost-dev.myshopify.com/admin/api/2023-07/pages/${pageId}.json`,
-            headers: {
-              "X-Shopify-Access-Token":
-                "shpua_832b00f9f277821c02a70c5524402acd",
-              "Content-Type": "application/json",
-            },
-            data: data,
-          };
-
-          Axios.request(config)
-            .then((response) => {
-              console.log(response);
-
-              if (response.status === 200) {
-                res.json({
-                  message: `success`,
-                });
-              }
-              console.log(JSON.stringify(response.data));
-            })
-            .catch((error) => {
-              console.log(error);
-            });
         }
       }
     }
-  });
+
+    return sendSuccessJSONResponse(res, { message: "success" });
+  } catch (error) {
+    return sendErrorJSONResponse(res, { message: "Something went wrong" });
+  }
 };
 
 exports.DNSPrefetching = async (req, res, next) => {
@@ -793,7 +703,6 @@ exports.imageSizeAdaptions = (req, res) => {
 };
 
 exports.criticalCSS = async (req, res) => {
-
   try {
     const session = await Shopify.Utils.loadCurrentSession(
       ctx.req,
@@ -1115,9 +1024,6 @@ exports.restoringFontOptimization = async (req, res, next) => {
       const name = cssAsset?.key;
 
       const { fontExists, cssContent } = await CheckFontFaceExists(publicURL);
-      function removeFontDisplay(cssContent) {
-        return cssContent.replace(/(font-display\s*:\s*[^;]+;)/g, "");
-      }
 
       if (fontExists) {
         const value = cssContent.replace(/(font-display\s*:\s*[^;]+;)/g, "");
@@ -1244,11 +1150,11 @@ exports.restoreImageSizeAdaption = async (req, res, next) => {
   }
 };
 
-exports.restoreImageCompression = async(req, res, next) => {
+exports.restoreImageCompression = async (req, res, next) => {
   const products = await ShopifyAPIAndMethod.getAllProducts();
 
-  for(let i=products.length - 1; i >= 0; i--){
-    console.log(`products[i]`,products[i])
+  for (let i = products.length - 1; i >= 0; i--) {
+    console.log(`products[i]`, products[i]);
   }
 
   res.json(data);
@@ -1259,7 +1165,6 @@ exports.restoreImageCompression = async(req, res, next) => {
  * @param {Object} shopifyAdmin
  */
 async function criticalCssRestore(shopifyAdmin, redisStore) {
-
   try {
     const session = await Shopify.Utils.loadCurrentSession(
       ctx.req,
