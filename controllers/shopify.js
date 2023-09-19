@@ -765,7 +765,7 @@ exports.addingGoogleTagManager = async (req, res, next) => {
 
 // restoration api started
 exports.restoringFontOptimization = async (req, res, next) => {
-  try {
+  try { 
     const themeAssets = await ShopifyAPIAndMethod.getAssets();
     const assets = themeAssets.assets;
     const cssAssets = assets.filter(
