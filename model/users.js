@@ -17,7 +17,8 @@ const userSchema = new mongoose.Schema(
                 type: Number,
                 enum:[1,2,3]
             },
-            country: defaultStringConfig
+            country: defaultStringConfig,
+            email_token: defaultStringConfig,
         },
 
         app_token: {

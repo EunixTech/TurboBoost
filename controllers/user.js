@@ -2,7 +2,7 @@ const asyncHandler = require('express-async-handler');
 const mongoose = require("mongoose");
 const User = mongoose.model("user");
 const sendEmail = require("../services/sendEmail");
-const nodemailer = require("nodemailer");
+const generateRandomString = require("../utils/generateRandomString");
 const generateToken = require('../utils/generateToken.js');
 const {
     sendSuccessJSONResponse,
@@ -173,7 +173,12 @@ exports.checkAccountExist = async(req, res, next) => {
     User.findOne({ "user_info.email_address": emailAddress })
         .then((foundAccount) => {
             if (!foundAccount) return sendFailureJSONResponse(res, { message: "Account not exist" });
-            else sendSuccessJSONResponse(res, { message: " " });
+            else {
+              User.findByIdAndUpdate({_id: userId},{
+                email_token :generateRandomString(10)
+              })
+              sendSuccessJSONResponse(res, { message: " " });
+            }
         }).catch((err) => {
             return sendFailureJSONResponse(res, { message: "Please provide email address" });
         })
@@ -201,13 +206,6 @@ exports.updatePassword = async(req, res, next) =>{
     })
 
 }
-
-exports.email = (req, res) =>{
-  
-sendEmail("manmohankumar023@gmail.com","<h1>Manmohan</h1>","test");
-res.json("working")
-}
-
 
 
 // Logout user / clear cookie
