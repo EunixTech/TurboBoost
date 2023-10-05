@@ -1,5 +1,8 @@
 const asyncHandler = require('express-async-handler');
+const mongoose = require("mongoose");
 const User = mongoose.model("user");
+const sendEmail = require("../services/sendEmail");
+const nodemailer = require("nodemailer");
 const generateToken = require('../utils/generateToken.js');
 const {
     sendSuccessJSONResponse,
@@ -101,9 +104,8 @@ exports.registerAccount = async (req, res, next) => {
 
         const foundUser = await User.findOne({ "user_info.email_address": emailAddress });
 
-        if (foundUser) {
-            sendFailureJSONResponse(res, { message: "Account already exists" }, 403);
-        } else {
+        if (foundUser)  return sendFailureJSONResponse(res, { message: "Account already exists" }, 403);
+        else {
 
             User.create(req.formData)
                 .then((newAccount) => {
@@ -160,6 +162,53 @@ exports.deleteAccount = async (req, res, next) => {
     })
 
 }
+
+exports.checkAccountExist = async(req, res, next) => {
+
+    const emailAddress = req.body.email_address;
+
+    if (!emailAddress) return sendFailureJSONResponse(res, { message: "Please provide email address" });
+    else if (!isValidEmailAddress(emailAddress)) return sendFailureJSONResponse(res, { message: "Please provide valid email address" });
+
+    User.findOne({ "user_info.email_address": emailAddress })
+        .then((foundAccount) => {
+            if (!foundAccount) return sendFailureJSONResponse(res, { message: "Account not exist" });
+            else sendSuccessJSONResponse(res, { message: " " });
+        }).catch((err) => {
+            return sendFailureJSONResponse(res, { message: "Please provide email address" });
+        })
+
+}
+
+exports.updatePassword = async(req, res, next) =>{
+
+    const {
+        password,
+        userId
+    } = req.body;
+
+    if (!(password || userId)) return sendFailureJSONResponse(res, { message: "Please provide password and userId" });
+
+    User.findByIdAndUpdate({_id: userId },{
+        "user_info.password": password
+    }, {new: true})
+    .then((updatedAccount)=>{
+        if (!foundAccount) return sendFailureJSONResponse(res, { message: "Something went wrong" });
+        else sendSuccessJSONResponse(res, { message: "Password updated successfully" });
+    })
+    .catch((err)=>{
+        return sendFailureJSONResponse(res, { message: "Please provide email address" });
+    })
+
+}
+
+exports.email = (req, res) =>{
+  
+sendEmail("manmohankumar023@gmail.com","<h1>Manmohan</h1>","test");
+res.json("working")
+}
+
+
 
 // Logout user / clear cookie
 const logoutUser = (req, res) => {
