@@ -8,8 +8,6 @@ const fetchReqConfig = {
     }
 };
 
-exports.getFetchConfig=()=>{
-    return fetchReqConfig;
-};
+exports.getFetchConfig=()=>{ return fetchReqConfig };
 
 

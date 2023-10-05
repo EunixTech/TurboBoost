@@ -2,23 +2,31 @@ const mongoose = require("mongoose");
 const { defaultStringConfig } = require("../utils/mongoose");
 
 const userSchema = new mongoose.Schema(
-  {
-    user_info: {
-      first_name: defaultStringConfig,
-      last_name: defaultStringConfig,
-      password: defaultStringConfig,
-      user_name: defaultStringConfig,
-      email_address: defaultStringConfig,
-      date_of_birth: defaultStringConfig,
-    },
+    {
+        user_info: {
+            first_name: defaultStringConfig,
+            last_name: defaultStringConfig,
+            password: defaultStringConfig,
+            user_name: defaultStringConfig,
+            email_address: defaultStringConfig,
+            date_of_birth: defaultStringConfig,
+        },
 
-    app_token: {
-      shopify: defaultStringConfig,
-      wordpress: defaultStringConfig,
-      woocomerce: defaultStringConfig,
+        user_basic_info: {
+            bussiness_type:{
+                type: Number,
+                enum:[1,2,3]
+            },
+            country: defaultStringConfig
+        },
+
+        app_token: {
+            shopify: defaultStringConfig,
+            wordpress: defaultStringConfig,
+            woocomerce: defaultStringConfig,
+        },
     },
-  },
-  { timestamps: true }
+    { timestamps: true }
 );
 
 // Match user entered password to hashed password in database
