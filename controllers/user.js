@@ -1,121 +1,171 @@
-const asyncHandler =  require('express-async-handler');
+const asyncHandler = require('express-async-handler');
 const User = mongoose.model("user");
-import generateToken from '../utils/generateToken.js';
+const generateToken = require('../utils/generateToken.js');
+const {
+    sendSuccessJSONResponse,
+    sendFailureJSONResponse,
+    sendErrorJSONResponse,
+} = require("../handlers/jsonResponseHandlers.js");
 
-// @desc    Auth user & get token
-// @route   POST /api/users/auth
-// @access  Public
+const {
+    isTruthyString,
+    isValidEmailAddress,
+} = require('../utils/verifications.js');
+
+
+// Auth user & get token
 const authUser = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+    const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
+    const user = await User.findOne({ email });
 
-  if (user && (await user.matchPassword(password))) {
-    generateToken(res, user._id);
+    if (user && (await user.matchPassword(password))) {
+        generateToken(res, user._id);
 
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-    });
-  } else {
-    res.status(401);
-    throw new Error('Invalid email or password');
-  }
+        res.json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+        });
+    } else {
+        throw new Error('Invalid email or password');
+    }
 });
 
-// @desc    Register a new user
-// @route   POST /api/users
-// @access  Public
-const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
+exports.validateData = (req, res, next) => {
+    const {
+        first_name,
+        last_name,
+        email_address,
+        bussiness_name,
+        country,
+        password
+    } = req.body;
 
-  const userExists = await User.findOne({ email });
+    const missingData = [],
+        invalidData = [];
 
-  if (userExists) {
-    res.status(400);
-    throw new Error('User already exists');
-  }
+    if (!isTruthyString(first_name)) missingData.push("First name");
+    if (!isTruthyString(last_name)) missingData.push("Last name");
+    if (!isTruthyString(bussiness_name)) missingData.push("Bussiness name");
+    if (!isTruthyString(country)) missingData.push("Country");
 
-  const user = await User.create({
-    name,
-    email,
-    password,
-  });
+    if (!email_address) missingData.push("Email Address");
+    else if (!isValidEmailAddress(email_address)) invalidData.push("Email Address");
 
-  if (user) {
-    generateToken(res, user._id);
+    if (!password) missingData.push("password");
+    else if (!isValidPassword(password)) invalidData.push("password");
 
-    res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-    });
-  } else {
-    res.status(400);
-    throw new Error('Invalid user data');
-  }
-});
+    if (missingData.length || invalidData.length) {
+        if (missingData.length) toast.error(`Missing Data:- ${missingData.join(`, `)}`);
+        if (invalidData.length) toast.error(`Invalid Data:- ${invalidData.join(`, `)}`);
+        return;
+    } else {
 
-// @desc    Logout user / clear cookie
-// @route   POST /api/users/logout
-// @access  Public
-const logoutUser = (req, res) => {
-  res.cookie('jwt', '', {
-    httpOnly: true,
-    expires: new Date(0),
-  });
-  res.status(200).json({ message: 'Logged out successfully' });
-};
+        const formData = {
+            user_info: {},
+            user_basic_info: {}
+        };
 
-// @desc    Get user profile
-// @route   GET /api/users/profile
-// @access  Private
-const getUserProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
+        if (first_name) formData.user_info.first_name = first_name;
+        if (last_name) formData.user_info.last_name = last_name;
+        if (email_address) formData.user_info.email_address = email_address;
+        if (bussiness_type) formData.user_basic_info.bussiness_type = bussiness_type;
+        if (country) formData.user_basic_info.country = country;
+        if (password) formData.user_info.password = password;
 
-  if (user) {
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-    });
-  } else {
-    res.status(404);
-    throw new Error('User not found');
-  }
-});
-
-// @desc    Update user profile
-// @route   PUT /api/users/profile
-// @access  Private
-const updateUserProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
-
-  if (user) {
-    user.name = req.body.name || user.name;
-    user.email = req.body.email || user.email;
-
-    if (req.body.password) {
-      user.password = req.body.password;
+        req.formData = formData
     }
 
-    const updatedUser = await user.save();
+}
 
-    res.json({
-      _id: updatedUser._id,
-      name: updatedUser.name,
-      email: updatedUser.email,
+exports.fetchAccount = (req, res, next) => {
+    const userId = req.userId;
+
+    User.findById(userId)
+        .then((user) => {
+            if (!user) return sendFailureJSONResponse(res, { message: "Account not found" });
+            else {
+                return sendSuccessJSONResponse(res, { acccount: user });
+            }
+        }).catch((err) => {
+            return sendFailureJSONResponse(res, { message: "Something went wrong" });
+        })
+}
+
+
+exports.registerAccount = async (req, res, next) => {
+    try {
+
+        const emailAddress = req.body.email_address;
+
+        const foundUser = await User.findOne({ "user_info.email_address": emailAddress });
+
+        if (foundUser) {
+            sendFailureJSONResponse(res, { message: "Account already exists" }, 403);
+        } else {
+
+            User.create(req.formData)
+                .then((newAccount) => {
+                    if (!newAccount) {
+                        return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                    } else {
+                        generateToken(res, newAccount._id);
+                        return sendSuccessJSONResponse(res, { message: "Account created successfully" });
+                    }
+                }).catch((err) => {
+                    return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                });
+        }
+
+    } catch (error) {
+        return sendFailureJSONResponse(res, { message: "Something went wrong" });
+    }
+
+};
+
+exports.updateAccount = async (req, res, next) => {
+
+    const userId = req.params.userId;
+    const emailAddress = req.body.email_address;
+
+    if (!userId) { sendFailureJSONResponse(res, { message: "Something went wrong" }) }
+
+    const accountExists = await User.findOne({ "user_info.email_address": emailAddress, _id: { $ne: userId } });
+    if (accountExists) {
+        return sendFailureJSONResponse(res, { message: "Account already exists" }, 403);
+    } else {
+        User.findByIdAndUpdate({ _id: userId }, req.formData, { new: true })
+            .then((updateAccount) => {
+                if (!updateAccount) return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                else sendSuccessJSONResponse(res, { message: "Account updated successfully" })
+            }).catch((err) => {
+                return sendErrorJSONResponse(res, { message: "Something went wrong" });
+            })
+    }
+
+}
+
+
+exports.deleteAccount = async (req, res, next) => {
+
+    const userId = req.query.userId;
+    if (!userId) { sendFailureJSONResponse(res, { message: "Something went wrong" }) };
+
+    User.findByIdAndDelete({ _id: userId }).then((acccount) => {
+        if (!acccount) return sendFailureJSONResponse(res, { message: "Something went wrong" })
+        else return sendSuccessJSONResponse(res, { message: "Account deleted successfully" })
+    }).catch((err) => {
+        return sendErrorJSONResponse(res, { message: "Something went wrong" });
+    })
+
+}
+
+// Logout user / clear cookie
+const logoutUser = (req, res) => {
+    res.cookie('jwt', '', {
+        httpOnly: true,
+        expires: new Date(0),
     });
-  } else {
-    res.status(404);
-    throw new Error('User not found');
-  }
-});
-export {
-  authUser,
-  registerUser,
-  logoutUser,
-  getUserProfile,
-  updateUserProfile,
+    res.status(200).json({ message: 'Logged out successfully' });
 };
