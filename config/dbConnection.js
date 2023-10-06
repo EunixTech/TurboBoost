@@ -6,8 +6,8 @@ module.exports = (mongoose) => {
 
   const isDevMode = Boolean(
     process.env.MODE &&
-      typeof process.env.MODE === `string` &&
-      process.env.MODE.toLowerCase().trim() === `dev`
+    typeof process.env.MODE === `string` &&
+    process.env.MODE.toLowerCase().trim() === `dev`
   );
 
   const mongoURLToUse = isDevMode ? mongoURL.dev : mongoURL.prod,
