@@ -13,6 +13,7 @@ const {
 const {
     isTruthyString,
     isValidEmailAddress,
+    isValidPassword
 } = require('../utils/verifications.js');
 
 
@@ -40,7 +41,7 @@ exports.validateData = (req, res, next) => {
         first_name,
         last_name,
         email_address,
-        bussiness_name,
+        bussiness_type,
         country,
         password
     } = req.body;
@@ -50,7 +51,8 @@ exports.validateData = (req, res, next) => {
 
     if (!isTruthyString(first_name)) missingData.push("First name");
     if (!isTruthyString(last_name)) missingData.push("Last name");
-    if (!isTruthyString(bussiness_name)) missingData.push("Bussiness name");
+    if (!bussiness_type) missingData.push("Bussiness type");
+    else if(bussiness_type && isNaN(bussiness_type) ) invalidData("Bussiness type")
     if (!isTruthyString(country)) missingData.push("Country");
 
     if (!email_address) missingData.push("Email Address");
@@ -60,9 +62,9 @@ exports.validateData = (req, res, next) => {
     else if (!isValidPassword(password)) invalidData.push("password");
 
     if (missingData.length || invalidData.length) {
-        if (missingData.length) toast.error(`Missing Data:- ${missingData.join(`, `)}`);
-        if (invalidData.length) toast.error(`Invalid Data:- ${invalidData.join(`, `)}`);
-        return;
+        if (missingData.length) return sendFailureJSONResponse(res, { message: `Missing Data:- ${missingData.join(`, `)}` });
+        if (invalidData.length) return sendFailureJSONResponse(res, { message: `Invalid Data:- ${invalidData.join(`, `)}` });
+
     } else {
 
         const formData = {
@@ -78,6 +80,7 @@ exports.validateData = (req, res, next) => {
         if (password) formData.user_info.password = password;
 
         req.formData = formData
+        next();
     }
 
 }
@@ -86,12 +89,13 @@ exports.fetchAccount = (req, res, next) => {
     const userId = req.userId;
 
     User.findById(userId)
-        .then((user) => {
+        .then((user) => {''
             if (!user) return sendFailureJSONResponse(res, { message: "Account not found" });
             else {
                 return sendSuccessJSONResponse(res, { acccount: user });
             }
         }).catch((err) => {
+            console.log(err)
             return sendFailureJSONResponse(res, { message: "Something went wrong" });
         })
 }
@@ -110,17 +114,21 @@ exports.registerAccount = async (req, res, next) => {
             User.create(req.formData)
                 .then((newAccount) => {
                     if (!newAccount) {
+                     
                         return sendFailureJSONResponse(res, { message: "Something went wrong" });
                     } else {
-                        generateToken(res, newAccount._id);
+                      console.log(`newAccount`, newAccount._id)
+                        // generateToken(res, newAccount._id);
                         return sendSuccessJSONResponse(res, { message: "Account created successfully" });
                     }
                 }).catch((err) => {
+                  console.log(err)
                     return sendFailureJSONResponse(res, { message: "Something went wrong" });
                 });
         }
 
     } catch (error) {
+        console.log(error)
         return sendFailureJSONResponse(res, { message: "Something went wrong" });
     }
 
@@ -152,11 +160,16 @@ exports.updateAccount = async (req, res, next) => {
 exports.deleteAccount = async (req, res, next) => {
 
     const userId = req.query.userId;
-    if (!userId) { sendFailureJSONResponse(res, { message: "Something went wrong" }) };
+    if (!userId) { return sendFailureJSONResponse(res, { message: "Something went wrong" }) };
 
-    User.findByIdAndDelete({ _id: userId }).then((acccount) => {
-        if (!acccount) return sendFailureJSONResponse(res, { message: "Something went wrong" })
-        else return sendSuccessJSONResponse(res, { message: "Account deleted successfully" })
+    User.findByIdAndDelete({ _id: userId })
+    .then((acccount) => {
+        if (!acccount) {
+          return sendFailureJSONResponse(res, { message: "Something went wrong" })
+        }
+        else {
+          return sendSuccessJSONResponse(res, { message: "Account deleted successfully" })
+        }
     }).catch((err) => {
         return sendErrorJSONResponse(res, { message: "Something went wrong" });
     })
@@ -166,6 +179,7 @@ exports.deleteAccount = async (req, res, next) => {
 exports.checkAccountExist = async(req, res, next) => {
 
     const emailAddress = req.body.email_address;
+    console.log(`emailAddress`, emailAddress)
 
     if (!emailAddress) return sendFailureJSONResponse(res, { message: "Please provide email address" });
     else if (!isValidEmailAddress(emailAddress)) return sendFailureJSONResponse(res, { message: "Please provide valid email address" });
@@ -174,13 +188,15 @@ exports.checkAccountExist = async(req, res, next) => {
         .then((foundAccount) => {
             if (!foundAccount) return sendFailureJSONResponse(res, { message: "Account not exist" });
             else {
-              User.findByIdAndUpdate({_id: userId},{
+              User.findByIdAndUpdate({_id: "6520095c29371858a78fb1ec"},{
                 email_token :generateRandomString(10)
               })
+              sendEmail(reciverEmail = emailAddress ,HTMlContent = "<h1></h1>", heading = "forgetpassword")
               sendSuccessJSONResponse(res, { message: " " });
             }
         }).catch((err) => {
-            return sendFailureJSONResponse(res, { message: "Please provide email address" });
+            console.log(err)
+            return sendFailureJSONResponse(res, { message: "Something went wrong" });
         })
 
 }
