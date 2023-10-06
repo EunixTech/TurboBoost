@@ -1,10 +1,16 @@
 const router = require(`express`).Router(),
   controllers = require("../../controllers/shopify"),
-  shopifyMiddleware=require('../../middleware/shopifyMiddleware')
+  shopifyMiddleware = require('../../middleware/shopifyMiddleware')
 
-router.get("/app-installations",shopifyMiddleware.shopifyAuth,controllers.appInstallations);
+router.get("/app-installations", shopifyMiddleware.shopifyAuth, controllers.appInstallations);
 
-router.get("/auth-callback",shopifyMiddleware.shopifyAuth,controllers.authCallback);
+router.get("/auth-callback", shopifyMiddleware.shopifyAuth, controllers.authCallback);
+
+router.post('/customer/data', controllers.customerData)
+
+router.post('/customers/redact', controllers.customerRedact)
+
+router.post('/shop/redact', controllers.shopRedact)
 
 router.get("/adding-lazy-loading", controllers.addingLazyLoading);
 

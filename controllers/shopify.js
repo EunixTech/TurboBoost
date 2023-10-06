@@ -961,3 +961,38 @@ async function criticalCssRestore(shopifyAdmin, redisStore) {
     ctx.body = JSON.stringify({ error: "could not find session" });
   }
 }
+
+
+exports.customerData = async (req, res) => {
+  const hmac = req.get('X-Shopify-Hmac-Sha256');
+  const generatedHash = crypto.createHmac('SHA256', SHOPIFY_API_SECRET).update(JSON.stringify(req.body), 'utf8').digest('base64');
+  if (hmac === generatedHash) {
+    console.log("match")
+    res.status(200).send();
+  } else {
+    console.log("not match")
+    res.status(401).send("Not Authorized");
+  }
+}
+exports.customerRedact = async (req, res) => {
+  const hmac = req.get('X-Shopify-Hmac-Sha256');
+  const generatedHash = crypto.createHmac('SHA256', SHOPIFY_API_SECRET).update(JSON.stringify(req.body), 'utf8').digest('base64');
+  if (hmac === generatedHash) {
+    console.log("match")
+    res.status(200).send();
+  } else {
+    console.log("not match")
+    res.status(401).send("Not Authorized");
+  }
+}
+exports.shopRedact = async (req, res) => {
+  const hmac = req.get('X-Shopify-Hmac-Sha256');
+  const generatedHash = crypto.createHmac('SHA256', SHOPIFY_API_SECRET).update(JSON.stringify(req.body), 'utf8').digest('base64');
+  if (hmac === generatedHash) {
+    console.log("match")
+    res.status(200).send();
+  } else {
+    console.log("not match")
+    res.status(401).send("Not Authorized");
+  }
+}
