@@ -233,7 +233,7 @@ exports.authCallback = async (req, res) => {
           });
 
           await state.save();
-          res.redirect(`${FRONTEND_URL}?userToken=${state?._id}`)
+          res.redirect(`${FRONTEND_URL}?userToken=${state?.unique_key}`)
         }
       })
       .catch((err) => {

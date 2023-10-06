@@ -17,7 +17,8 @@ const outhStateSchema = new mongoose.Schema({
         },
         action:{
             ...defaultStringConfig,
-        }
+        },
+        userID:defaultStringConfig
     }
 
 }, { timestamps: true });

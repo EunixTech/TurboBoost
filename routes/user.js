@@ -5,7 +5,8 @@ const {
   fetchAccount,
   updateAccount,
   checkAccountExist,
-  updatePassword
+  updatePassword,
+  loginUsingStateToken
   
 } = require('../controllers/user');
 
@@ -16,5 +17,6 @@ router.post("/register-account",validateData,registerAccount);
 router.patch("/register-account/:userId",validateData,updateAccount);
 router.post("forget-password/",checkAccountExist);
 router.post("update-password/",updatePassword);
+router.get("/redirect/login/:userToken",loginUsingStateToken);
 
 module.exports =  router;

@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const mongoose = require("mongoose");
 const User = mongoose.model("user");
+const OauthState = mongoose.model("outhState")
 const sendEmail = require("../services/sendEmail");
 const generateRandomString = require("../utils/generateRandomString");
 const generateToken = require('../utils/generateToken.js');
@@ -205,6 +206,42 @@ exports.updatePassword = async(req, res, next) =>{
         return sendFailureJSONResponse(res, { message: "Please provide email address" });
     })
 
+}
+
+exports.loginUsingStateToken=async(req,res,next)=>{
+    try{
+        let userToken=req.params.userToken
+        if(!userToken){
+            return sendFailureJSONResponse(res, { message: "Please provide token" });
+        }
+        let stateData=await OauthState.findOne({unique_key:userToken})
+        console.log(Object.keys(stateData).length===0)
+
+        if(Object.keys(stateData).length===0){
+            return sendFailureJSONResponse(res, { message: "Invalid Token" });
+        }
+        let data=stateData?.data
+
+        if(!data?.userID){
+            return sendFailureJSONResponse(res, { message: "userId not found" });
+        }
+        const user = await User.findById(data.userID);
+        console.log(user)
+        await OauthState.deleteOne({ _id: stateData._id });
+        if (user) {
+            generateToken(res, user._id);
+            res.json({
+                _id: user._id,
+                userData: user.user_info,
+            });
+        } else {
+            throw new Error('Invalid email or password');
+        }
+
+    }catch(e){
+        console.log(e)
+        return sendFailureJSONResponse(res, { message: "Invalid Token" });
+    }
 }
 
 
