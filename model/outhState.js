@@ -14,8 +14,10 @@ const outhStateSchema = new mongoose.Schema({
         login: defaultBooleanConfig,
         hmac: {
             ...defaultStringConfig,
-            required: true
         },
+        action:{
+            ...defaultStringConfig,
+        }
     }
 
 }, { timestamps: true });

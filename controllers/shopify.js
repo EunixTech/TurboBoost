@@ -20,7 +20,7 @@ const mongoose = require("mongoose"),
     checkForGoogleTagManager,
   } = require("../resources/scripts/google-tag-manager"),
   User = mongoose.model("user"),
-  ShopifyService = require("../services/apps/index"),
+  { shopifyService } = require("../services/apps/index"),
   { getFetchConfig } = require("../utils/getFetchConfig"),
   OauthState = mongoose.model("outhState"),
   {
@@ -38,10 +38,14 @@ const mongoose = require("mongoose"),
     SHOPIFY_API_REDIRECT,
     SHOPIFY_API_SCOPES,
     SHOPIFY_BASE_URL,
+    MODE,
+    DEV_FRONTEND_URL,
+    LIVE_FRONTEND_URL
   } = process.env;
+  const FRONTEND_URL=MODE==='dev'?DEV_FRONTEND_URL:LIVE_FRONTEND_URL
 
 const { googleApiDisplaySwap } = require("../utils/commenRegrex");
-
+const { v4: uuidv4 } = require('uuid');
 require("../utils/mongoose");
 
 const ShopifyAPI = require("../services/apps/shopify");
@@ -52,7 +56,7 @@ const ShopifyAPIAndMethod = new ShopifyAPI({
   version: process.env.SHOPIFY_API_VERSION,
 });
 
-ShopifyAPIAndMethod.init();
+// ShopifyAPIAndMethod.init();
 
 const uploadToCloudinary = require("../utils/uploadToCloudinary");
 
@@ -101,7 +105,7 @@ exports.appInstallations = async (req, res) => {
 
     // creating OuthState for security checking
     OauthState.create({
-      unique_key: "jahdga",
+      unique_key: uuidv4(),
       data: {
         login: true,
         hmac: hmac,
@@ -172,7 +176,6 @@ exports.authCallback = async (req, res) => {
           });
         else {
           await OauthState.deleteOne({ _id: foundOauthState._id });
-
           const config = {
             method: "POST",
             url: `https://${shop}/admin/oauth/access_token`,
@@ -187,39 +190,50 @@ exports.authCallback = async (req, res) => {
           const data = response.data;
           console.log(data);
 
-          let shopData = await ShopifyService.getShopDetails(
+          let shopData = await ShopifyAPIAndMethod.getShopDetails(
             shop,
             data.access_token
           );
           console.log(shopData);
-          // const email = shopData?.shop?.email
-          // let name = shopData?.shop?.shop_owner
-          // const first_name = name.split(' ')[0]
-          // const last_name = name.split(' ')[1]
-          // const { email, first_name, last_name } = response.data.associated_user;
-          // let scopes = data.scope
-          // let webhook = await this.createUninstallWebHook(shop, data.access_token) //create webhook function
+          const email = shopData?.shop?.email
+          const first_name = shopData?.shop?.shop_owner.split(' ')[0]
+          const last_name = shopData?.shop?.shop_owner.split(' ')[1]
 
-          User.create({
-            app_token: {
-              shopify: data?.access_token,
-            },
-          })
-            .then((newUser) => {
-              if (newUser)
-                return sendSuccessJSONResponse(res, {
-                  message: "Succesfull login",
-                });
-              else
-                return sendFailureJSONResponse(res, {
-                  message: "Something went wrong",
-                });
+          let userData = await User.findOne({ 'app_token.shopify.shop': shop })
+          if (userData) {
+            userData = await User.findByIdAndUpdate(userData._id,
+              {
+                'app_token.shopify.access_token': data?.accessToken,
+                'app_token.shopify.isDeleted': false
+              }
+            )
+          } else {
+
+            userData = await User.create({
+              user_info: {
+                first_name: first_name,
+                last_name: last_name,
+                email_address: email,
+              },
+              app_token: {
+                shopify: {
+                  ...data, shop, isDeleted: false
+                },
+              },
             })
-            .catch(() => {
-              return sendFailureJSONResponse(res, {
-                message: "Something went wrong",
-              });
-            });
+          }
+          console.log(userData)
+          const state = new OauthState({
+            unique_key: uuidv4(),
+            data: {
+             login:true,
+             action:"loginAfterInstall",
+             userID:userData?._id
+            },
+          });
+
+          await state.save();
+          res.redirect(`${FRONTEND_URL}?userToken=${state?._id}`)
         }
       })
       .catch((err) => {
@@ -626,7 +640,7 @@ exports.losslessCompCollection = async (req, res, next) => {
     */
   const compressionType = req?.query?.compressionType;
 
-  if (!compressionType)return sendFailureJSONResponse(res, {message: `please provide compression type`,});
+  if (!compressionType) return sendFailureJSONResponse(res, { message: `please provide compression type`, });
 
   const smartCollections = await ShopifyAPIAndMethod.fetchSmartCollection();
 
@@ -663,7 +677,7 @@ exports.losslessCompCollection = async (req, res, next) => {
       };
 
       Axios.request(config)
-        .then((response) => {})
+        .then((response) => { })
         .catch((error) => {
           console.log(error);
         });
@@ -765,7 +779,7 @@ exports.addingGoogleTagManager = async (req, res, next) => {
 
 // restoration api started
 exports.restoringFontOptimization = async (req, res, next) => {
-  try { 
+  try {
     const themeAssets = await ShopifyAPIAndMethod.getAssets();
     const assets = themeAssets.assets;
     const cssAssets = assets.filter(
@@ -882,8 +896,8 @@ exports.restoreCriticalCss = async (req, res, next) => {
 exports.restoreImageSizeAdaption = async (req, res, next) => {
   try {
     const snippets = await ShopifyAPIAndMethod.getAssetByName(
-        "snippets/responsive-image.liquid"
-      ),
+      "snippets/responsive-image.liquid"
+    ),
       snippetsContent = snippets?.value;
 
     const updateSnippetsContent = removeWidthSizeAttribute(snippetsContent);
@@ -907,27 +921,27 @@ exports.restoreImageCompression = async (req, res, next) => {
   try {
 
     ProductImage.find({})
-    .then(async (images)=>{
+      .then(async (images) => {
 
-      for (let i = images.length - 1; i >= 0; i--) {
+        for (let i = images.length - 1; i >= 0; i--) {
 
-        const imageURL = images[i]?.url,
-          productId = images[i]?.product_id,
-          imageId = images[i]?.image_id,
-          imagePosition = images[i]?.position;
+          const imageURL = images[i]?.url,
+            productId = images[i]?.product_id,
+            imageId = images[i]?.image_id,
+            imagePosition = images[i]?.position;
 
           await ShopifyAPIAndMethod.updateProductImages({
-          productId,
-          imageId,
-          imageURL,
-          imagePosition
-        });
-      }
+            productId,
+            imageId,
+            imageURL,
+            imagePosition
+          });
+        }
 
-    })
+      })
 
-    return sendSuccessJSONResponse(res, {message: "success "})
-  
+    return sendSuccessJSONResponse(res, { message: "success " })
+
 
   } catch (error) {
     return sendErrorJSONResponse(res, { message: "Something went wrong" });

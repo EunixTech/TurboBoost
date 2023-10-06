@@ -1,5 +1,5 @@
 const fetchAPI = require("../../utils/fetchAPI");
-
+const Axios = require("axios");
 class ShopifyAPI {
   constructor({ shop, accessToken, version }) {
     if (!shop || !accessToken || !version) {
@@ -375,6 +375,37 @@ class ShopifyAPI {
     });
 
     return fetchAPI(`${this.url}/graphql.json`, "POST", data);
+  }
+
+
+
+  async getShopDetails(shop, token) {
+    return new Promise((resolve, reject) => {
+      if (!shop || !token) {
+        reject("Shop and token are required for shop details")
+      }
+
+      let config = {
+        method: 'get',
+        maxBodyLength: Infinity,
+        url: `https://${shop}/admin/shop.json`,
+        headers: {
+          'X-Shopify-Access-Token': token,
+        }
+      };
+
+      Axios.request(config)
+        .then((response) => {
+          // console.log(JSON.stringify(response.data));
+          resolve(response.data)
+        })
+        .catch((error) => {
+          console.log(error)
+          resolve({})
+        });
+    })
+
+
   }
 }
 

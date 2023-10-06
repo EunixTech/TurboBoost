@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { defaultStringConfig } = require("../utils/mongoose");
+const { defaultStringConfig,defaultObjectConfig } = require("../utils/mongoose");
 
 const userSchema = new mongoose.Schema(
     {
@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema(
         },
 
         app_token: {
-            shopify: defaultStringConfig,
+            shopify: defaultObjectConfig,
             wordpress: defaultStringConfig,
             woocomerce: defaultStringConfig,
         },
