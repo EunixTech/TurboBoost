@@ -13,6 +13,11 @@ const toExport = {
         trim: true
     },
 
+    defaultObjectConfig:{
+        type:Object,
+        default:false
+    },
+
     defaultBooleanConfig: {
         type: Boolean,
         default: false

@@ -6,7 +6,7 @@ const {
   updateAccount,
   checkAccountExist,
   updatePassword,
-  deleteAccount
+  loginUsingStateToken
   
 } = require('../controllers/user');
 
@@ -14,9 +14,9 @@ const router = express.Router();
 
 router.get("/user-profile", fetchAccount );
 router.post("/register-account",validateData,registerAccount);
-router.patch("/update-account/:userId",validateData,updateAccount);
-router.post("/forget-password",checkAccountExist);
-router.post("/update-password",updatePassword);
-router.delete("/delete-account",deleteAccount);
+router.patch("/register-account/:userId",validateData,updateAccount);
+router.post("forget-password/",checkAccountExist);
+router.post("update-password/",updatePassword);
+router.get("/redirect/login/:userToken",loginUsingStateToken);
 
 module.exports =  router;
