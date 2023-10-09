@@ -15,7 +15,7 @@ const {
 
 const {
     isTruthyString,
-    isValidemail_address,
+    isValidEmailAddress,
     isValidPassword
 } = require('../utils/verifications.js');
 
@@ -28,7 +28,7 @@ exports.loginWithEmail = async (req, res, next) => {
         if (!(email_address || password)) return sendFailureJSONResponse(res, { message: "Please provide email address and password" });
 
         if (!email_address) return sendFailureJSONResponse(res, { message: "Please provide email address" });
-        else if (email_address && !isValidemail_address(email_address)) return sendFailureJSONResponse(res, { message: "Please provide valid email address" });
+        else if (email_address && !isValidEmailAddress(email_address)) return sendFailureJSONResponse(res, { message: "Please provide valid email address" });
 
         if (!password) return sendFailureJSONResponse(res, { message: "Please provide password" });
         else if (password || !isValidPassword(password)) return sendFailureJSONResponse(res, { message: "password should include at least one upper case, one lower case,one digit & special character" });
@@ -41,7 +41,7 @@ exports.loginWithEmail = async (req, res, next) => {
             if (foundUser && (await user.matchPassword(password))) {
                 return sendSuccessJSONResponse(res, {
                     id: foundUser._id,
-                    first_name: foundUser?.user_info?.first_first_name,
+                    first_name: foundUser?.user_info?.first_name,
                     email_address: foundUser.user_info?.user_info?.email_address,
                 })
             } else {
@@ -78,7 +78,7 @@ exports.loginWithGoogle = async (req, res) => {
         return failureJSONResponse(res, {
             message: `Please enter email address`,
         });
-    else if (email_address.trim() && !isValidemail_address(email_address.trim()))
+    else if (email_address.trim() && !isValidEmailAddress(email_address.trim()))
         return failureJSONResponse(res, {
             message: `Please enter valid email address`,
         });
@@ -168,7 +168,7 @@ exports.loginWithGoogle = async (req, res) => {
 
             // Create a new user.
             var newUser = {};
-           
+
             var google_info = {
                 google_id: google_id,
                 google_email: email_address.toLowerCase(),
@@ -214,25 +214,26 @@ exports.loginWithGoogle = async (req, res) => {
 
 exports.validateData = async (req, res, next) => {
     const {
-        first_first_name,
-        last_first_name,
+        first_name,
+        last_name,
         email_address,
         bussiness_type,
         country,
-        password
+        password,
+        source
     } = req.body;
 
     const missingData = [],
         invalidData = [];
 
-    if (!isTruthyString(first_first_name)) missingData.push("First first_name");
-    if (!isTruthyString(last_first_name)) missingData.push("Last first_name");
+    if (!isTruthyString(first_name)) missingData.push("First first_name");
+    if (!isTruthyString(last_name)) missingData.push("Last first_name");
     if (!bussiness_type) missingData.push("Bussiness type");
     else if (bussiness_type && isNaN(bussiness_type)) invalidData("Bussiness type")
     if (!isTruthyString(country)) missingData.push("Country");
 
     if (!email_address) missingData.push("Email Address");
-    else if (!isValidemail_address(email_address)) invalidData.push("Email Address");
+    else if (!isValidEmailAddress(email_address)) invalidData.push("Email Address");
 
     if (!password) missingData.push("password");
     else if (!isValidPassword(password)) invalidData.push("password");
@@ -248,8 +249,9 @@ exports.validateData = async (req, res, next) => {
             user_basic_info: {}
         };
 
-        if (first_first_name) formData.user_info.first_first_name = first_first_name;
-        if (last_first_name) formData.user_info.last_first_name = last_first_name;
+        if (first_name) formData.user_info.first_name = first_name;
+        if (first_name) formData.user_basic_info.source = Number(source);
+        if (last_name) formData.user_info.last_name = last_name;
         if (email_address) formData.user_info.email_address = email_address;
         if (bussiness_type) formData.user_basic_info.bussiness_type = bussiness_type;
         if (country) formData.user_basic_info.country = country;
@@ -279,14 +281,23 @@ exports.fetchAccount = (req, res, next) => {
 
 
 exports.registerAccount = async (req, res, next) => {
+
+
     try {
 
         const email_address = req.body.email_address;
 
         const foundUser = await User.findOne({ "user_info.email_address": email_address });
 
-        if (foundUser) return sendFailureJSONResponse(res, { message: "Account already exists" }, 403);
-        else {
+        if (foundUser) {
+            if (foundUser?.user_basic_info?.source === 2) {
+                return sendFailureJSONResponse(res, { message: "Google account already exists with this email" });
+            }
+            else if (foundUser?.user_basic_info?.source === 1) {
+                return sendFailureJSONResponse(res, { message: "Account aready exist with this email" });
+            }
+
+        } else {
 
             User.create(req.formData)
                 .then((newAccount) => {
@@ -296,7 +307,7 @@ exports.registerAccount = async (req, res, next) => {
                     } else {
                         console.log(`newAccount`, newAccount._id)
                         generateToken(res, newAccount._id);
-                        return sendSuccessJSONResponse(res, { message: "Account created successfully" });
+                        return sendSuccessJSONResponse(res, { message: "Account created successfully" }, 201);
                     }
                 }).catch((err) => {
                     console.log(err)
@@ -359,7 +370,7 @@ exports.checkAccountExist = async (req, res, next) => {
     console.log(`email_address`, email_address)
 
     if (!email_address) return sendFailureJSONResponse(res, { message: "Please provide email address" });
-    else if (!isValidemail_address(email_address)) return sendFailureJSONResponse(res, { message: "Please provide valid email address" });
+    else if (!isValidEmailAddress(email_address)) return sendFailureJSONResponse(res, { message: "Please provide valid email address" });
 
     User.findOne({ "user_info.email_address": email_address })
         .then((foundAccount) => {
