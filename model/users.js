@@ -12,6 +12,14 @@ const userSchema = new mongoose.Schema(
             date_of_birth: defaultStringConfig,
         },
 
+        google_info: {
+            google_Id: defaultStringConfig,
+            google_email: defaultStringConfig,
+            google_token: defaultStringConfig,
+        },
+
+        device_token: defaultStringConfig,
+    
         user_basic_info: {
             bussiness_type:{
                 type: Number,

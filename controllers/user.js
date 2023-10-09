@@ -1,9 +1,9 @@
-const asyncHandler = require('express-async-handler');
 const mongoose = require("mongoose");
 const User = mongoose.model("user");
 const sendEmail = require("../services/sendEmail");
 const generateRandomString = require("../utils/generateRandomString");
 const generateToken = require('../utils/generateToken.js');
+const hashedPassword = require("../utils/hashPassword");
 const {
     sendSuccessJSONResponse,
     sendFailureJSONResponse,
@@ -51,7 +51,7 @@ exports.loginWithEmail = async (req, res, next) => {
     }
 }
 
-exports.validateData = (req, res, next) => {
+exports.validateData = async (req, res, next) => {
     const {
         first_name,
         last_name,
@@ -92,7 +92,7 @@ exports.validateData = (req, res, next) => {
         if (email_address) formData.user_info.email_address = email_address;
         if (bussiness_type) formData.user_basic_info.bussiness_type = bussiness_type;
         if (country) formData.user_basic_info.country = country;
-        if (password) formData.user_info.password = password;
+        if (password) formData.user_info.password = await hashedPassword(password);
 
         req.formData = formData
         next();
@@ -134,7 +134,7 @@ exports.registerAccount = async (req, res, next) => {
                         return sendFailureJSONResponse(res, { message: "Something went wrong" });
                     } else {
                         console.log(`newAccount`, newAccount._id)
-                        // generateToken(res, newAccount._id);
+                        generateToken(res, newAccount._id);
                         return sendSuccessJSONResponse(res, { message: "Account created successfully" });
                     }
                 }).catch((err) => {
@@ -241,13 +241,39 @@ exports.updatePassword = async (req, res, next) => {
 
 
 
+exports.logout = async (req, res, next) => {
+
+    const deviceType = req?.body?.device_type;
+    const deviceToken = req?.body?.device_token;
+
+    if (!isValidString(deviceToken?.trim())) return failureJSONResponse(res, { message: 'Device token missing.' });
 
 
-// Logout user / clear cookie
-const logoutUser = (req, res) => {
-    res.cookie('jwt', '', {
-        httpOnly: true,
-        expires: new Date(0),
-    });
-    res.status(200).json({ message: 'Logged out successfully' });
-};
+    if (!deviceType) {
+        return failureJSONResponse(res, { message: 'Device type missing.' });
+    } else if (isNaN(deviceType)) {
+        return failureJSONResponse(res, { message: 'Invalid device type.' });
+    }
+
+    try {
+        const user = await User.updateOne(
+            { _id: req.userId },
+            {
+                $pull: {
+                    user_device_info: {
+                        token: deviceToken,
+                        device_type: Number(deviceType),
+                    },
+                },
+            }
+        );
+
+        if (user.modifiedCount === 1) {
+            return successJSONResponse(res, { message: 'Logout successful.' });
+        } else {
+            return failureJSONResponse(res, { message: 'Device token not found.' });
+        }
+    } catch (error) {
+        return failureJSONResponse(res, { message: 'Something went wrong.' });
+    }
+}
