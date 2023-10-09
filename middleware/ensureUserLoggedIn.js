@@ -24,8 +24,6 @@ exports.ensureUserLoggedIn = async (req, res, next) => {
         else {
 
             const decodedPayload = verifyAndDecodeToken(token);
-            console.log(`decodedPayload`,decodedPayload)
-        
 
             if (!((decodedPayload && decodedPayload.userId))) {
                 return res.json({
@@ -65,7 +63,7 @@ exports.ensureUserLoggedIn = async (req, res, next) => {
 }
 
 function verifyqJWT(token) {
-    jwt.verify(token, `AbCdEfGhIjKlMnOPYT`, function (err, decoded) {
+    jwt.verify(token, process.env.JWT_SECRET, function (err, decoded) {
         if (err) {
             return err;
         } else {

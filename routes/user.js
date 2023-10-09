@@ -15,8 +15,8 @@ const {
 
 const router = express.Router();
 
-router.get("/email-login", loginWithEmail);
-router.get("/google-login", loginWithGoogle);
+router.post("/login-with-email", loginWithEmail);
+router.post("/login-with-google", loginWithGoogle);
 router.get("/user-profile", fetchAccount);
 router.post("/register-account", validateData, registerAccount);
 router.patch("/register-account/:userId", validateData, updateAccount);

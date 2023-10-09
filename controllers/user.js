@@ -31,14 +31,14 @@ exports.loginWithEmail = async (req, res, next) => {
         else if (email_address && !isValidEmailAddress(email_address)) return sendFailureJSONResponse(res, { message: "Please provide valid email address" });
 
         if (!password) return sendFailureJSONResponse(res, { message: "Please provide password" });
-        else if (password || !isValidPassword(password)) return sendFailureJSONResponse(res, { message: "password should include at least one upper case, one lower case,one digit & special character" });
-
-        const user = await User.findOne({ email });
+        else if (password && !isValidPassword(password)) return sendFailureJSONResponse(res, { message: "password should include at least one upper case, one lower case,one digit & special character" });
 
         User.findOne({
             "user_info.email_address": email_address
         }).then(async (foundUser) => {
-            if (foundUser && (await user.matchPassword(password))) {
+
+            if(!foundUser) return sendFailureJSONResponse(res, { message: `Account does't exist with email ${email_address}` });
+            else if (foundUser && (await foundUser.matchPassword(password))) {
                 return sendSuccessJSONResponse(res, {
                     id: foundUser._id,
                     first_name: foundUser?.user_info?.first_name,
@@ -50,13 +50,14 @@ exports.loginWithEmail = async (req, res, next) => {
         })
 
     } catch (error) {
+        console.log(error)
         return sendFailureJSONResponse(res, { message: "Something went wrong" });
     }
 
 }
 
 // Standard signup with Google.
-exports.loginWithGoogle = async (req, res) => {
+exports.loginWithGoogle = async (req, res, next) => {
 
     const email_address = req?.body?.email_address,
         first_name = req?.body?.first_name,
@@ -64,35 +65,34 @@ exports.loginWithGoogle = async (req, res) => {
         google_token = req?.body?.google_token,
         device_token = req?.body?.device_token;
 
-    if (!isValidString(first_name.trim()))
-        return failureJSONResponse(res, { message: `Please enter valid first_name` });
-    if (!isValidString(google_id.trim()))
-        return failureJSONResponse(res, { message: `google id missing` });
-    if (!isValidString(google_token.trim()))
-        return failureJSONResponse(res, { message: `google token missing` });
+    // if (!isValidString(first_name.trim()))
+    //     return failureJSONResponse(res, { message: `Please enter valid first_name` });
+    // if (!isValidString(google_id.trim()))
+    //     return failureJSONResponse(res, { message: `google id missing` });
+    // if (!isValidString(google_token.trim()))
+    //     return failureJSONResponse(res, { message: `google token missing` });
 
-    if (!isValidString(device_token.trim()))
-        return failureJSONResponse(res, { message: `device token missing` });
+    // if (!isValidString(device_token.trim()))
+    //     return failureJSONResponse(res, { message: `device token missing` });
 
-    if (!isValidString(email_address.trim()))
-        return failureJSONResponse(res, {
-            message: `Please enter email address`,
-        });
-    else if (email_address.trim() && !isValidEmailAddress(email_address.trim()))
+    // if (!isValidString(email_address.trim()))
+    //     return failureJSONResponse(res, {
+    //         message: `Please enter email address`,
+    //     });
+    // else 
+    
+    if (email_address.trim() && !isValidEmailAddress(email_address.trim()))
         return failureJSONResponse(res, {
             message: `Please enter valid email address`,
         });
 
     // Check If email is register with any user via other platforms like facebook,google or email.
 
-    const foundUser = await User.findOne(
-        { "google_info.google_id": google_id },
-        {
-            _id: 1,
-            user_basic_info: 1,
-            user_info: 1,
-        }
-    );
+    const foundUser = await User.findOne({
+        "google_info.google_id": google_id
+    });
+
+    console.log(`foundUser*****************`,foundUser)
 
     if (foundUser && Object.keys(foundUser).length) {
 
@@ -178,31 +178,30 @@ exports.loginWithGoogle = async (req, res) => {
                 first_name: first_name,
                 status: Number(2),
                 device_token,
-                source: 2,
+                
                 email_address: email_address.toLowerCase(),
             };
+            
 
             newUser.google_info = google_info;
             newUser.user_info = user_info;
-            newUser.user_basic_info = user_basic_info;
+            newUser.user_basic_info = {
+                source: 2,
+            }
 
-
-            User(newUser).save(function (err, data) {
-                if (err) {
-                    return sendFailureJSONResponse(res, { message: "Something went wrong" })
-                } else {
-
-                    return sendSuccessJSONResponse({
+            User.create(newUser)
+            .then((data)=>{
+                if(!data)return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                else {
+                    generateToken(res, data?._id);
+                    return sendSuccessJSONResponse(res,{
                         userId: data._id,
                         first_name: data.user_info.first_name || null,
                         message: `success`,
-                        token: createJWT(data._id)
-
                     }, 201);
 
                 }
-
-            });
+            })
 
         }
 
