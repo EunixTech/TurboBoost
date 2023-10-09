@@ -17,24 +17,39 @@ const {
 } = require('../utils/verifications.js');
 
 
-// Auth user & get token
-const authUser = asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
+exports.loginWithEmail = async (req, res, next) => {
+    try {
 
-    const user = await User.findOne({ email });
+        const { email_address, password } = req.body;
 
-    if (user && (await user.matchPassword(password))) {
-        generateToken(res, user._id);
+        if (!(email_address || password)) return sendFailureJSONResponse(res, { message: "Please provide email address and password" });
 
-        res.json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-        });
-    } else {
-        throw new Error('Invalid email or password');
+        if (!email_address) return sendFailureJSONResponse(res, { message: "Please provide email address" });
+        else if (email_address && !isValidEmailAddress(email_address)) return sendFailureJSONResponse(res, { message: "Please provide valid email address" });
+
+        if (!password) return sendFailureJSONResponse(res, { message: "Please provide password" });
+        else if (password || !isValidPassword(password)) return sendFailureJSONResponse(res, { message: "password should include at least one upper case, one lower case,one digit & special character" });
+
+        const user = await User.findOne({ email });
+
+        User.findOne({
+            "user_info.email_address": email_address
+        }).then(async (foundUser) => {
+            if (foundUser && (await user.matchPassword(password))) {
+                return sendSuccessJSONResponse(res, {
+                    id: foundUser._id,
+                    name: foundUser?.user_info?.first_name,
+                    email_address: foundUser.user_info?.user_info?.email_address,
+                })
+            } else {
+                return sendFailureJSONResponse(res, { message: "Invalid email or password" });
+            }
+        })
+
+    } catch (error) {
+        return sendFailureJSONResponse(res, { message: "Something went wrong" });
     }
-});
+}
 
 exports.validateData = (req, res, next) => {
     const {
@@ -52,7 +67,7 @@ exports.validateData = (req, res, next) => {
     if (!isTruthyString(first_name)) missingData.push("First name");
     if (!isTruthyString(last_name)) missingData.push("Last name");
     if (!bussiness_type) missingData.push("Bussiness type");
-    else if(bussiness_type && isNaN(bussiness_type) ) invalidData("Bussiness type")
+    else if (bussiness_type && isNaN(bussiness_type)) invalidData("Bussiness type")
     if (!isTruthyString(country)) missingData.push("Country");
 
     if (!email_address) missingData.push("Email Address");
@@ -89,7 +104,8 @@ exports.fetchAccount = (req, res, next) => {
     const userId = req.userId;
 
     User.findById(userId)
-        .then((user) => {''
+        .then((user) => {
+            ''
             if (!user) return sendFailureJSONResponse(res, { message: "Account not found" });
             else {
                 return sendSuccessJSONResponse(res, { acccount: user });
@@ -108,21 +124,21 @@ exports.registerAccount = async (req, res, next) => {
 
         const foundUser = await User.findOne({ "user_info.email_address": emailAddress });
 
-        if (foundUser)  return sendFailureJSONResponse(res, { message: "Account already exists" }, 403);
+        if (foundUser) return sendFailureJSONResponse(res, { message: "Account already exists" }, 403);
         else {
 
             User.create(req.formData)
                 .then((newAccount) => {
                     if (!newAccount) {
-                     
+
                         return sendFailureJSONResponse(res, { message: "Something went wrong" });
                     } else {
-                      console.log(`newAccount`, newAccount._id)
+                        console.log(`newAccount`, newAccount._id)
                         // generateToken(res, newAccount._id);
                         return sendSuccessJSONResponse(res, { message: "Account created successfully" });
                     }
                 }).catch((err) => {
-                  console.log(err)
+                    console.log(err)
                     return sendFailureJSONResponse(res, { message: "Something went wrong" });
                 });
         }
@@ -163,20 +179,20 @@ exports.deleteAccount = async (req, res, next) => {
     if (!userId) { return sendFailureJSONResponse(res, { message: "Something went wrong" }) };
 
     User.findByIdAndDelete({ _id: userId })
-    .then((acccount) => {
-        if (!acccount) {
-          return sendFailureJSONResponse(res, { message: "Something went wrong" })
-        }
-        else {
-          return sendSuccessJSONResponse(res, { message: "Account deleted successfully" })
-        }
-    }).catch((err) => {
-        return sendErrorJSONResponse(res, { message: "Something went wrong" });
-    })
+        .then((acccount) => {
+            if (!acccount) {
+                return sendFailureJSONResponse(res, { message: "Something went wrong" })
+            }
+            else {
+                return sendSuccessJSONResponse(res, { message: "Account deleted successfully" })
+            }
+        }).catch((err) => {
+            return sendErrorJSONResponse(res, { message: "Something went wrong" });
+        })
 
 }
 
-exports.checkAccountExist = async(req, res, next) => {
+exports.checkAccountExist = async (req, res, next) => {
 
     const emailAddress = req.body.email_address;
     console.log(`emailAddress`, emailAddress)
@@ -188,11 +204,11 @@ exports.checkAccountExist = async(req, res, next) => {
         .then((foundAccount) => {
             if (!foundAccount) return sendFailureJSONResponse(res, { message: "Account not exist" });
             else {
-              User.findByIdAndUpdate({_id: "6520095c29371858a78fb1ec"},{
-                email_token :generateRandomString(10)
-              })
-              sendEmail(reciverEmail = emailAddress ,HTMlContent = "<h1></h1>", heading = "forgetpassword")
-              sendSuccessJSONResponse(res, { message: " " });
+                User.findByIdAndUpdate({ _id: "6520095c29371858a78fb1ec" }, {
+                    email_token: generateRandomString(10)
+                })
+                sendEmail(reciverEmail = emailAddress, HTMlContent = "<h1></h1>", heading = "forgetpassword")
+                sendSuccessJSONResponse(res, { message: " " });
             }
         }).catch((err) => {
             console.log(err)
@@ -201,7 +217,7 @@ exports.checkAccountExist = async(req, res, next) => {
 
 }
 
-exports.updatePassword = async(req, res, next) =>{
+exports.updatePassword = async (req, res, next) => {
 
     const {
         password,
@@ -210,18 +226,21 @@ exports.updatePassword = async(req, res, next) =>{
 
     if (!(password || userId)) return sendFailureJSONResponse(res, { message: "Please provide password and userId" });
 
-    User.findByIdAndUpdate({_id: userId },{
+    User.findByIdAndUpdate({ _id: userId }, {
         "user_info.password": password
-    }, {new: true})
-    .then((updatedAccount)=>{
-        if (!foundAccount) return sendFailureJSONResponse(res, { message: "Something went wrong" });
-        else sendSuccessJSONResponse(res, { message: "Password updated successfully" });
-    })
-    .catch((err)=>{
-        return sendFailureJSONResponse(res, { message: "Please provide email address" });
-    })
+    }, { new: true })
+        .then((updatedAccount) => {
+            if (!foundAccount) return sendFailureJSONResponse(res, { message: "Something went wrong" });
+            else sendSuccessJSONResponse(res, { message: "Password updated successfully" });
+        })
+        .catch((err) => {
+            return sendFailureJSONResponse(res, { message: "Please provide email address" });
+        })
 
 }
+
+
+
 
 
 // Logout user / clear cookie
