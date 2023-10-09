@@ -210,8 +210,6 @@ exports.loginWithGoogle = async (req, res) => {
 
 }
 
-
-
 exports.validateData = async (req, res, next) => {
     const {
         first_name,
@@ -305,9 +303,10 @@ exports.registerAccount = async (req, res, next) => {
 
                         return sendFailureJSONResponse(res, { message: "Something went wrong" });
                     } else {
-                        console.log(`newAccount`, newAccount._id)
-                        generateToken(res, newAccount._id);
-                        return sendSuccessJSONResponse(res, { message: "Account created successfully" }, 201);
+                        return sendSuccessJSONResponse(res,
+                            {
+                                message: "Account created successfully",
+                            }, 201);
                     }
                 }).catch((err) => {
                     console.log(err)
