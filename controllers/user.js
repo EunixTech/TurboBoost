@@ -37,7 +37,7 @@ exports.loginWithEmail = async (req, res, next) => {
             "user_info.email_address": email_address
         }).then(async (foundUser) => {
 
-            if(!foundUser) return sendFailureJSONResponse(res, { message: `Account does't exist with email ${email_address}` });
+            if (!foundUser) return sendFailureJSONResponse(res, { message: `Account does't exist with email ${email_address}` });
             else if (foundUser && (await foundUser.matchPassword(password))) {
                 return sendSuccessJSONResponse(res, {
                     id: foundUser._id,
@@ -80,7 +80,7 @@ exports.loginWithGoogle = async (req, res, next) => {
     //         message: `Please enter email address`,
     //     });
     // else 
-    
+
     if (email_address.trim() && !isValidEmailAddress(email_address.trim()))
         return failureJSONResponse(res, {
             message: `Please enter valid email address`,
@@ -92,11 +92,10 @@ exports.loginWithGoogle = async (req, res, next) => {
         "google_info.google_id": google_id
     });
 
-    console.log(`foundUser*****************`,foundUser)
 
     if (foundUser && Object.keys(foundUser).length) {
 
-        const updateDeviceInfo = await User.update(
+        const updateDeviceInfo = await User.findOneAndUpdate(
             { _id: foundUser._id },
             {
                 $addToSet: {
@@ -105,19 +104,18 @@ exports.loginWithGoogle = async (req, res, next) => {
                 $set: {
                     "user_info.status": Number(2),
                 },
-            }
+            },
+            { new: true }
         );
 
         if (!updateDeviceInfo) failureJSONResponse(res, { message: `Something went wrong`, });
         else {
-
-            return successJSONResponse(res, {
-                data: {
-                    userId: foundUser._id,
-                    first_name: foundUser?.user_info?.first_name || null,
-                },
+            
+            generateToken(res, foundUser._id)
+            return sendSuccessJSONResponse(res, {
+                userId: foundUser._id,
+                first_name: foundUser?.user_info?.first_name || null,
                 message: `success`,
-                token: createJWT(foundUser._id),
             });
 
         }
@@ -141,7 +139,7 @@ exports.loginWithGoogle = async (req, res, next) => {
             Object.keys(checkUserExistWithEmail).length
         ) {
 
-            const updateDeviceInfo = await User.update(
+            const updateDeviceInfo = await User.findOneAndUpdate(
                 { _id: checkUserExistWithEmail._id },
                 {
                     $set: {
@@ -151,7 +149,8 @@ exports.loginWithGoogle = async (req, res, next) => {
                         "user_info.source": 2,
                         device_token: device_token
                     }
-                }
+                },
+                { new: true }
             );
 
             return successJSONResponse(res, {
@@ -178,10 +177,10 @@ exports.loginWithGoogle = async (req, res, next) => {
                 first_name: first_name,
                 status: Number(2),
                 device_token,
-                
+
                 email_address: email_address.toLowerCase(),
             };
-            
+
 
             newUser.google_info = google_info;
             newUser.user_info = user_info;
@@ -190,18 +189,18 @@ exports.loginWithGoogle = async (req, res, next) => {
             }
 
             User.create(newUser)
-            .then((data)=>{
-                if(!data)return sendFailureJSONResponse(res, { message: "Something went wrong" });
-                else {
-                    generateToken(res, data?._id);
-                    return sendSuccessJSONResponse(res,{
-                        userId: data._id,
-                        first_name: data.user_info.first_name || null,
-                        message: `success`,
-                    }, 201);
+                .then((data) => {
+                    if (!data) return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                    else {
+                        generateToken(res, data?._id);
+                        return sendSuccessJSONResponse(res, {
+                            userId: data._id,
+                            first_name: data.user_info.first_name || null,
+                            message: `success`,
+                        }, 201);
 
-                }
-            })
+                    }
+                })
 
         }
 
