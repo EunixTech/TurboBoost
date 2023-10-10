@@ -1,16 +1,16 @@
 const {
     sendSuccessJSONResponse,
     sendFailureJSONResponse,
-} = require("../handlers/jsonResponseHandlers")
+} = require("../../handlers/jsonResponseHandlers")
 
 
 
-async function connectSlack(req, res) {
+async function connectKlaviyo(req, res) {
     try {
 
         return sendSuccessJSONResponse(res, {
             success: true,
-            message: `Slack Connected`,
+            message: `Klaviyo Connected`,
         });
     } catch (e) {
         console.log(e);
@@ -24,5 +24,5 @@ async function connectSlack(req, res) {
 
 
 module.exports = {
-    connectSlack
+    connectKlaviyo
 }

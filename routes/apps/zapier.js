@@ -1,5 +1,5 @@
 const router = require(`express`).Router(),
-    controllers = require("../../controllers/zapier")
+    controllers = require("../../controllers/apps/zapier")
 
 router.post("/connect", controllers.connectZapier);
 

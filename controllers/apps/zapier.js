@@ -1,7 +1,7 @@
 const {
     sendSuccessJSONResponse,
     sendFailureJSONResponse,
-} = require("../handlers/jsonResponseHandlers")
+} = require("../../handlers/jsonResponseHandlers")
 
 
 
