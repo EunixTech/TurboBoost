@@ -1,0 +1,20 @@
+const planData={
+    starter:{
+        PlanName:'Starter',
+        monthly:15,
+        annually:150
+    },
+    growth:{
+        PlanName:'Growth',
+        monthly:40,
+        annually:339.6
+    },
+    pro:{
+        PlanName:'Pro',
+        monthly:150,
+        annually:1500
+    },
+}
+module.exports={
+    planData
+}
