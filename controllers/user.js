@@ -5,6 +5,8 @@ const sendEmail = require("../services/sendEmail");
 const generateRandomString = require("../utils/generateRandomString");
 const generateToken = require('../utils/generateToken.js');
 const hashedPassword = require("../utils/hashPassword");
+const bcrypt = require("bcrypt");
+
 const {
     sendSuccessJSONResponse,
     sendFailureJSONResponse,
@@ -29,17 +31,17 @@ exports.loginWithEmail = async (req, res, next) => {
         else if (email_address && !isValidEmailAddress(email_address)) return sendFailureJSONResponse(res, { message: "Please provide valid email address" });
 
         if (!password) return sendFailureJSONResponse(res, { message: "Please provide password" });
-        else if (password || !isValidPassword(password)) return sendFailureJSONResponse(res, { message: "password should include at least one upper case, one lower case,one digit & special character" });
-
-        const user = await User.findOne({ email });
+        else if (password && !isValidPassword(password)) return sendFailureJSONResponse(res, { message: "password should include at least one upper case, one lower case,one digit & special character" });
 
         User.findOne({
             "user_info.email_address": email_address
         }).then(async (foundUser) => {
-            if (foundUser && (await user.matchPassword(password))) {
+
+            if (!foundUser) return sendFailureJSONResponse(res, { message: `Account does't exist with email ${email_address}` });
+            else if (foundUser && (await foundUser.matchPassword(password))) {
                 return sendSuccessJSONResponse(res, {
                     id: foundUser._id,
-                    name: foundUser?.user_info?.first_name,
+                    first_name: foundUser?.user_info?.first_name,
                     email_address: foundUser.user_info?.user_info?.email_address,
                 })
             } else {
@@ -48,8 +50,162 @@ exports.loginWithEmail = async (req, res, next) => {
         })
 
     } catch (error) {
+        console.log(error)
         return sendFailureJSONResponse(res, { message: "Something went wrong" });
     }
+
+}
+
+// Standard signup with Google.
+exports.loginWithGoogle = async (req, res, next) => {
+
+    const email_address = req?.body?.email_address,
+        first_name = req?.body?.first_name,
+        google_id = req?.body?.google_id,
+        google_token = req?.body?.google_token,
+        device_token = req?.body?.device_token;
+
+    // if (!isValidString(first_name.trim()))
+    //     return failureJSONResponse(res, { message: `Please enter valid first_name` });
+    // if (!isValidString(google_id.trim()))
+    //     return failureJSONResponse(res, { message: `google id missing` });
+    // if (!isValidString(google_token.trim()))
+    //     return failureJSONResponse(res, { message: `google token missing` });
+
+    // if (!isValidString(device_token.trim()))
+    //     return failureJSONResponse(res, { message: `device token missing` });
+
+    // if (!isValidString(email_address.trim()))
+    //     return failureJSONResponse(res, {
+    //         message: `Please enter email address`,
+    //     });
+    // else 
+
+    if (email_address.trim() && !isValidEmailAddress(email_address.trim()))
+        return failureJSONResponse(res, {
+            message: `Please enter valid email address`,
+        });
+
+    // Check If email is register with any user via other platforms like facebook,google or email.
+
+    const foundUser = await User.findOne({
+        "google_info.google_id": google_id
+    });
+
+
+    if (foundUser && Object.keys(foundUser).length) {
+
+        const updateDeviceInfo = await User.findOneAndUpdate(
+            { _id: foundUser._id },
+            {
+                $addToSet: {
+                    device_token: device_token
+                },
+                $set: {
+                    "user_info.status": Number(2),
+                },
+            },
+            { new: true }
+        );
+
+        if (!updateDeviceInfo) failureJSONResponse(res, { message: `Something went wrong`, });
+        else {
+            
+            generateToken(res, foundUser._id)
+            return sendSuccessJSONResponse(res, {
+                userId: foundUser._id,
+                first_name: foundUser?.user_info?.first_name || null,
+                message: `success`,
+            });
+
+        }
+    } else {
+        const checkUserExistWithEmail = await User.findOne(
+            {
+                "user_info.email_address": email_address.toLowerCase(),
+                "google_info.google_id": null,
+                "user_info.status": 1,
+            },
+            {
+                user_basic_info: 1,
+                _id: 1,
+                userStatus: 1,
+                user_info: 1,
+            }
+        );
+
+        if (
+            checkUserExistWithEmail &&
+            Object.keys(checkUserExistWithEmail).length
+        ) {
+
+            const updateDeviceInfo = await User.findOneAndUpdate(
+                { _id: checkUserExistWithEmail._id },
+                {
+                    $set: {
+                        "google_info.google_id": google_id,
+                        "google_info.google_email": email_address.toLowerCase(),
+                        "google_info.google_token": google_token,
+                        "user_info.source": 2,
+                        device_token: device_token
+                    }
+                },
+                { new: true }
+            );
+
+            return successJSONResponse(res, {
+                status: 200,
+                data: {
+                    userId: checkUserExistWithEmail._id,
+                    first_name: checkUserExistWithEmail.user_info.first_name || null,
+
+                },
+                message: `success`,
+                token: createJWT(checkUserExistWithEmail._id),
+            });
+        } else {
+
+            // Create a new user.
+            var newUser = {};
+
+            var google_info = {
+                google_id: google_id,
+                google_email: email_address.toLowerCase(),
+                google_token: google_token,
+            };
+            var user_info = {
+                first_name: first_name,
+                status: Number(2),
+                device_token,
+
+                email_address: email_address.toLowerCase(),
+            };
+
+
+            newUser.google_info = google_info;
+            newUser.user_info = user_info;
+            newUser.user_basic_info = {
+                source: 2,
+            }
+
+            User.create(newUser)
+                .then((data) => {
+                    if (!data) return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                    else {
+                        generateToken(res, data?._id);
+                        return sendSuccessJSONResponse(res, {
+                            userId: data._id,
+                            first_name: data.user_info.first_name || null,
+                            message: `success`,
+                        }, 201);
+
+                    }
+                })
+
+        }
+
+    }
+
 }
 
 exports.validateData = async (req, res, next) => {
@@ -59,14 +215,15 @@ exports.validateData = async (req, res, next) => {
         email_address,
         bussiness_type,
         country,
-        password
+        password,
+        source
     } = req.body;
 
     const missingData = [],
         invalidData = [];
 
-    if (!isTruthyString(first_name)) missingData.push("First name");
-    if (!isTruthyString(last_name)) missingData.push("Last name");
+    if (!isTruthyString(first_name)) missingData.push("First first_name");
+    if (!isTruthyString(last_name)) missingData.push("Last first_name");
     if (!bussiness_type) missingData.push("Bussiness type");
     else if (bussiness_type && isNaN(bussiness_type)) invalidData("Bussiness type")
     if (!isTruthyString(country)) missingData.push("Country");
@@ -89,6 +246,7 @@ exports.validateData = async (req, res, next) => {
         };
 
         if (first_name) formData.user_info.first_name = first_name;
+        if (first_name) formData.user_basic_info.source = Number(source);
         if (last_name) formData.user_info.last_name = last_name;
         if (email_address) formData.user_info.email_address = email_address;
         if (bussiness_type) formData.user_basic_info.bussiness_type = bussiness_type;
@@ -119,14 +277,23 @@ exports.fetchAccount = (req, res, next) => {
 
 
 exports.registerAccount = async (req, res, next) => {
+
+
     try {
 
-        const emailAddress = req.body.email_address;
+        const email_address = req.body.email_address;
 
-        const foundUser = await User.findOne({ "user_info.email_address": emailAddress });
+        const foundUser = await User.findOne({ "user_info.email_address": email_address });
 
-        if (foundUser) return sendFailureJSONResponse(res, { message: "Account already exists" }, 403);
-        else {
+        if (foundUser) {
+            if (foundUser?.user_basic_info?.source === 2) {
+                return sendFailureJSONResponse(res, { message: "Google account already exists with this email" });
+            }
+            else if (foundUser?.user_basic_info?.source === 1) {
+                return sendFailureJSONResponse(res, { message: "Account aready exist with this email" });
+            }
+
+        } else {
 
             User.create(req.formData)
                 .then((newAccount) => {
@@ -134,9 +301,10 @@ exports.registerAccount = async (req, res, next) => {
 
                         return sendFailureJSONResponse(res, { message: "Something went wrong" });
                     } else {
-                        console.log(`newAccount`, newAccount._id)
-                        generateToken(res, newAccount._id);
-                        return sendSuccessJSONResponse(res, { message: "Account created successfully" });
+                        return sendSuccessJSONResponse(res,
+                            {
+                                message: "Account created successfully",
+                            }, 201);
                     }
                 }).catch((err) => {
                     console.log(err)
@@ -154,11 +322,11 @@ exports.registerAccount = async (req, res, next) => {
 exports.updateAccount = async (req, res, next) => {
 
     const userId = req.params.userId;
-    const emailAddress = req.body.email_address;
+    const email_address = req.body.email_address;
 
     if (!userId) { sendFailureJSONResponse(res, { message: "Something went wrong" }) }
 
-    const accountExists = await User.findOne({ "user_info.email_address": emailAddress, _id: { $ne: userId } });
+    const accountExists = await User.findOne({ "user_info.email_address": email_address, _id: { $ne: userId } });
     if (accountExists) {
         return sendFailureJSONResponse(res, { message: "Account already exists" }, 403);
     } else {
@@ -195,20 +363,20 @@ exports.deleteAccount = async (req, res, next) => {
 
 exports.checkAccountExist = async (req, res, next) => {
 
-    const emailAddress = req.body.email_address;
-    console.log(`emailAddress`, emailAddress)
+    const email_address = req.body.email_address;
+    console.log(`email_address`, email_address)
 
-    if (!emailAddress) return sendFailureJSONResponse(res, { message: "Please provide email address" });
-    else if (!isValidEmailAddress(emailAddress)) return sendFailureJSONResponse(res, { message: "Please provide valid email address" });
+    if (!email_address) return sendFailureJSONResponse(res, { message: "Please provide email address" });
+    else if (!isValidEmailAddress(email_address)) return sendFailureJSONResponse(res, { message: "Please provide valid email address" });
 
-    User.findOne({ "user_info.email_address": emailAddress })
+    User.findOne({ "user_info.email_address": email_address })
         .then((foundAccount) => {
             if (!foundAccount) return sendFailureJSONResponse(res, { message: "Account not exist" });
             else {
                 User.findByIdAndUpdate({ _id: "6520095c29371858a78fb1ec" }, {
                     email_token: generateRandomString(10)
                 })
-                sendEmail(reciverEmail = emailAddress, HTMlContent = "<h1></h1>", heading = "forgetpassword")
+                sendEmail(reciverEmail = email_address, HTMlContent = "<h1></h1>", heading = "forgetpassword")
                 sendSuccessJSONResponse(res, { message: " " });
             }
         }).catch((err) => {
@@ -240,21 +408,21 @@ exports.updatePassword = async (req, res, next) => {
 
 }
 
-exports.loginUsingStateToken=async(req,res,next)=>{
-    try{
-        let userToken=req.params.userToken
-        if(!userToken){
+exports.loginUsingStateToken = async (req, res, next) => {
+    try {
+        let userToken = req.params.userToken
+        if (!userToken) {
             return sendFailureJSONResponse(res, { message: "Please provide token" });
         }
-        let stateData=await OauthState.findOne({unique_key:userToken})
-        console.log(Object.keys(stateData).length===0)
+        let stateData = await OauthState.findOne({ unique_key: userToken })
+        console.log(Object.keys(stateData).length === 0)
 
-        if(Object.keys(stateData).length===0){
+        if (Object.keys(stateData).length === 0) {
             return sendFailureJSONResponse(res, { message: "Invalid Token" });
         }
-        let data=stateData?.data
+        let data = stateData?.data
 
-        if(!data?.userID){
+        if (!data?.userID) {
             return sendFailureJSONResponse(res, { message: "userId not found" });
         }
         const user = await User.findById(data.userID);
@@ -270,7 +438,7 @@ exports.loginUsingStateToken=async(req,res,next)=>{
             throw new Error('Invalid email or password');
         }
 
-    }catch(e){
+    } catch (e) {
         console.log(e)
         return sendFailureJSONResponse(res, { message: "Invalid Token" });
     }
@@ -280,27 +448,16 @@ exports.loginUsingStateToken=async(req,res,next)=>{
 
 exports.logout = async (req, res, next) => {
 
-    const deviceType = req?.body?.device_type;
-    const deviceToken = req?.body?.device_token;
+    const device_token = req?.body?.device_token;
 
-    if (!isValidString(deviceToken?.trim())) return failureJSONResponse(res, { message: 'Device token missing.' });
-
-
-    if (!deviceType) {
-        return failureJSONResponse(res, { message: 'Device type missing.' });
-    } else if (isNaN(deviceType)) {
-        return failureJSONResponse(res, { message: 'Invalid device type.' });
-    }
+    if (!isValidString(device_token?.trim())) return failureJSONResponse(res, { message: 'Device token missing.' });
 
     try {
         const user = await User.updateOne(
             { _id: req.userId },
             {
                 $pull: {
-                    user_device_info: {
-                        token: deviceToken,
-                        device_type: Number(deviceType),
-                    },
+                    device_token: device_token
                 },
             }
         );

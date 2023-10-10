@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 const { defaultStringConfig,defaultObjectConfig } = require("../utils/mongoose");
 
 const userSchema = new mongoose.Schema(
@@ -10,10 +11,18 @@ const userSchema = new mongoose.Schema(
             user_name: defaultStringConfig,
             email_address: defaultStringConfig,
             date_of_birth: defaultStringConfig,
+            status: {
+                type: String,
+                enum:[1,2],
+                required: true,
+                default: 2
+                // 1 = active
+                //2 = inactive
+            }
         },
 
         google_info: {
-            google_Id: defaultStringConfig,
+            google_id: defaultStringConfig,
             google_email: defaultStringConfig,
             google_token: defaultStringConfig,
         },
@@ -27,6 +36,12 @@ const userSchema = new mongoose.Schema(
             },
             country: defaultStringConfig,
             email_token: defaultStringConfig,
+            source:{
+                type: Number,
+                enum:[1,2]
+                // 1: email adddress
+                // 2: google
+            },
         },
 
         app_token: {
@@ -39,8 +54,9 @@ const userSchema = new mongoose.Schema(
 );
 
 // Match user entered password to hashed password in database
-userSchema.methods.matchPassword = async function (enteredPassword) {
-    return await bcrypt.compare(enteredPassword, this.password);
+userSchema.methods.matchPassword = async function (password) {
+    console.log(`password`,password)
+    return await bcrypt.compare(password, this.user_info.password);
 };
 
 // Encrypt password using bcrypt
