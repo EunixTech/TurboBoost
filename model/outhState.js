@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
 const {
     defaultStringConfig,
-    defaultBooleanConfig
+    defaultBooleanConfig,
+    defaultObjectConfig
 } = require("../utils/mongoose");
 
 const outhStateSchema = new mongoose.Schema({
@@ -19,7 +20,8 @@ const outhStateSchema = new mongoose.Schema({
             ...defaultStringConfig,
         },
         userID:defaultStringConfig
-    }
+    },
+    paymentCallback:defaultObjectConfig
 
 }, { timestamps: true });
 
