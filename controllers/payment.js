@@ -32,9 +32,10 @@ exports.createSubscription = async (req, res) => {
     //   const { id: userId } = auth_body;
     const userId = '652037f32dface7dd49ef96e'
 
-    const { priceID, planType, planName } = req.body;
+    const {  planType, planName } = req.body;
 
     let userData = await User.findById(userId)
+    console.log(userData)
     if (typeof userData?.app_token?.shopify?.isDeleted === 'undefined' || userData?.app_token?.shopify?.isDeleted) {
       return sendFailureJSONResponse(
         res,
@@ -43,7 +44,7 @@ exports.createSubscription = async (req, res) => {
       );
     }
 
-    if (!priceID || !planType || !planName) {
+    if (  !planType || !planName) {
       return sendFailureJSONResponse(
         res,
         { message: "Invalid Input" },
@@ -51,7 +52,7 @@ exports.createSubscription = async (req, res) => {
       );
     }
 
-    let mapPrice = planData[planName]
+    let mapPrice = planData[planName.toLowerCase()]
     if (Object.keys(mapPrice) < 0) {
       return sendFailureJSONResponse(
         res,
@@ -145,8 +146,8 @@ exports.createSubscription = async (req, res) => {
       );
 
     } catch (err) {
-      console.log(err);
-      console.error(err.data);
+      // console.log(err);
+      console.error( err.response.status);
       const errorMessage =
         err.response.status === 401
           ? "Could not update plan because your Shopify credentials have expired"
