@@ -16,7 +16,7 @@ exports.sendFailureJSONResponse = (res = null, data = null, httpStatusCode = nul
         let httpStatusCodeToUse = 400;
         if (httpStatusCode && Number(httpStatusCode)) httpStatusCodeToUse = Number(httpStatusCode);
 
-        return res.status(httpStatusCodeToUse).json({
+        return res.status(200).json({
             status: httpStatusCodeToUse,
             ...data
         });

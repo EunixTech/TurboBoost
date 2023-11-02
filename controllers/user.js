@@ -5,6 +5,7 @@ const sendEmail = require("../services/sendEmail");
 const generateRandomString = require("../utils/generateRandomString");
 const generateToken = require('../utils/generateToken.js');
 const hashedPassword = require("../utils/hashPassword");
+const {createMixpanelEvent}  = require("../services/mixepanelEventFunc");
 const bcrypt = require("bcrypt");
 
 const {
@@ -36,7 +37,11 @@ exports.loginWithEmail = async (req, res, next) => {
         User.findOne({
             "user_info.email_address": email_address
         }).then(async (foundUser) => {
-
+            await createMixpanelEvent("loginwith email", {
+                firstName:"manmohan",
+                id: 2 ,
+                email_address: "manmohankuma@exunix.com"
+            })
             if (!foundUser) return sendFailureJSONResponse(res, { message: `Account does't exist with email ${email_address}` });
             else if (foundUser && (await foundUser.matchPassword(password))) {
                 return sendSuccessJSONResponse(res, {
@@ -225,8 +230,8 @@ exports.validateData = async (req, res, next) => {
     if (!isTruthyString(first_name)) missingData.push("First first_name");
     if (!isTruthyString(last_name)) missingData.push("Last first_name");
     if (!bussiness_type) missingData.push("Bussiness type");
-    else if (bussiness_type && isNaN(bussiness_type)) invalidData("Bussiness type")
-    if (!isTruthyString(country)) missingData.push("Country");
+    // else if (bussiness_type && isNaN(bussiness_type)) invalidData("Bussiness type")
+    // if (!isTruthyString(country)) missingData.push("Country");
 
     if (!email_address) missingData.push("Email Address");
     else if (!isValidEmailAddress(email_address)) invalidData.push("Email Address");
@@ -246,10 +251,10 @@ exports.validateData = async (req, res, next) => {
         };
 
         if (first_name) formData.user_info.first_name = first_name;
-        if (first_name) formData.user_basic_info.source = Number(source);
+        if (first_name) formData.user_basic_info.source = Number(1);
         if (last_name) formData.user_info.last_name = last_name;
         if (email_address) formData.user_info.email_address = email_address;
-        if (bussiness_type) formData.user_basic_info.bussiness_type = bussiness_type;
+        if (bussiness_type) formData.user_basic_info.bussiness_type = 1;
         if (country) formData.user_basic_info.country = country;
         if (password) formData.user_info.password = await hashedPassword(password);
 
