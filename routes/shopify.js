@@ -1,6 +1,6 @@
 const router = require(`express`).Router(),
-  controllers = require("../../controllers/shopify"),
-  shopifyMiddleware = require('../../middleware/shopifyMiddleware')
+  controllers = require("../controllers/shopify"),
+  shopifyMiddleware = require('../middleware/shopifyMiddleware')
 
 router.get("/app-installations", shopifyMiddleware.shopifyAuth, controllers.appInstallations);
 
@@ -14,9 +14,8 @@ router.post('/shop/redact', controllers.shopRedact)
 
 router.get("/adding-lazy-loading", controllers.addingLazyLoading);
 
+// version 1 features
 router.get("/remove-unused-javascript-code", controllers.removeUnusedJavascriptCode);
-
-router.get("/remove-unused-css-index-page", controllers.removingUnusedCssFromIndexPage);
 
 router.get("/minify-javascript-code", controllers.minifyJavascriptCode);
 
@@ -40,7 +39,7 @@ router.get("/lossless-comp-collection-image", controllers.losslessCompCollection
 
 router.get("/delay-google-font", controllers.delayingGoogleFont);
 
-router.post("/adding-google-tag-manager", controllers.addingGoogleTagManager);
+// router.post("/adding-google-tag-manager", controllers.addingGoogleTagManager);
 
 router.get("/restore-critical-css", controllers.restoreCriticalCss);
 

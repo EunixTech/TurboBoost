@@ -10,8 +10,9 @@ const mongoose = require("mongoose"),
     minifyPageContent = require("../resources/scripts/minify-page-content"),
     AssetsCaching = require("../resources/scripts/assets-caching"),
     addDNSPrefetch = require("../resources/scripts/add-dns-prefetch"),
-    removeUnusedJavascritCode = require("../resources/scripts/remove-unused-javascript-code")
-CheckFontFaceExists = require("../resources/scripts/checking-font-face"),
+    removeUnusedJavascritCode = require("../resources/scripts/remove-unused-javascript-code"),
+    minifyJavaScriptCode = require("../resources/scripts/minfiy-javascript-code"),
+    CheckFontFaceExists = require("../resources/scripts/checking-font-face"),
     addingFontDisplayInCss = require("../resources/scripts/add-font-display"),
     restoreResourceHints = require("../resources/scripts/restore-resource-hints"),
     convertStylesheets = require("../resources/scripts/convert-stylesheets"),
@@ -99,8 +100,8 @@ exports.appInstallations = async (req, res) => {
             .update(message, "utf8")
             .digest("hex");
 
-        console.log(generatedHash);
-        console.log(hmac);
+        console.log(`generatedHash`, generatedHash);
+        console.log("hmac", hmac);
         if (generatedHash != hmac)
             return sendFailureJSONResponse(
                 res,
@@ -150,6 +151,8 @@ exports.authCallback = async (req, res) => {
                 401
             );
         }
+
+        console.log(user_token)
 
         const message = `code=${code}&host=${host}&shop=${shop}&state=${user_token}&timestamp=${timestamp}`;
 
@@ -486,6 +489,40 @@ exports.v1testconnection = async (req, res) => {
 }
 
 
+exports.customerData = async (req, res) => {
+    const hmac = req.get('X-Shopify-Hmac-Sha256');
+    const generatedHash = crypto.createHmac('SHA256', SHOPIFY_API_SECRET).update(JSON.stringify(req.body), 'utf8').digest('base64');
+    if (hmac === generatedHash) {
+        console.log("match")
+        res.status(200).send();
+    } else {
+        console.log("not match")
+        res.status(401).send("Not Authorized");
+    }
+}
+exports.customerRedact = async (req, res) => {
+    const hmac = req.get('X-Shopify-Hmac-Sha256');
+    const generatedHash = crypto.createHmac('SHA256', SHOPIFY_API_SECRET).update(JSON.stringify(req.body), 'utf8').digest('base64');
+    if (hmac === generatedHash) {
+        console.log("match")
+        res.status(200).send();
+    } else {
+        console.log("not match")
+        res.status(401).send("Not Authorized");
+    }
+}
+exports.shopRedact = async (req, res) => {
+    const hmac = req.get('X-Shopify-Hmac-Sha256');
+    const generatedHash = crypto.createHmac('SHA256', SHOPIFY_API_SECRET).update(JSON.stringify(req.body), 'utf8').digest('base64');
+    if (hmac === generatedHash) {
+        console.log("match")
+        res.status(200).send();
+    } else {
+        console.log("not match")
+        res.status(401).send("Not Authorized");
+    }
+}
+
 // exports.createProductCreateWebHook = async (shop, accessToken) => { // call this on installing shopify app
 //     let uuid = crypto.randomUUID()
 //     const registerWebhookOptions = {
@@ -558,67 +595,28 @@ exports.addingLazyLoading = async (req, res, next) => {
 };
 
 exports.minifyJavascriptCode = async (req, res, next) => {
+    
     const themeAssets = await ShopifyAPIAndMethod.getAssets();
     const assets = themeAssets.assets;
 
-    const cssAssets = assets.filter(
-        (asset) => asset.content_type === "application/javascript"
-    );
+    const cssAssets = assets.filter((asset) => asset.content_type === "application/javascript");
 
-    return res.json({});
+    for (const cssAsset of cssAssets) {
+        const publicURL = cssAsset?.public_url;
+        const name = cssAsset?.key;
 
-    function removeUnusedCodeFromHTML(html) {
-        const scriptRegex = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
-        const scriptTags = html.match(scriptRegex);
-        if (!scriptTags) {
-            console.log("No JavaScript code found in the HTML.");
-            return html;
+        try {
+            await ShopifyAPIAndMethod.writeAsset({
+                name: name,
+                value: value,
+            });
+        } catch (error) {
+            console.log(`Error occurred while writing asset:`, error);
+            continue; // Continue to the next iteration of the loop
         }
 
-        scriptTags.forEach((scriptTag) => {
-            const jsRegex = /<script\b[^<]*>([\s\S]*?)<\/script>/i;
-            const jsMatch = scriptTag.match(jsRegex);
-            if (!jsMatch || !jsMatch[1]) return;
-
-            const jsCode = jsMatch[1];
-            const result = UglifyJS.minify(jsCode, {
-                compress: {
-                    unused: true, // Remove unused code
-                },
-            });
-
-            if (result.error) {
-                console.error(result.error);
-            } else {
-                const updatedJsCode = result.code;
-                html = html.replace(jsCode, updatedJsCode);
-            }
-        });
-
-        return html;
     }
 
-    const htmlString = `
-      <html>
-        <head>
-          <script>
-            function unusedFunction() {
-              console.log('This function is not used.');
-            }
-            
-            function usedFunction() {
-              console.log('This function is used.');
-            }
-          </script>
-        </head>
-        <body>
-          <h1>Hello, world!</h1>
-        </body>
-      </html>
-      `;
-
-    const updatedHtmlString = removeUnusedCodeFromHTML(htmlString);
-    console.log(updatedHtmlString);
 };
 
 /**
@@ -666,14 +664,6 @@ exports.eliminateRenderBlockingResources = async (req, res, next) => {
     } catch (error) {
         return sendErrorJSONResponse(res, { message: "Something went wrong" });
     }
-};
-
-// removing unused css code from index page
-exports.removingUnusedCssFromIndexPage = async (req, res, next) => {
-    const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
-        htmlContent = themeLiquid?.value;
-
-
 };
 
 exports.minifyPageContent = async (req, res, next) => {
@@ -868,9 +858,7 @@ exports.fontOptimization = async (req, res, next) => {
     try {
         const themeAssets = await ShopifyAPIAndMethod.getAssets();
         const assets = themeAssets.assets;
-        const cssAssets = assets.filter(
-            (asset) => asset.content_type === "text/css"
-        );
+        const cssAssets = assets.filter((asset) => asset.content_type === "text/css");
 
         for (const cssAsset of cssAssets) {
             const publicURL = cssAsset?.public_url;
@@ -1154,37 +1142,3 @@ async function criticalCssRestore(shopifyAdmin, redisStore) {
 }
 
 
-
-exports.customerData = async (req, res) => {
-    const hmac = req.get('X-Shopify-Hmac-Sha256');
-    const generatedHash = crypto.createHmac('SHA256', SHOPIFY_API_SECRET).update(JSON.stringify(req.body), 'utf8').digest('base64');
-    if (hmac === generatedHash) {
-        console.log("match")
-        res.status(200).send();
-    } else {
-        console.log("not match")
-        res.status(401).send("Not Authorized");
-    }
-}
-exports.customerRedact = async (req, res) => {
-    const hmac = req.get('X-Shopify-Hmac-Sha256');
-    const generatedHash = crypto.createHmac('SHA256', SHOPIFY_API_SECRET).update(JSON.stringify(req.body), 'utf8').digest('base64');
-    if (hmac === generatedHash) {
-        console.log("match")
-        res.status(200).send();
-    } else {
-        console.log("not match")
-        res.status(401).send("Not Authorized");
-    }
-}
-exports.shopRedact = async (req, res) => {
-    const hmac = req.get('X-Shopify-Hmac-Sha256');
-    const generatedHash = crypto.createHmac('SHA256', SHOPIFY_API_SECRET).update(JSON.stringify(req.body), 'utf8').digest('base64');
-    if (hmac === generatedHash) {
-        console.log("match")
-        res.status(200).send();
-    } else {
-        console.log("not match")
-        res.status(401).send("Not Authorized");
-    }
-}

@@ -10,6 +10,8 @@ const express = require(`express`),
     MongoStore = require(`connect-mongo`),
     app = express();
 
+    var morgan = require('morgan')
+
 // Create / Connect to a named work queue
 const workQueue = new Queue('critical-css', process.env.REDIS_URL, { redis: { 
 	tls: { rejectUnauthorized: false }
@@ -33,7 +35,8 @@ loadExpressSession(app, expressSession, MongoStore);
 // body parser
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
+// setup the logger
+app.use(morgan('combined'))
 app.use(cors());
 
 
