@@ -8,9 +8,14 @@ const {
 } = require("../../handlers/jsonResponseHandlers.js");
 
 exports.fetchGoogleSpeedAPIData = async (req, res, next) => {
-    console.log("working")
-    return res.json({
-        data: await fetchPageSpeedAPIdata("https://menehariya.netscapelabs.com")
-    })
+    
+    try {
+       const data = await fetchPageSpeedAPIdata("https://menehariya.netscapelabs.com");
+       console.log("data",data)
+        return sendSuccessJSONResponse(res, { message:"successfull",data });
+    } catch (error) {
+        return sendErrorJSONResponse(res, { message: "Error fetching data" });
+    }
+
 }
 

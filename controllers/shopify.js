@@ -78,8 +78,7 @@ exports.appInstallations = async (req, res) => {
 
         if (!shop || !hmac || !host || !timestamp) {
             return sendFailureJSONResponse(
-                res,
-                { message: "Unauthorized access" },
+            res, { message: "Unauthorized access" },
                 401
             );
         }
