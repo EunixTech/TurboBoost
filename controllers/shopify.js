@@ -2,16 +2,9 @@ const mongoose = require("mongoose"),
     crypto = require("crypto"),
     Axios = require("axios"),
 
-    fs = require("fs"),
-    ReplaceImagTag = require("../resources/scripts/replace-image-tag"),
-    cssbeautify = require("cssbeautify"),
-    Cheerio = require("cheerio"),
-    UglifyJS = require("uglify-es"),
     minifyPageContent = require("../resources/scripts/minify-page-content"),
-    AssetsCaching = require("../resources/scripts/assets-caching"),
     addDNSPrefetch = require("../resources/scripts/add-dns-prefetch"),
     removeUnusedJavascritCode = require("../resources/scripts/remove-unused-javascript-code"),
-    minifyJavaScriptCode = require("../resources/scripts/minfiy-javascript-code"),
     CheckFontFaceExists = require("../resources/scripts/checking-font-face"),
     addingFontDisplayInCss = require("../resources/scripts/add-font-display"),
     restoreResourceHints = require("../resources/scripts/restore-resource-hints"),
@@ -22,9 +15,8 @@ const mongoose = require("mongoose"),
         addGoogleTagManager,
         checkForGoogleTagManager,
     } = require("../resources/scripts/google-tag-manager"),
+
     User = mongoose.model("user"),
-    { shopifyService } = require("../services/apps/index"),
-    { getFetchConfig } = require("../utils/getFetchConfig"),
     OauthState = mongoose.model("outhState"),
     {
         sendSuccessJSONResponse,
@@ -94,6 +86,7 @@ exports.appInstallations = async (req, res) => {
         // let message ={ ...req.query}
         // delete message["hmac"];
 
+   
         const generatedHash = crypto
             .createHmac("SHA256", SHOPIFY_API_SECRET)
             .update(message, "utf8")
@@ -102,11 +95,7 @@ exports.appInstallations = async (req, res) => {
         console.log(`generatedHash`, generatedHash);
         console.log("hmac", hmac);
         if (generatedHash != hmac)
-            return sendFailureJSONResponse(
-                res,
-                { message: "Unauthorized access" },
-                401
-            );
+            return sendFailureJSONResponse( res, { message: "Unauthorized access" }, 401);
 
         // creating OuthState for security checking
         OauthState.create({
@@ -129,9 +118,7 @@ exports.appInstallations = async (req, res) => {
             })
             .catch((err) => {
                 console.log(err);
-                return sendFailureJSONResponse(res, {
-                    message: "Something went wrong",
-                });
+                return sendFailureJSONResponse(res, { message: "Something went wrong"});
             });
     } catch (err) {
         console.log(err);
@@ -195,7 +182,7 @@ exports.authCallback = async (req, res) => {
 
                     const response = await Axios(config);
                     const data = response.data;
-                    console.log(data);
+                    console.log("dataaaaaaaaaaaa", data);
 
                     let shopData = await ShopifyAPIAndMethod.getShopDetails(
                         shop,
@@ -522,33 +509,7 @@ exports.shopRedact = async (req, res) => {
     }
 }
 
-// exports.createProductCreateWebHook = async (shop, accessToken) => { // call this on installing shopify app
-//     let uuid = crypto.randomUUID()
-//     const registerWebhookOptions = {
-//         method: 'POST',
-//         url: `https://${shop}/admin/api/2023-04/webhooks.json?access_token=${accessToken}`,
-//         data: {
-//             webhook: {
-//                 topic: 'products/create',
-//                 address: `${serverUrl}app/shopify/auth/uninstallApp/${uuid}`, // address of route of your product create webhook
-//                 format: 'json',
-//             },
-//         },
-//     };
 
-//     try {
-//         await Axios(registerWebhookOptions);
-//         console.log(`Successfully registered webhook`);
-//     } catch (e) {
-//         // Needed for UI test cases - if on non development instance then proceed
-//         if (serverUrl !== 'http://localhost:8000') {
-//             return res.status(400).send({
-//                 message: `Failed to register webhook: ${e}`,
-//                 success: false,
-//             });
-//         }
-//     }
-// }
 
 exports.productCreateWebhook = async (req, res) => {
     try {
@@ -1076,7 +1037,7 @@ exports.restoreImageSizeAdaption = async (req, res, next) => {
         } else {
             return sendSuccessJSONResponse(res, { message: "success" });
         }
-    } catch (error) {
+    } catch (error) { 
         return sendErrorJSONResponse(res, { message: "Something went wrong" });
     }
 };

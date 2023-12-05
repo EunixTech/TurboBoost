@@ -61,7 +61,6 @@ const allRoutes = require("./routes/all");
 app.use(allRoutes)
 
 // app.use((err, req, res) => {
-//     console.log(err)
 //     return res.status(500).send({ error: 'seriously something went wrong ' });
 // });
 
