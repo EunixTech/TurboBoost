@@ -309,6 +309,7 @@ exports.registerAccount = async (req, res, next) => {
                         return sendSuccessJSONResponse(res,
                             {
                                 message: "Account created successfully",
+                                data: req.body
                             }, 201);
                     }
                 }).catch((err) => {
