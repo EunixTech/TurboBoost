@@ -25,8 +25,6 @@ const BACKEND_URL = MODE === 'dev' ? DEV_BACKEND_URL : LIVE_BACKEND_URL
 
 const { v4: uuidv4 } = require('uuid');
 
-
-
 exports.createSubscription = async (req, res) => {
   try {
     //   const { id: userId } = auth_body;
@@ -53,6 +51,7 @@ exports.createSubscription = async (req, res) => {
     }
 
     let mapPrice = planData[planName.toLowerCase()]
+    
     if (Object.keys(mapPrice) < 0) {
       return sendFailureJSONResponse(
         res,
@@ -224,7 +223,7 @@ exports.paymentCallback = async (req, res) => {
       await subscriptionUpdate.save();
     }
     await OauthState.deleteOne({ _id: stackDataId });
-    res.redirect(`${FRONTEND_URL}/billing`);
+    res.redirect(`${FRONTEND_URL}/dashboard`);
 
   } catch (e) {
     console.log(e);

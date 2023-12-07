@@ -432,13 +432,15 @@ exports.loginUsingStateToken = async (req, res, next) => {
             return sendFailureJSONResponse(res, { message: "userId not found" });
         }
         const user = await User.findById(data.userID);
-        console.log(user)
+   
         await OauthState.deleteOne({ _id: stateData._id });
         if (user) {
+              
             generateToken(res, user._id);
             res.json({
                 _id: user._id,
                 userData: user.user_info,
+                redirectURI:data?.redirectURI
             });
         } else {
             throw new Error('Invalid email or password');
@@ -449,7 +451,6 @@ exports.loginUsingStateToken = async (req, res, next) => {
         return sendFailureJSONResponse(res, { message: "Invalid Token" });
     }
 }
-
 
 
 exports.logout = async (req, res, next) => {

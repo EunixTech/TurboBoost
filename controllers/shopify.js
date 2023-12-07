@@ -1,7 +1,6 @@
 const mongoose = require("mongoose"),
     crypto = require("crypto"),
     Axios = require("axios"),
-
     minifyPageContent = require("../resources/scripts/minify-page-content"),
     addDNSPrefetch = require("../resources/scripts/add-dns-prefetch"),
     removeUnusedJavascritCode = require("../resources/scripts/remove-unused-javascript-code"),
@@ -83,10 +82,6 @@ exports.appInstallations = async (req, res) => {
         }
         message = message.slice(1, message.length);
 
-        // let message ={ ...req.query}
-        // delete message["hmac"];
-
-   
         const generatedHash = crypto
             .createHmac("SHA256", SHOPIFY_API_SECRET)
             .update(message, "utf8")
@@ -138,8 +133,6 @@ exports.authCallback = async (req, res) => {
             );
         }
 
-        console.log(user_token)
-
         const message = `code=${code}&host=${host}&shop=${shop}&state=${user_token}&timestamp=${timestamp}`;
 
         const generatedHash = crypto
@@ -160,14 +153,13 @@ exports.authCallback = async (req, res) => {
         if (!regexp1.test(shop))
             return sendFailureJSONResponse(res, { message: "unauthorized access" });
 
-        OauthState.findOne({
-            unique_key: user_token,
-        })
+        OauthState.findOne({ unique_key: user_token})
             .then(async (foundOauthState) => {
                 if (!foundOauthState)
                     return sendFailureJSONResponse(res, {
                         message: "Something went wrong",
                     });
+
                 else {
                     await OauthState.deleteOne({ _id: foundOauthState._id });
                     const config = {
@@ -182,18 +174,18 @@ exports.authCallback = async (req, res) => {
 
                     const response = await Axios(config);
                     const data = response.data;
-                    console.log("dataaaaaaaaaaaa", data);
-
+            
                     let shopData = await ShopifyAPIAndMethod.getShopDetails(
                         shop,
                         data.access_token
                     );
-                    console.log(shopData);
+   
                     const email = shopData?.shop?.email
                     const first_name = shopData?.shop?.shop_owner.split(' ')[0]
                     const last_name = shopData?.shop?.shop_owner.split(' ')[1]
 
-                    let userData = await User.findOne({ 'app_token.shopify.shop': shop })
+                    let userData = await User.findOne({ 'app_token.shopify.shop': shop });
+                        let redirectURI = "";
                     if (userData) {
                         userData = await User.findByIdAndUpdate(userData._id,
                             {
@@ -201,6 +193,7 @@ exports.authCallback = async (req, res) => {
                                 'app_token.shopify.isDeleted': false
                             }
                         )
+                        redirectURI = "/"
                     } else {
 
                         userData = await User.create({
@@ -215,14 +208,19 @@ exports.authCallback = async (req, res) => {
                                 },
                             },
                         })
+
+                        redirectURI = "/billing"
                     }
-                    console.log(userData)
+
+
+                    // console.log(userData)
                     const state = new OauthState({
                         unique_key: uuidv4(),
                         data: {
                             login: true,
                             action: "loginAfterInstall",
-                            userID: userData?._id
+                            userID: userData?._id,
+                            redirectURI: redirectURI
                         },
                     });
 
@@ -237,12 +235,12 @@ exports.authCallback = async (req, res) => {
                 });
             });
     } catch (err) {
-        console.log(err);
         return sendFailureJSONResponse(res, { message: "Something went wrong" });
     }
 };
 
 exports.v1authCallBack = async (req, res) => {
+
     try {
 
         const { shop, code, state: user_token, timestamp, host, hmac } = req.query;
@@ -270,7 +268,6 @@ exports.v1authCallBack = async (req, res) => {
         await OauthState.deleteOne({ _id: oauthState._id });
 
         /// api verification ends here ////////
-
         const config = { //Request for access token
             method: 'POST',
             url: `https://${shop}/admin/oauth/access_token`,

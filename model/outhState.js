@@ -19,10 +19,12 @@ const outhStateSchema = new mongoose.Schema({
         action:{
             ...defaultStringConfig,
         },
-        userID:defaultStringConfig
-    },
-    paymentCallback:defaultObjectConfig
+        userID:defaultStringConfig,
 
+        redirectURI: defaultStringConfig
+    },
+    paymentCallback:defaultObjectConfig,
+  
 }, { timestamps: true });
 
 module.exports = mongoose.model('outhState', outhStateSchema);
