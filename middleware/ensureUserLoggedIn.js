@@ -1,10 +1,9 @@
 const mongoose = require(`mongoose`),
-    User = mongoose.model("user"), 
-     { verifyAndDecodeToken } = require(`../utils/generate`),
+    User = mongoose.model("user"),
+    { verifyAndDecodeToken } = require(`../utils/generate`),
     jwt = require('jsonwebtoken');
 
 exports.ensureUserLoggedIn = async (req, res, next) => {
-
 
     try {
 
@@ -14,13 +13,11 @@ exports.ensureUserLoggedIn = async (req, res, next) => {
             token = req.headers.authorization.split(' ')[1];
         }
 
-        console.log(`token`, token)
-
         if (!token) return res.json({
             status: 403,
-            message: `InvalidToken` ,
-            
-        }) 
+            message: `InvalidToken`,
+
+        })
         else {
 
             const decodedPayload = verifyAndDecodeToken(token);
@@ -57,7 +54,7 @@ exports.ensureUserLoggedIn = async (req, res, next) => {
             status: 403,
             message: `InvalidToken`,
 
-        }) 
+        })
     }
 
 }

@@ -28,6 +28,7 @@ require("./model/outhState");
 require("./model/users");
 require("./model/productImages");
 require("./model/subscription");
+require("./model/OTP");
 
 loadHelmet(app, helmet);
 loadExpressSession(app, expressSession, MongoStore);

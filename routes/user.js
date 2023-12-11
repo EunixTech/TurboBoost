@@ -9,7 +9,10 @@ const {
   updatePassword,
   loginUsingStateToken,
   loginWithEmail,
-  loginWithGoogle
+  loginWithGoogle,
+  sendingOTPForChangeEmail,
+  updateEmailAddress,
+  checkEmailAreadyExits
 
 } = require('../controllers/user');
 
@@ -17,6 +20,8 @@ const {
   createSubscription,
   paymentCallback
 }=require('../controllers/payment')
+
+const authmiddleware = require("../middleware/ensureUserLoggedIn")
 
 const router = express.Router();
 
@@ -29,7 +34,12 @@ router.post("forget-password/", checkAccountExist);
 router.post("update-password/", updatePassword);
 router.get("/redirect/login/:userToken", loginUsingStateToken);
 
-router.post('/createSubscription',createSubscription)
-router.get('/paymentCallback',paymentCallback)
+router.post('/createSubscription',createSubscription);
+router.get('/paymentCallback',paymentCallback);
 
-module.exports =  router;
+//changing email address
+router.use(authmiddleware.ensureUserLoggedIn);
+router.post("/sending-otp",checkEmailAreadyExits, sendingOTPForChangeEmail);
+router.post("/update-emailaddress", updateEmailAddress);
+
+module.exports =  router;   
