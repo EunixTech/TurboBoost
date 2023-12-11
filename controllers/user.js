@@ -481,40 +481,6 @@ exports.logout = async (req, res, next) => {
     }
 }
 
-exports.sendingOTPForChangeEmail = (req, res, next) => {
-
-    const userId = req?.userId,
-        email_address = req?.body?.email_address;
-
-    if (!email_address) return sendFailureJSONResponse(res, { message: "Please provide email address" });
-
-    User.findById({ _id: userId })
-        .then((foundUser) => {
-            if (!foundUser) return sendFailureJSONResponse(res, { message: "Something went wrong" });
-            else {
-                const OTPDataObj = {
-                    is_active: true,
-                    code: generateOTP(),
-                    email_address,
-                    user: userId
-                }
-
-                OTP.create(OTPDataObj)
-                    .then((newOTP) => {
-                        if (!newOTP) return sendFailureJSONResponse(res, { message: "Something went wrong" });
-                        else {
-                            sendEmail(reciverEmail = email_address, HTMlContent = "<h1>" + generateOTP() + "</h1>", heading = "Change Email Address");
-                            return sendSuccessJSONResponse(res, { message: "Email sent successfully" })
-                        }
-                    }).catch((err) => {
-                        return sendFailureJSONResponse(res, { message: "Something went wrong" });
-                    })
-            }
-        }).catch((err) => {
-            return sendFailureJSONResponse(res, { message: "Something went wrong" });
-        })
-
-}
 
 exports.checkEmailAreadyExits = (req, res, next) => {
 
@@ -528,11 +494,112 @@ exports.checkEmailAreadyExits = (req, res, next) => {
             if (foundUser) return sendFailureJSONResponse(res, { message: `Account with ${email_address} already exits` });
             else return next();
         }).catch((err) => {
-            console.log(err)
             return sendFailureJSONResponse(res, { message: "Something went wrong" });
         })
 
 }
+
+exports.checkOTPExistForAccount = (req, res, next) => {
+
+    const userId = req?.userId,
+        OTPCode = req.body.OTPCode,
+        email_address = req?.body?.email_address;
+
+    OTP.findOne({
+        is_active: true,
+        user: userId,
+        email_address
+    })
+        .then((foundOTP) => {
+            console.log("foundOTP", foundOTP)
+            if (!foundOTP) return next();
+            else {
+
+                console.log("skdjhfkjsdhfksdhfkjshdf", foundOTP._id)
+
+                OTP.findByIdAndUpdate({ _id: foundOTP._id }, {
+                    "code": generateOTP()
+                }, { new: true })
+                    .then((updatedOTP) => {
+                        if (!updatedOTP) return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                        else return next();
+                    })
+                    .catch((err) => {
+                        return sendFailureJSONResponse(res, { message: "Please provide email address" });
+                    }).catch((err) => {
+                        return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                    })
+            }
+        }).catch((err) => {
+            return sendFailureJSONResponse(res, { message: "Something went wrong" });
+        })
+
+}
+
+exports.sendingOTPForChangeEmail = (req, res, next) => {
+
+    const userId = req?.userId,
+        email_address = req?.body?.email_address;
+
+    if (!email_address) return sendFailureJSONResponse(res, { message: "Please provide email address" });
+
+    User.findById({ _id: userId })
+        .then((foundUser) => {
+            if (!foundUser) return sendFailureJSONResponse(res, { message: "Something went wrong" });
+            else {
+
+                OTP.findOne({
+                    is_active: true,
+                    user: userId,
+                    email_address
+                }).then((foundOTP) => {
+
+                    if (foundOTP) {
+                        OTP.findByIdAndUpdate({ _id: foundOTP._id }, { "code": generateOTP() }, { new: true })
+                            .then((updatedOTP) => {
+                                if (updatedOTP) {
+                                    sendEmail(reciverEmail = email_address, HTMlContent = "<h1>" + generateOTP() + "</h1>", heading = "Change Email Address");
+                                    return sendSuccessJSONResponse(res, { message: "Email sent successfully" });
+                                } else {
+                                    return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                                }
+                            })
+                            .catch((err) => {
+                                return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                            });
+                    } else {
+
+                        const OTPDataObj = {
+                            is_active: true,
+                            code: generateOTP(),
+                            email_address,
+                            user: userId
+                        }
+
+                        OTP.create(OTPDataObj)
+                            .then((newOTP) => {
+                                if (!newOTP) {
+                                    return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                                } else {
+                                    sendEmail(reciverEmail = email_address, HTMlContent = "<h1>" + generateOTP() + "</h1>", heading = "Change Email Address");
+                                    return sendSuccessJSONResponse(res, { message: "Email sent successfully" });
+                                }
+                            })
+                            .catch((err) => {
+                                return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                            });
+                    }
+                })
+                    .catch((err) => {
+                        return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                    });
+            }
+        })
+        .catch((err) => {
+            return sendFailureJSONResponse(res, { message: "Something went wrong" });
+        });
+}
+
 
 exports.updateEmailAddress = (req, res, next) => {
 
@@ -572,6 +639,5 @@ exports.updateEmailAddress = (req, res, next) => {
         }).catch((err) => {
             return sendFailureJSONResponse(res, { message: "Something went wrong" });
         })
-
 
 }
