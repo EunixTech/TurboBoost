@@ -25,12 +25,12 @@ const BACKEND_URL = MODE === 'dev' ? DEV_BACKEND_URL : LIVE_BACKEND_URL
 
 const { v4: uuidv4 } = require('uuid');
 
-exports.createSubscription = async (req, res) => {
+exports.createSubscription = async (req, res, next) => {
   try {
     //   const { id: userId } = auth_body;
     const userId = '652037f32dface7dd49ef96e'
 
-    const {  planType, planName } = req.body;
+    const { planType, planName } = req.body;
 
     let userData = await User.findById(userId)
     console.log(userData)
@@ -42,7 +42,7 @@ exports.createSubscription = async (req, res) => {
       );
     }
 
-    if (  !planType || !planName) {
+    if (!planType || !planName) {
       return sendFailureJSONResponse(
         res,
         { message: "Invalid Input" },
@@ -51,7 +51,7 @@ exports.createSubscription = async (req, res) => {
     }
 
     let mapPrice = planData[planName.toLowerCase()]
-    
+
     if (Object.keys(mapPrice) < 0) {
       return sendFailureJSONResponse(
         res,
@@ -146,7 +146,7 @@ exports.createSubscription = async (req, res) => {
 
     } catch (err) {
       // console.log(err);
-      console.error( err.response.status);
+      console.error(err.response.status);
       const errorMessage =
         err.response.status === 401
           ? "Could not update plan because your Shopify credentials have expired"
@@ -175,11 +175,7 @@ exports.createSubscription = async (req, res) => {
   }
 };
 
-
-
-
-
-exports.paymentCallback = async (req, res) => {
+exports.paymentCallback = async (req, res, next) => {
   try {
     const { state, charge_id } = req.query;
     if (!state || !charge_id) {
@@ -230,3 +226,25 @@ exports.paymentCallback = async (req, res) => {
     res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
+
+exports.getCurrentPlan = (req, res, next) => {
+  const userId = req.userId;
+  
+  Subscription.findOne({ userId: userId })
+    .then((foundSub) => {
+     
+      if (!foundSub) return sendFailureJSONResponse(res, { message: "No Subscription found" });
+      else {
+        
+        const billingHistory = foundSub?.billingHistory;
+
+        if (billingHistory && billingHistory.length) {
+          const currentPlan = billingHistory[billingHistory.length - 1];
+          return sendSuccessJSONResponse(res, { message: "", data: currentPlan });
+        } else {
+          return sendFailureJSONResponse(res, { message: "No Plan found" });
+        }
+
+      }
+    })
+}

@@ -515,8 +515,6 @@ exports.checkOTPExistForAccount = (req, res, next) => {
             if (!foundOTP) return next();
             else {
 
-                console.log("skdjhfkjsdhfksdhfkjshdf", foundOTP._id)
-
                 OTP.findByIdAndUpdate({ _id: foundOTP._id }, {
                     "code": generateOTP()
                 }, { new: true })

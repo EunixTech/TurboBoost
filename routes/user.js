@@ -13,13 +13,14 @@ const {
   sendingOTPForChangeEmail,
   updateEmailAddress,
   checkEmailAreadyExits,
-  checkOTPExistForAccount
+  checkOTPExistForAccount,
 
 } = require('../controllers/user');
 
 const {
   createSubscription,
-  paymentCallback
+  paymentCallback,
+  getCurrentPlan
 } = require('../controllers/payment')
 
 const authmiddleware = require("../middleware/ensureUserLoggedIn")
@@ -31,15 +32,15 @@ router.post("/login-with-google", loginWithGoogle);
 router.get("/user-profile", fetchAccount);
 router.post("/register-account", validateData, registerAccount);
 router.patch("/register-account/:userId", validateData, updateAccount);
-router.post("forget-password/", checkAccountExist);
-router.post("update-password/", updatePassword);
+router.post("/forget-password", checkAccountExist);
+router.post("/update-password", updatePassword);
 router.get("/redirect/login/:userToken", loginUsingStateToken);
-
+router.use(authmiddleware.ensureUserLoggedIn);
 router.post('/createSubscription', createSubscription);
 router.get('/paymentCallback', paymentCallback);
+router.get('/current-plan-detail', getCurrentPlan);
 
 //changing email address
-router.use(authmiddleware.ensureUserLoggedIn);
 router.post("/sending-otp",
   checkEmailAreadyExits,
   checkOTPExistForAccount,
