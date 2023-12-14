@@ -59,6 +59,11 @@ const uploadToCloudinary = require("../utils/uploadToCloudinary");
 
 const downloadImage = require("../resources/downloadImage");
 
+/**
+ * Handle app installations
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
 exports.appInstallations = async (req, res) => {
     try {
         const { ["hmac"]: hmac, ...queryData } = req.query;
@@ -121,6 +126,11 @@ exports.appInstallations = async (req, res) => {
     }
 };
 
+/**
+ * Handle authentication callback
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
 exports.authCallback = async (req, res) => {
     try {
         const { shop, code, state: user_token, timestamp, host, hmac } = req.query;
@@ -229,16 +239,12 @@ exports.authCallback = async (req, res) => {
                 }
             })
             .catch((err) => {
-                console.log(err);
-                return sendFailureJSONResponse(res, {
-                    message: "Something went wrong",
-                });
+                return sendFailureJSONResponse(res, { message: "Something went wrong"});
             });
     } catch (err) {
         return sendFailureJSONResponse(res, { message: "Something went wrong" });
     }
 };
-
 
 exports.customerData = async (req, res) => {
     const hmac = req.get('X-Shopify-Hmac-Sha256');
@@ -273,7 +279,6 @@ exports.shopRedact = async (req, res) => {
         res.status(401).send("Not Authorized");
     }
 }
-
 
 
 exports.productCreateWebhook = async (req, res) => {
@@ -313,10 +318,10 @@ exports.productCreateWebhook = async (req, res) => {
 };
 
 exports.addingLazyLoading = async (req, res, next) => {
-    const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
-        htmlContent = themeLiquid?.value;
 
-    const updateThemeContent = restoreResourceHints(htmlContent);
+
+       
+
 };
 
 exports.minifyJavascriptCode = async (req, res, next) => {

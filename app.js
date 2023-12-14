@@ -17,7 +17,6 @@ const workQueue = new Queue('critical-css', process.env.REDIS_URL, { redis: {
 	tls: { rejectUnauthorized: false }
 }});
 
-
 const dbConnection = require('./config/dbConnection'),
     loadHelmet = require(`./loaders/helmets`),
     loadExpressSession = require(`./loaders/expressSession`);
@@ -75,7 +74,6 @@ workQueue.on('global:completed', async (jobId, result) => {
             result: result
         });
     }
-  console.log(`Job ${jobId} completed with result ${result}`);
 });
 
 // Server setup
