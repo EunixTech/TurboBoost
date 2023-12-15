@@ -195,7 +195,7 @@ exports.authCallback = async (req, res) => {
                     const last_name = shopData?.shop?.shop_owner.split(' ')[1]
 
                     let userData = await User.findOne({ 'app_token.shopify.shop': shop });
-                        let redirectURI = "";
+                        let redirectURI = "/dashbaord";
                     if (userData) {
                         userData = await User.findByIdAndUpdate(userData._id,
                             {
@@ -203,7 +203,7 @@ exports.authCallback = async (req, res) => {
                                 'app_token.shopify.isDeleted': false
                             }
                         )
-                        redirectURI = "/"
+                        redirectURI = "/dashboard"
                     } else {
 
                         userData = await User.create({
@@ -221,6 +221,8 @@ exports.authCallback = async (req, res) => {
 
                         redirectURI = "/billing"
                     }
+
+                    console.log()
 
 
                     // console.log(userData)

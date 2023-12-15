@@ -28,12 +28,15 @@ const { v4: uuidv4 } = require('uuid');
 exports.createSubscription = async (req, res, next) => {
   try {
     //   const { id: userId } = auth_body;
-    const userId = '652037f32dface7dd49ef96e'
+    const userId = req.userId;
+
+    console.log("userId", userId)
 
     const { planType, planName } = req.body;
 
     let userData = await User.findById(userId)
-    console.log(userData)
+    console.log("userData", userData)
+
     if (typeof userData?.app_token?.shopify?.isDeleted === 'undefined' || userData?.app_token?.shopify?.isDeleted) {
       return sendFailureJSONResponse(
         res,

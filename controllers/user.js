@@ -439,17 +439,22 @@ exports.loginUsingStateToken = async (req, res, next) => {
         await OauthState.deleteOne({ _id: stateData._id });
         if (user) {
 
-            generateToken(res, user._id);
-            res.json({
-                _id: user._id,
-                userData: user.user_info,
-                redirectURI: data?.redirectURI
-            });
+            return sendSuccessJSONResponse(res,{
+                message: "",
+                data: {
+                    _id: user._id,
+                    userData: user.user_info,
+                    redirectURI: data?.redirectURI,
+                    token: generateToken(res, user._id)
+                }
+            })
+
         } else {
             throw new Error('Invalid email or password');
         }
 
     } catch (e) {
+        console.log(e)
         return sendFailureJSONResponse(res, { message: "Invalid Token" });
     }
 }
