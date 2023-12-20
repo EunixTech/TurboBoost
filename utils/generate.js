@@ -1,7 +1,7 @@
 const jwt = require(`jsonwebtoken`),
     bcrypt = require(`bcryptjs`);
 
-const tokenSecret = `AbCdEfGhIjKlMnOPYT`;
+const tokenSecret = process.env.JWT_SECRET;
 
 exports.generateJWT = (id, entity) => {
     return jwt.sign({ id, entity }, tokenSecret);

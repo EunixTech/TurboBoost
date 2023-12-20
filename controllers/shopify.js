@@ -65,6 +65,8 @@ const downloadImage = require("../resources/downloadImage");
  * @param {Object} res - The response object
  */
 exports.appInstallations = async (req, res) => {
+    // const forwardedIp = req.headers['x-forwarded-for'].split(',')[0];
+    // console.log("forwardedIp", forwardedIp)
     try {
         const { ["hmac"]: hmac, ...queryData } = req.query;
 
@@ -133,6 +135,9 @@ exports.appInstallations = async (req, res) => {
  */
 exports.authCallback = async (req, res) => {
     try {
+        // console.log("headers", req.headers)
+        const forwardedIp = req.headers['x-forwarded-for'];
+        console.log("forwardedIp", forwardedIp)
         const { shop, code, state: user_token, timestamp, host, hmac } = req.query;
 
         if (!shop || !hmac || !host || !timestamp || !user_token || !code) {

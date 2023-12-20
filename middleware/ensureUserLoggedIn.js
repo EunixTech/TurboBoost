@@ -4,7 +4,7 @@ const mongoose = require(`mongoose`),
     jwt = require('jsonwebtoken');
 
 exports.ensureUserLoggedIn = async (req, res, next) => {
-    console.log("working")
+    console.log("working111")
     try {
 
         let token = null;

@@ -8,8 +8,7 @@ const generateToken = require('../utils/generateToken.js');
 const hashedPassword = require("../utils/hashPassword");
 const { createMixpanelEvent } = require("../services/mixepanelEventFunc");
 const { generateOTP } = require("../utils/generateOTP.js");
-const bcrypt = require("bcrypt");
-
+// const crypto = require('crypto');
 const {
     sendSuccessJSONResponse,
     sendFailureJSONResponse,
@@ -25,7 +24,7 @@ const {
 
 exports.loginWithEmail = async (req, res, next) => {
     try {
-
+     
         const { email_address, password } = req.body;
 
         if (!(email_address || password)) return sendFailureJSONResponse(res, { message: "Please provide email address and password" });
@@ -419,6 +418,7 @@ exports.updatePassword = async (req, res, next) => {
 }
 
 exports.loginUsingStateToken = async (req, res, next) => {
+    console.log("working")
     try {
         let userToken = req.params.userToken
         if (!userToken) {
@@ -439,22 +439,27 @@ exports.loginUsingStateToken = async (req, res, next) => {
         await OauthState.deleteOne({ _id: stateData._id });
         if (user) {
 
+            // const secretKey = process.env.CRYPTO_SECRET // an Identity Verification secret key (web)
+            //      userIdentifier = user._id, // a UUID to identify your user
+            //      hash = crypto.createHmac('sha256', secretKey).update(userIdentifier).digest('hex');
+       
             return sendSuccessJSONResponse(res,{
                 message: "",
                 data: {
                     _id: user._id,
-                    userData: user.user_info,
+                    userData: user,
                     redirectURI: data?.redirectURI,
-                    token: generateToken(res, user._id)
+                    token: generateToken(res, user._id),
+                    // hashToken: hash
                 }
             })
 
         } else {
-            throw new Error('Invalid email or password');
+            return sendFailureJSONResponse(res, { message: "User not found" });
         }
 
     } catch (e) {
-        console.log(e)
+        console.log("e",e)
         return sendFailureJSONResponse(res, { message: "Invalid Token" });
     }
 }
