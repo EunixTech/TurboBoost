@@ -43,6 +43,7 @@ exports.ensureUserLoggedIn = async (req, res, next) => {
                     message: `User  not found`
                 });
                 req.userId = user._id;
+                req.accessToken = user?.app_token?.access_token;
             }
 
         }

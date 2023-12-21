@@ -65,16 +65,16 @@ app.use(allRoutes)
 // });
 
 
-// You can listen to global events to get notified when jobs are processed
-workQueue.on('global:completed', async (jobId, result) => {
-    let job = await workQueue.getJob(jobId);
-    if (job !== null) {
-        job.update({
-            ...job.data,
-            result: result
-        });
-    }
-});
+// // You can listen to global events to get notified when jobs are processed
+// workQueue.on('global:completed', async (jobId, result) => {
+//     let job = await workQueue.getJob(jobId);
+//     if (job !== null) {
+//         job.update({
+//             ...job.data,
+//             result: result
+//         });
+//     }
+// });
 
 // Server setup
 app.listen(process.env.PORT, () => console.log(`[ Turbo Boost ] on ${process.env.PORT}`));

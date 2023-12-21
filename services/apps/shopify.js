@@ -47,6 +47,7 @@ class ShopifyAPI {
 
       this.themeId = mainTheme.id;
     } catch (e) {
+      console.log(e)
       throw e;
     }
   }
