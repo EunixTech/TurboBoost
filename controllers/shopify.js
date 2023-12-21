@@ -90,6 +90,7 @@ exports.appInstallations = async (req, res) => {
         if (generatedHash != hmac)
             return sendFailureJSONResponse( res, { message: "Unauthorized access" }, 401);
 
+        console.log("working11111")
         // creating OuthState for security checking
         OauthState.create({
             unique_key: uuidv4(),
@@ -100,6 +101,7 @@ exports.appInstallations = async (req, res) => {
             },
         })
             .then((newOuthState) => {
+                console.log("working11111sajdajshgd")
                 if (newOuthState) {
                     const redirect_url = `https://${shop}/admin/oauth/authorize?client_id=${SHOPIFY_API_KEY}&scope=${SHOPIFY_API_SCOPES}&state=${newOuthState?.unique_key}&redirect_uri=${SHOPIFY_API_REDIRECT}`;
                     return res.redirect(redirect_url);
@@ -161,7 +163,7 @@ exports.authCallback = async (req, res) => {
             .then(async (foundOauthState) => {
                 if (!foundOauthState)
                     return sendFailureJSONResponse(res, {
-                        message: "Something went wrong",
+                        message: "Something went wrong1",
                     });
 
                 else {
@@ -176,16 +178,25 @@ exports.authCallback = async (req, res) => {
                         },
                     };
 
+
+
                     const response = await Axios(config);
                     const data = response.data;
+                    console.log("datadatadatadata",data)
+
+
+                    const ShopifyAPIAndMethod = new ShopifyAPI({
+                        accessToken: data.access_token,
+                        shop: process.env.SHOP,
+                        version: process.env.SHOPIFY_API_VERSION,
+                    });
             
                     let shopData = await ShopifyAPIAndMethod.getShopDetails(
                         shop,
                         data.access_token
                     );
 
-                    console.log(data)
-   
+            
                     const email = shopData?.shop?.email
                     const first_name = shopData?.shop?.shop_owner.split(' ')[0]
                     const last_name = shopData?.shop?.shop_owner.split(' ')[1]
@@ -195,7 +206,7 @@ exports.authCallback = async (req, res) => {
                     if (userData) {
                         userData = await User.findByIdAndUpdate(userData._id,
                             {
-                                'app_token.shopify.access_token': data?.accessToken,
+                                'app_token.shopify.access_token': data?.access_token,
                                 'app_token.shopify.isDeleted': false
                             }
                         )
@@ -234,9 +245,11 @@ exports.authCallback = async (req, res) => {
                 }
             })
             .catch((err) => {
+                console.log(err)
                 return sendFailureJSONResponse(res, { message: "Something went wrong"});
             });
     } catch (err) {
+        console.log(err)
         return sendFailureJSONResponse(res, { message: "Something went wrong" });
     }
 };

@@ -2,6 +2,7 @@ const fetchAPI = require("../../utils/fetchAPI");
 const Axios = require("axios");
 class ShopifyAPI {
   constructor({ shop, accessToken, version }) {
+    console.log(shop, accessToken, version )
     if (!shop || !accessToken || !version) {
       throw new Error(
         "Cannot initialise ShopifyAdmin. Required parameter missing"
