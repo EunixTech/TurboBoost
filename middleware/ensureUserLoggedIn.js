@@ -32,18 +32,18 @@ exports.ensureUserLoggedIn = async (req, res, next) => {
                 userId = decodedPayload.userId.trim();
 
                 const dbQuery = {
-                    // "userInfo.status": 1, //checking if user is active or not
                     _id: userId
                 };
 
                 const user = await User.findOne(dbQuery);
-
+            
                 if (!user) return res.status(401).json({
                     status: 404,
                     message: `User  not found`
                 });
+
                 req.userId = user._id;
-                req.accessToken = user?.app_token?.access_token;
+                req.accessToken = user?.app_token?.shopify?.access_token;
             }
 
         }

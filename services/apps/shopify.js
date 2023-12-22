@@ -114,10 +114,9 @@ class ShopifyAPI {
     }
   }
 
-
-
   async writeAsset({ name, value }) {
     try {
+    
       const res = await fetch(`${this.url}/themes/${this.themeId}/assets.json`, {
         method: "PUT",
         headers: {

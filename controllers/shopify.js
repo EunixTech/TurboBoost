@@ -409,21 +409,20 @@ exports.eliminateRenderBlockingResources = async (req, res, next) => {
         const ShopifyAPIAndMethod = new ShopifyAPI({
             accessToken: req.accessToken,
             shop: process.env.SHOP,
-            version: process.env.SHOPIFY_API_VERSION,
+            version: "2022-10",
         });
-        ShopifyAPIAndMethod.init();
+        await ShopifyAPIAndMethod.init();
     
-        
         const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
             htmlContent = themeLiquid?.value,
-            updatedThemeLiquid = convertStylesheets(htmlContent);
+            updatedThemeLiquid = await convertStylesheets(htmlContent);
 
         const resposne = await ShopifyAPIAndMethod.writeAsset({
             name: "layout/theme.liquid",
             value: updatedThemeLiquid,
         });
 
-        if (resposne) return sendSuccessJSONResponse(res, { message: "success" });
+        if (resposne) return sendSuccessJSONResponse(res, { message: "Applied success" });
         else
             return sendFailureJSONResponse(res, { message: "something went right" });
     } catch (error) {
