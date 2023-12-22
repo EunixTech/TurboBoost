@@ -1,7 +1,7 @@
 const router = require(`express`).Router();
 
-// const apiRoutes = require("./api/_all")
+const dashboardRoutes = require("./dashboard")
    
-// router.use(`/v1/api/`, apiRoutes);
+router.use(`/dashboard`, dashboardRoutes);
 
 module.exports = router;

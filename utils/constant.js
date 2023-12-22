@@ -1,4 +1,9 @@
 const planData={
+    free:{
+        PlanName:'Free',
+        monthly:0,
+        annually:0
+    },
     starter:{
         PlanName:'Starter',
         monthly:15,

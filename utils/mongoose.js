@@ -13,6 +13,11 @@ const toExport = {
         trim: true
     },
 
+    defaultNumberConfig: {
+        type: Number,
+        default: 0,
+    },
+
     defaultObjectConfig:{
         type:Object,
         default:false

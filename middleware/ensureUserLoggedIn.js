@@ -1,11 +1,10 @@
 const mongoose = require(`mongoose`),
-    User = mongoose.model("user"), 
-     { verifyAndDecodeToken } = require(`../utils/generate`),
+    User = mongoose.model("user"),
+    { verifyAndDecodeToken } = require(`../utils/generate`),
     jwt = require('jsonwebtoken');
 
 exports.ensureUserLoggedIn = async (req, res, next) => {
-
-
+   
     try {
 
         let token = null;
@@ -14,13 +13,11 @@ exports.ensureUserLoggedIn = async (req, res, next) => {
             token = req.headers.authorization.split(' ')[1];
         }
 
-        console.log(`token`, token)
-
         if (!token) return res.json({
             status: 403,
-            message: `InvalidToken` ,
-            
-        }) 
+            message: `InvalidToken`,
+        
+        })
         else {
 
             const decodedPayload = verifyAndDecodeToken(token);
@@ -35,29 +32,30 @@ exports.ensureUserLoggedIn = async (req, res, next) => {
                 userId = decodedPayload.userId.trim();
 
                 const dbQuery = {
-                    // "userInfo.status": 1, //checking if user is active or not
                     _id: userId
                 };
 
                 const user = await User.findOne(dbQuery);
-
+            
                 if (!user) return res.status(401).json({
                     status: 404,
                     message: `User  not found`
                 });
+
                 req.userId = user._id;
+                req.accessToken = user?.app_token?.shopify?.access_token;
             }
 
         }
 
         return next();
     } catch (err) {
-        console.log(err)
+       
         res.json({
             status: 403,
             message: `InvalidToken`,
 
-        }) 
+        })
     }
 
 }

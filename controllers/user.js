@@ -1,12 +1,14 @@
 const mongoose = require("mongoose");
 const User = mongoose.model("user");
+const OTP = mongoose.model("otp");
 const OauthState = mongoose.model("outhState")
 const sendEmail = require("../services/sendEmail");
 const generateRandomString = require("../utils/generateRandomString");
 const generateToken = require('../utils/generateToken.js');
 const hashedPassword = require("../utils/hashPassword");
-const bcrypt = require("bcrypt");
-
+const { createMixpanelEvent } = require("../services/mixepanelEventFunc");
+const { generateOTP } = require("../utils/generateOTP.js");
+// const crypto = require('crypto');
 const {
     sendSuccessJSONResponse,
     sendFailureJSONResponse,
@@ -22,7 +24,7 @@ const {
 
 exports.loginWithEmail = async (req, res, next) => {
     try {
-
+     
         const { email_address, password } = req.body;
 
         if (!(email_address || password)) return sendFailureJSONResponse(res, { message: "Please provide email address and password" });
@@ -36,10 +38,15 @@ exports.loginWithEmail = async (req, res, next) => {
         User.findOne({
             "user_info.email_address": email_address
         }).then(async (foundUser) => {
-
+            await createMixpanelEvent("loginwith email", {
+                firstName: "manmohan",
+                id: 2,
+                email_address: "manmohankuma@exunix.com"
+            })
             if (!foundUser) return sendFailureJSONResponse(res, { message: `Account does't exist with email ${email_address}` });
             else if (foundUser && (await foundUser.matchPassword(password))) {
                 return sendSuccessJSONResponse(res, {
+                    token: generateToken(res, foundUser._id),
                     id: foundUser._id,
                     first_name: foundUser?.user_info?.first_name,
                     email_address: foundUser.user_info?.user_info?.email_address,
@@ -110,9 +117,9 @@ exports.loginWithGoogle = async (req, res, next) => {
 
         if (!updateDeviceInfo) failureJSONResponse(res, { message: `Something went wrong`, });
         else {
-            
-            generateToken(res, foundUser._id)
+
             return sendSuccessJSONResponse(res, {
+                token: generateToken(res, checkUserExistWithEmail._id),
                 userId: foundUser._id,
                 first_name: foundUser?.user_info?.first_name || null,
                 message: `success`,
@@ -161,7 +168,7 @@ exports.loginWithGoogle = async (req, res, next) => {
 
                 },
                 message: `success`,
-                token: createJWT(checkUserExistWithEmail._id),
+                token: generateToken(res, checkUserExistWithEmail._id),
             });
         } else {
 
@@ -192,8 +199,9 @@ exports.loginWithGoogle = async (req, res, next) => {
                 .then((data) => {
                     if (!data) return sendFailureJSONResponse(res, { message: "Something went wrong" });
                     else {
-                        generateToken(res, data?._id);
+                        const token = generateToken(res, data?._id);
                         return sendSuccessJSONResponse(res, {
+                            token,
                             userId: data._id,
                             first_name: data.user_info.first_name || null,
                             message: `success`,
@@ -225,8 +233,8 @@ exports.validateData = async (req, res, next) => {
     if (!isTruthyString(first_name)) missingData.push("First first_name");
     if (!isTruthyString(last_name)) missingData.push("Last first_name");
     if (!bussiness_type) missingData.push("Bussiness type");
-    else if (bussiness_type && isNaN(bussiness_type)) invalidData("Bussiness type")
-    if (!isTruthyString(country)) missingData.push("Country");
+    // else if (bussiness_type && isNaN(bussiness_type)) invalidData("Bussiness type")
+    // if (!isTruthyString(country)) missingData.push("Country");
 
     if (!email_address) missingData.push("Email Address");
     else if (!isValidEmailAddress(email_address)) invalidData.push("Email Address");
@@ -246,10 +254,10 @@ exports.validateData = async (req, res, next) => {
         };
 
         if (first_name) formData.user_info.first_name = first_name;
-        if (first_name) formData.user_basic_info.source = Number(source);
+        if (first_name) formData.user_basic_info.source = Number(1);
         if (last_name) formData.user_info.last_name = last_name;
         if (email_address) formData.user_info.email_address = email_address;
-        if (bussiness_type) formData.user_basic_info.bussiness_type = bussiness_type;
+        if (bussiness_type) formData.user_basic_info.bussiness_type = 1;
         if (country) formData.user_basic_info.country = country;
         if (password) formData.user_info.password = await hashedPassword(password);
 
@@ -304,6 +312,7 @@ exports.registerAccount = async (req, res, next) => {
                         return sendSuccessJSONResponse(res,
                             {
                                 message: "Account created successfully",
+                                data: req.body
                             }, 201);
                     }
                 }).catch((err) => {
@@ -363,8 +372,8 @@ exports.deleteAccount = async (req, res, next) => {
 
 exports.checkAccountExist = async (req, res, next) => {
 
+    const userID = req.userId;
     const email_address = req.body.email_address;
-    console.log(`email_address`, email_address)
 
     if (!email_address) return sendFailureJSONResponse(res, { message: "Please provide email address" });
     else if (!isValidEmailAddress(email_address)) return sendFailureJSONResponse(res, { message: "Please provide valid email address" });
@@ -373,11 +382,11 @@ exports.checkAccountExist = async (req, res, next) => {
         .then((foundAccount) => {
             if (!foundAccount) return sendFailureJSONResponse(res, { message: "Account not exist" });
             else {
-                User.findByIdAndUpdate({ _id: "6520095c29371858a78fb1ec" }, {
+                User.findByIdAndUpdate({ _id: userID }, {
                     email_token: generateRandomString(10)
                 })
                 sendEmail(reciverEmail = email_address, HTMlContent = "<h1></h1>", heading = "forgetpassword")
-                sendSuccessJSONResponse(res, { message: " " });
+                return sendSuccessJSONResponse(res, { message: "Email Sent successfully" });
             }
         }).catch((err) => {
             console.log(err)
@@ -409,13 +418,13 @@ exports.updatePassword = async (req, res, next) => {
 }
 
 exports.loginUsingStateToken = async (req, res, next) => {
+    console.log("working")
     try {
         let userToken = req.params.userToken
         if (!userToken) {
             return sendFailureJSONResponse(res, { message: "Please provide token" });
         }
         let stateData = await OauthState.findOne({ unique_key: userToken })
-        console.log(Object.keys(stateData).length === 0)
 
         if (Object.keys(stateData).length === 0) {
             return sendFailureJSONResponse(res, { message: "Invalid Token" });
@@ -426,24 +435,34 @@ exports.loginUsingStateToken = async (req, res, next) => {
             return sendFailureJSONResponse(res, { message: "userId not found" });
         }
         const user = await User.findById(data.userID);
-        console.log(user)
+
         await OauthState.deleteOne({ _id: stateData._id });
         if (user) {
-            generateToken(res, user._id);
-            res.json({
-                _id: user._id,
-                userData: user.user_info,
-            });
+
+            // const secretKey = process.env.CRYPTO_SECRET // an Identity Verification secret key (web)
+            //      userIdentifier = user._id, // a UUID to identify your user
+            //      hash = crypto.createHmac('sha256', secretKey).update(userIdentifier).digest('hex');
+       
+            return sendSuccessJSONResponse(res,{
+                message: "",
+                data: {
+                    _id: user._id,
+                    userData: user,
+                    redirectURI: data?.redirectURI,
+                    token: generateToken(res, user._id),
+                    // hashToken: hash
+                }
+            })
+
         } else {
-            throw new Error('Invalid email or password');
+            return sendFailureJSONResponse(res, { message: "User not found" });
         }
 
     } catch (e) {
-        console.log(e)
+        console.log("e",e)
         return sendFailureJSONResponse(res, { message: "Invalid Token" });
     }
 }
-
 
 
 exports.logout = async (req, res, next) => {
@@ -470,4 +489,163 @@ exports.logout = async (req, res, next) => {
     } catch (error) {
         return failureJSONResponse(res, { message: 'Something went wrong.' });
     }
+}
+
+
+exports.checkEmailAreadyExits = (req, res, next) => {
+
+    const userId = req.userId,
+        email_address = req?.body?.email_address;
+
+    if (!email_address) { sendFailureJSONResponse(res, { message: "Please provide email address" }) };
+
+    User.findOne({ "user_info.email_address": email_address, _id: { $ne: userId } })
+        .then((foundUser) => {
+            if (foundUser) return sendFailureJSONResponse(res, { message: `Account with ${email_address} already exits` });
+            else return next();
+        }).catch((err) => {
+            return sendFailureJSONResponse(res, { message: "Something went wrong" });
+        })
+
+}
+
+exports.checkOTPExistForAccount = (req, res, next) => {
+
+    const userId = req?.userId,
+        OTPCode = req.body.OTPCode,
+        email_address = req?.body?.email_address;
+
+    OTP.findOne({
+        is_active: true,
+        user: userId,
+        email_address
+    })
+        .then((foundOTP) => {
+            console.log("foundOTP", foundOTP)
+            if (!foundOTP) return next();
+            else {
+
+                OTP.findByIdAndUpdate({ _id: foundOTP._id }, {
+                    "code": generateOTP()
+                }, { new: true })
+                    .then((updatedOTP) => {
+                        if (!updatedOTP) return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                        else return next();
+                    })
+                    .catch((err) => {
+                        return sendFailureJSONResponse(res, { message: "Please provide email address" });
+                    }).catch((err) => {
+                        return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                    })
+            }
+        }).catch((err) => {
+            return sendFailureJSONResponse(res, { message: "Something went wrong" });
+        })
+
+}
+
+exports.sendingOTPForChangeEmail = (req, res, next) => {
+
+    const userId = req?.userId,
+        email_address = req?.body?.email_address;
+
+    if (!email_address) return sendFailureJSONResponse(res, { message: "Please provide email address" });
+
+    User.findById({ _id: userId })
+        .then((foundUser) => {
+            if (!foundUser) return sendFailureJSONResponse(res, { message: "Something went wrong" });
+            else {
+
+                OTP.findOne({
+                    is_active: true,
+                    user: userId,
+                    email_address
+                }).then((foundOTP) => {
+
+                    if (foundOTP) {
+                        OTP.findByIdAndUpdate({ _id: foundOTP._id }, { "code": generateOTP() }, { new: true })
+                            .then((updatedOTP) => {
+                                if (updatedOTP) {
+                                    sendEmail(reciverEmail = email_address, HTMlContent = "<h1>" + generateOTP() + "</h1>", heading = "Change Email Address");
+                                    return sendSuccessJSONResponse(res, { message: "Email sent successfully" });
+                                } else {
+                                    return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                                }
+                            })
+                            .catch((err) => {
+                                return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                            });
+                    } else {
+
+                        const OTPDataObj = {
+                            is_active: true,
+                            code: generateOTP(),
+                            email_address,
+                            user: userId
+                        }
+
+                        OTP.create(OTPDataObj)
+                            .then((newOTP) => {
+                                if (!newOTP) {
+                                    return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                                } else {
+                                    sendEmail(reciverEmail = email_address, HTMlContent = "<h1>" + generateOTP() + "</h1>", heading = "Change Email Address");
+                                    return sendSuccessJSONResponse(res, { message: "Email sent successfully" });
+                                }
+                            })
+                            .catch((err) => {
+                                return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                            });
+                    }
+                })
+                    .catch((err) => {
+                        return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                    });
+            }
+        })
+        .catch((err) => {
+            return sendFailureJSONResponse(res, { message: "Something went wrong" });
+        });
+}
+
+
+exports.updateEmailAddress = (req, res, next) => {
+
+    const userId = req?.userId,
+        OTPCode = req.body.OTPCode,
+        email_address = req?.body?.email_address;
+
+    if (!email_address) return sendFailureJSONResponse(res, { message: "Please provide email address" });
+    if (!OTPCode) return sendFailureJSONResponse(res, { message: "Please provide otp" });
+
+    OTP.findOne({
+        is_active: true,
+        user: userId,
+        code: OTPCode,
+        email_address
+    })
+        .then((foundOTP) => {
+            if (!foundOTP) return sendFailureJSONResponse(res, { message: "Invalid OTP" });
+            else {
+
+                User.findByIdAndUpdate({ _id: userId }, {
+                    "user_info.email_address": email_address
+                }, { new: true })
+                    .then(async (updatedAccount) => {
+                        if (!updatedAccount) return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                        else {
+                            await OTP.findByIdAndDelete({ _id: foundOTP._id });
+                            return sendSuccessJSONResponse(res, { message: "Email updated successfully" });
+                        }
+                    })
+                    .catch((err) => {
+                        return sendFailureJSONResponse(res, { message: "Please provide email address" });
+                    }).catch((err) => {
+                        return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                    })
+            }
+        }).catch((err) => {
+            return sendFailureJSONResponse(res, { message: "Something went wrong" });
+        })
+
 }

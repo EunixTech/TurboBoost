@@ -10,11 +10,12 @@ const express = require(`express`),
     MongoStore = require(`connect-mongo`),
     app = express();
 
+    var morgan = require('morgan')
+
 // Create / Connect to a named work queue
 const workQueue = new Queue('critical-css', process.env.REDIS_URL, { redis: { 
 	tls: { rejectUnauthorized: false }
 }});
-
 
 const dbConnection = require('./config/dbConnection'),
     loadHelmet = require(`./loaders/helmets`),
@@ -26,6 +27,7 @@ require("./model/outhState");
 require("./model/users");
 require("./model/productImages");
 require("./model/subscription");
+require("./model/OTP");
 
 loadHelmet(app, helmet);
 loadExpressSession(app, expressSession, MongoStore);
@@ -33,7 +35,8 @@ loadExpressSession(app, expressSession, MongoStore);
 // body parser
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
+// setup the logger
+app.use(morgan('combined'))
 app.use(cors());
 
 
@@ -58,22 +61,20 @@ const allRoutes = require("./routes/all");
 app.use(allRoutes)
 
 // app.use((err, req, res) => {
-//     console.log(err)
 //     return res.status(500).send({ error: 'seriously something went wrong ' });
 // });
 
 
-// You can listen to global events to get notified when jobs are processed
-workQueue.on('global:completed', async (jobId, result) => {
-    let job = await workQueue.getJob(jobId);
-    if (job !== null) {
-        job.update({
-            ...job.data,
-            result: result
-        });
-    }
-  console.log(`Job ${jobId} completed with result ${result}`);
-});
+// // You can listen to global events to get notified when jobs are processed
+// workQueue.on('global:completed', async (jobId, result) => {
+//     let job = await workQueue.getJob(jobId);
+//     if (job !== null) {
+//         job.update({
+//             ...job.data,
+//             result: result
+//         });
+//     }
+// });
 
 // Server setup
 app.listen(process.env.PORT, () => console.log(`[ Turbo Boost ] on ${process.env.PORT}`));

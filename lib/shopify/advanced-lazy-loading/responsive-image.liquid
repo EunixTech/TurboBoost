@@ -86,3 +86,8 @@
 <noscript>
   <img class="{{ image_class }}" src="{{ image | img_url: '2048x2048' }}" alt="{{ image.alt | escape }}">
 </noscript>
+
+
+
+
+- {% include 'responsive-image' with image: featured_image, image_class: "css-class", wrapper_class: "wrapper-css-class", max_width: 700, max_height: 800 %}

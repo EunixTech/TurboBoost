@@ -2,6 +2,7 @@ const fetchAPI = require("../../utils/fetchAPI");
 const Axios = require("axios");
 class ShopifyAPI {
   constructor({ shop, accessToken, version }) {
+    console.log(shop, accessToken, version )
     if (!shop || !accessToken || !version) {
       throw new Error(
         "Cannot initialise ShopifyAdmin. Required parameter missing"
@@ -47,6 +48,7 @@ class ShopifyAPI {
 
       this.themeId = mainTheme.id;
     } catch (e) {
+      console.log(e)
       throw e;
     }
   }
@@ -112,10 +114,9 @@ class ShopifyAPI {
     }
   }
 
-
-
   async writeAsset({ name, value }) {
     try {
+    
       const res = await fetch(`${this.url}/themes/${this.themeId}/assets.json`, {
         method: "PUT",
         headers: {

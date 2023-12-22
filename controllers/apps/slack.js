@@ -3,8 +3,6 @@ const {
     sendFailureJSONResponse,
 } = require("../../handlers/jsonResponseHandlers")
 
-
-
 async function connectSlack(req, res) {
     try {
 
