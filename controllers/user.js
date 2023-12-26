@@ -233,7 +233,7 @@ exports.validateData = async (req, res, next) => {
 
     if (!isTruthyString(first_name)) missingData.push("First first_name");
     if (!isTruthyString(last_name)) missingData.push("Last first_name");
-    if (!business_type) missingData.push("Bussiness type");
+    // if (!business_type) missingData.push("Bussiness type");
     // else if (bussiness_type && isNaN(bussiness_type)) invalidData("Bussiness type")
     // if (!isTruthyString(country)) missingData.push("Country");
 

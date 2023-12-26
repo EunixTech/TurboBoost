@@ -10,7 +10,8 @@ const {
 exports.fetchGoogleSpeedAPIData = async (req, res, next) => {
     
     try {
-       const data = await fetchPageSpeedAPIdata("https://menehariya.netscapelabs.com");
+        const websiteURL = req.query.url;
+       const data = await fetchPageSpeedAPIdata(websiteURL);
        console.log("data",data)
         return sendSuccessJSONResponse(res, { message:"successfull",data });
     } catch (error) {
