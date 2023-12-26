@@ -548,28 +548,37 @@ exports.checkOTPExistForAccount = (req, res, next) => {
 }
 
 exports.sendingOTPForChangeEmail = (req, res, next) => {
-
-    const userId = req?.userId,
-        email_address = req?.body?.email_address;
-
-    if (!email_address) return sendFailureJSONResponse(res, { message: "Please provide email address" });
-
+    const userId = req?.userId;
+    const email_address = req?.body?.email_address;
+  
+    if (!email_address) {
+        return sendFailureJSONResponse(res, { message: "Please provide email address" });
+    }
+  
     User.findById({ _id: userId })
         .then((foundUser) => {
-            if (!foundUser) return sendFailureJSONResponse(res, { message: "Something went wrong" });
-            else {
-
+            if (!foundUser) {
+                return sendFailureJSONResponse(res, { message: "Something went wrong" });
+            } else {
                 OTP.findOne({
                     is_active: true,
                     user: userId,
                     email_address
                 }).then((foundOTP) => {
-
                     if (foundOTP) {
                         OTP.findByIdAndUpdate({ _id: foundOTP._id }, { "code": generateOTP() }, { new: true })
                             .then((updatedOTP) => {
                                 if (updatedOTP) {
-                                    sendEmail(reciverEmail = email_address, HTMlContent = "<h1>" + generateOTP() + "</h1>", heading = "Change Email Address");
+                                    const emailContent = `
+                                        <h1>Your One-Time Password (OTP) for changing your email address is:</h1>
+                                        <div style="background-color: #f8f8f8; padding: 10px; border-radius: 5px; text-align: center;">
+                                            <h1 style="color: #333; margin: 0; font-size: 24px;">${updatedOTP.code}</h1>
+                                        </div>
+                                        <p>Please use this OTP to verify your identity and proceed with the email address change.</p>
+                                        <p>If you did not request this change, please ignore this email.</p>
+                                        <p>Thank you,<br/>Your Application Team</p>
+                                    `;
+                                    sendEmail(reciverEmail = email_address, HTMlContent = emailContent, heading = "Change Email Address");
                                     return sendSuccessJSONResponse(res, { message: "Email sent successfully" });
                                 } else {
                                     return sendFailureJSONResponse(res, { message: "Something went wrong" });
@@ -579,20 +588,28 @@ exports.sendingOTPForChangeEmail = (req, res, next) => {
                                 return sendFailureJSONResponse(res, { message: "Something went wrong" });
                             });
                     } else {
-
                         const OTPDataObj = {
                             is_active: true,
                             code: generateOTP(),
                             email_address,
                             user: userId
-                        }
-
+                        };
+  
                         OTP.create(OTPDataObj)
                             .then((newOTP) => {
                                 if (!newOTP) {
                                     return sendFailureJSONResponse(res, { message: "Something went wrong" });
                                 } else {
-                                    sendEmail(reciverEmail = email_address, HTMlContent = "<h1>" + generateOTP() + "</h1>", heading = "Change Email Address");
+                                    const emailContent = `
+                                        <h1>Your One-Time Password (OTP) for changing your email address is:</h1>
+                                        <div style="background-color: #f8f8f8; padding: 10px; border-radius: 5px; text-align: center;">
+                                            <h1 style="color: #333; margin: 0; font-size: 24px;">${newOTP.code}</h1>
+                                        </div>
+                                        <p>Please use this OTP to verify your identity and proceed with the email address change.</p>
+                                        <p>If you did not request this change, please ignore this email.</p>
+                                        <p>Thank you,<br/>TurboBoost</p>
+                                    `;
+                                    sendEmail(reciverEmail = email_address, HTMlContent = emailContent, heading = "Change Email Address");
                                     return sendSuccessJSONResponse(res, { message: "Email sent successfully" });
                                 }
                             })
@@ -601,16 +618,15 @@ exports.sendingOTPForChangeEmail = (req, res, next) => {
                             });
                     }
                 })
-                    .catch((err) => {
-                        return sendFailureJSONResponse(res, { message: "Something went wrong" });
-                    });
+                .catch((err) => {
+                    return sendFailureJSONResponse(res, { message: "Something went wrong" });
+                });
             }
         })
         .catch((err) => {
             return sendFailureJSONResponse(res, { message: "Something went wrong" });
         });
-}
-
+  };
 
 exports.updateEmailAddress = (req, res, next) => {
 

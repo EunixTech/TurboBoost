@@ -67,6 +67,8 @@ exports.appInstallations = async (req, res) => {
             host = queryData.host,
             timestamp = queryData.timestamp;
 
+            console.log("req.query", req.query)
+
         if (!shop || !hmac || !host || !timestamp) {
             return sendFailureJSONResponse(
             res, { message: "Unauthorized access" },
@@ -130,6 +132,7 @@ exports.authCallback = async (req, res) => {
     try {
 
         const { shop, code, state: user_token, timestamp, host, hmac } = req.query;
+        console.log("req.query", req.query)
 
         if (!shop || !hmac || !host || !timestamp || !user_token || !code) {
             return sendFailureJSONResponse(
