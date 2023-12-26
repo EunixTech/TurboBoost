@@ -67,6 +67,8 @@ exports.appInstallations = async (req, res) => {
             host = queryData.host,
             timestamp = queryData.timestamp;
 
+            console.log("req.query", req.query)
+
         if (!shop || !hmac || !host || !timestamp) {
             return sendFailureJSONResponse(
             res, { message: "Unauthorized access" },
@@ -130,6 +132,7 @@ exports.authCallback = async (req, res) => {
     try {
 
         const { shop, code, state: user_token, timestamp, host, hmac } = req.query;
+        console.log("req.query", req.query)
 
         if (!shop || !hmac || !host || !timestamp || !user_token || !code) {
             return sendFailureJSONResponse(
@@ -338,9 +341,9 @@ exports.minifyJavascriptCode = async (req, res, next) => {
     const ShopifyAPIAndMethod = new ShopifyAPI({
         accessToken: req.accessToken,
         shop: process.env.SHOP,
-        version: process.env.SHOPIFY_API_VERSION,
+        version: "2022-10",
     });
-    ShopifyAPIAndMethod.init();
+    await ShopifyAPIAndMethod.init();
     
     
     const themeAssets = await ShopifyAPIAndMethod.getAssets();
@@ -384,7 +387,7 @@ exports.removeUnusedJavascriptCode = async (req, res, next) => {
             shop: process.env.SHOP,
             version: process.env.SHOPIFY_API_VERSION,
         });
-        ShopifyAPIAndMethod.init();
+        await ShopifyAPIAndMethod.init();
         
         const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
             htmlContent = themeLiquid?.value,
@@ -413,6 +416,7 @@ exports.eliminateRenderBlockingResources = async (req, res, next) => {
         });
         await ShopifyAPIAndMethod.init();
     
+        
         const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
             htmlContent = themeLiquid?.value,
             updatedThemeLiquid = await convertStylesheets(htmlContent);
@@ -422,7 +426,7 @@ exports.eliminateRenderBlockingResources = async (req, res, next) => {
             value: updatedThemeLiquid,
         });
 
-        if (resposne) return sendSuccessJSONResponse(res, { message: "Applied success" });
+        if (resposne) return sendSuccessJSONResponse(res, { message: "success" });
         else
             return sendFailureJSONResponse(res, { message: "something went right" });
     } catch (error) {
@@ -437,9 +441,8 @@ exports.minifyPageContent = async (req, res, next) => {
             shop: process.env.SHOP,
             version: process.env.SHOPIFY_API_VERSION,
         });
-        ShopifyAPIAndMethod.init();
+        await ShopifyAPIAndMethod.init();
     
-        
         const pages = await ShopifyAPIAndMethod.getAllPages();
 
         if (pages?.length) {
@@ -471,7 +474,7 @@ exports.DNSPrefetching = async (req, res, next) => {
             shop: process.env.SHOP,
             version: process.env.SHOPIFY_API_VERSION,
         });
-        ShopifyAPIAndMethod.init();
+        await ShopifyAPIAndMethod.init();
     
         const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
             htmlContent = themeLiquid?.value;
@@ -501,7 +504,7 @@ exports.criticalCSS = async (req, res) => {
             shop: process.env.SHOP,
             version: process.env.SHOPIFY_API_VERSION,
         });
-        ShopifyAPIAndMethod.init();
+        await ShopifyAPIAndMethod.init();
 
         const session = await Shopify.Utils.loadCurrentSession(
             ctx.req,
@@ -647,7 +650,7 @@ exports.fontOptimization = async (req, res, next) => {
             shop: process.env.SHOP,
             version: process.env.SHOPIFY_API_VERSION,
         });
-        ShopifyAPIAndMethod.init();
+        await ShopifyAPIAndMethod.init();
 
         const themeAssets = await ShopifyAPIAndMethod.getAssets();
         const assets = themeAssets.assets;
@@ -687,7 +690,7 @@ exports.delayingGoogleFont = async (req, res, next) => {
             shop: process.env.SHOP,
             version: process.env.SHOPIFY_API_VERSION,
         });
-        ShopifyAPIAndMethod.init();
+        await ShopifyAPIAndMethod.init();
 
         const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
             htmlContent = themeLiquid?.value,
@@ -750,7 +753,7 @@ exports.restoringFontOptimization = async (req, res, next) => {
             shop: process.env.SHOP,
             version: process.env.SHOPIFY_API_VERSION,
         });
-        ShopifyAPIAndMethod.init();
+        await ShopifyAPIAndMethod.init();
 
         const themeAssets = await ShopifyAPIAndMethod.getAssets();
         const assets = themeAssets.assets;
@@ -793,7 +796,7 @@ exports.restoreGoogleFontDelay = async (req, res, next) => {
             shop: process.env.SHOP,
             version: process.env.SHOPIFY_API_VERSION,
         });
-        ShopifyAPIAndMethod.init();
+        await ShopifyAPIAndMethod.init();
 
         const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid();
         const themeContent = themeLiquid?.value;
@@ -825,7 +828,7 @@ exports.restoreDNSPrefetching = async (req, res, next) => {
             shop: process.env.SHOP,
             version: process.env.SHOPIFY_API_VERSION,
         });
-        ShopifyAPIAndMethod.init();
+        await ShopifyAPIAndMethod.init();
 
         const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
             htmlContent = themeLiquid?.value;
@@ -854,7 +857,7 @@ exports.restoreAdvancedLazyLoading = async (req, res, next) => {
             shop: process.env.SHOP,
             version: process.env.SHOPIFY_API_VERSION,
         });
-        ShopifyAPIAndMethod.init();
+        await ShopifyAPIAndMethod.init();
 
         const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
             htmlContent = themeLiquid?.value;
@@ -895,7 +898,7 @@ exports.restoreImageSizeAdaption = async (req, res, next) => {
             shop: process.env.SHOP,
             version: process.env.SHOPIFY_API_VERSION,
         });
-        ShopifyAPIAndMethod.init();
+        await ShopifyAPIAndMethod.init();
 
         const snippets = await ShopifyAPIAndMethod.getAssetByName(
             "snippets/responsive-image.liquid"
