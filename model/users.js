@@ -11,14 +11,15 @@ const userSchema = new mongoose.Schema(
             user_name: defaultStringConfig,
             email_address: defaultStringConfig,
             date_of_birth: defaultStringConfig,
-            status: {
-                type: String,
-                enum:[1,2],
-                required: true,
-                default: 2
-                // 1 = active
-                //2 = inactive
-            }
+            phone_number: defaultObjectConfig,
+            // status: {
+            //     type: String,
+            //     enum:[1,2],
+            //     required: true,
+            //     default: 2
+            //     // 1 = active
+            //     //2 = inactive
+            // }
         },
 
         google_info: {
@@ -30,10 +31,7 @@ const userSchema = new mongoose.Schema(
         device_token: defaultStringConfig,
     
         user_basic_info: {
-            bussiness_type:{
-                type: Number,
-                enum:[1,2,3]
-            },
+            bussiness_type: defaultStringConfig,
             country: defaultStringConfig,
             email_token: defaultStringConfig,
             source:{

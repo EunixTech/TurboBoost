@@ -221,9 +221,10 @@ exports.validateData = async (req, res, next) => {
         first_name,
         last_name,
         email_address,
-        bussiness_type,
+        business_type,
         country,
         password,
+        phone_number,
         source
     } = req.body;
 
@@ -232,15 +233,15 @@ exports.validateData = async (req, res, next) => {
 
     if (!isTruthyString(first_name)) missingData.push("First first_name");
     if (!isTruthyString(last_name)) missingData.push("Last first_name");
-    if (!bussiness_type) missingData.push("Bussiness type");
+    if (!business_type) missingData.push("Bussiness type");
     // else if (bussiness_type && isNaN(bussiness_type)) invalidData("Bussiness type")
     // if (!isTruthyString(country)) missingData.push("Country");
 
     if (!email_address) missingData.push("Email Address");
     else if (!isValidEmailAddress(email_address)) invalidData.push("Email Address");
 
-    if (!password) missingData.push("password");
-    else if (!isValidPassword(password)) invalidData.push("password");
+    // if (!password) missingData.push("password");
+    // else if (!isValidPassword(password)) invalidData.push("password");
 
     if (missingData.length || invalidData.length) {
         if (missingData.length) return sendFailureJSONResponse(res, { message: `Missing Data:- ${missingData.join(`, `)}` });
@@ -252,14 +253,15 @@ exports.validateData = async (req, res, next) => {
             user_info: {},
             user_basic_info: {}
         };
-
+        
         if (first_name) formData.user_info.first_name = first_name;
-        if (first_name) formData.user_basic_info.source = Number(1);
+        if (phone_number) formData.user_info.phone_number = phone_number;
+        formData.user_basic_info.source = Number(1);
         if (last_name) formData.user_info.last_name = last_name;
         if (email_address) formData.user_info.email_address = email_address;
-        if (bussiness_type) formData.user_basic_info.bussiness_type = 1;
+        if (business_type) formData.user_basic_info.bussiness_type = business_type;
         if (country) formData.user_basic_info.country = country;
-        if (password) formData.user_info.password = await hashedPassword(password);
+        // if (password) formData.user_info.password = await hashedPassword(password);
 
         req.formData = formData
         next();
@@ -330,7 +332,7 @@ exports.registerAccount = async (req, res, next) => {
 
 exports.updateAccount = async (req, res, next) => {
 
-    const userId = req.params.userId;
+    const userId = req.userId;
     const email_address = req.body.email_address;
 
     if (!userId) { sendFailureJSONResponse(res, { message: "Something went wrong" }) }
@@ -344,6 +346,7 @@ exports.updateAccount = async (req, res, next) => {
                 if (!updateAccount) return sendFailureJSONResponse(res, { message: "Something went wrong" });
                 else sendSuccessJSONResponse(res, { message: "Account updated successfully" })
             }).catch((err) => {
+                console.log(err)
                 return sendErrorJSONResponse(res, { message: "Something went wrong" });
             })
     }
@@ -533,7 +536,7 @@ exports.checkOTPExistForAccount = (req, res, next) => {
                         else return next();
                     })
                     .catch((err) => {
-                        return sendFailureJSONResponse(res, { message: "Please provide email address" });
+                        return sendFailureJSONResponse(res, { message: "Please provide valid OTP" });
                     }).catch((err) => {
                         return sendFailureJSONResponse(res, { message: "Something went wrong" });
                     })
