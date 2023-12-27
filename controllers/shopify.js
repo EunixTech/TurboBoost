@@ -205,7 +205,7 @@ exports.authCallback = async (req, res) => {
                     const last_name = shopData?.shop?.shop_owner.split(' ')[1]
 
                     let userData = await User.findOne({ 'app_token.shopify.shop': shop });
-                        let redirectURI = "/dashbaord";
+                        let redirectURI = "/dashboard";
                     if (userData) {
                         userData = await User.findByIdAndUpdate(userData._id,
                             {
@@ -243,12 +243,10 @@ exports.authCallback = async (req, res) => {
                         },
                     });
 
-                    console.log("`${FRONTEND_URL}?userToken=${state?.unique_key}`",`${FRONTEND_URL}?userToken=${state?.unique_key}`)
-
                     await state.save();
                     return res.redirect(`${FRONTEND_URL}?userToken=${state?.unique_key}`)
                 }
-                
+
             })
             .catch((err) => {
                 console.log(err)
