@@ -244,7 +244,7 @@ exports.authCallback = async (req, res) => {
                     });
 
                     await state.save();
-                    res.redirect(`${FRONTEND_URL}?userToken=${state?.unique_key}`)
+                    return res.redirect(`https://turboboost-dashboard.d1cf44z4f8lic9.amplifyapp.com?userToken=${state?.unique_key}`)
                 }
             })
             .catch((err) => {
