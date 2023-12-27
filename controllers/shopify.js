@@ -243,6 +243,8 @@ exports.authCallback = async (req, res) => {
                         },
                     });
 
+                    console.log("`${FRONTEND_URL}?userToken=${state?.unique_key}`",`${FRONTEND_URL}?userToken=${state?.unique_key}`)
+
                     await state.save();
                     return res.redirect(`${FRONTEND_URL}?userToken=${state?.unique_key}`)
                 }
