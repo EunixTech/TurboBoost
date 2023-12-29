@@ -243,7 +243,8 @@ exports.authCallback = async (req, res) => {
                             redirectURI: redirectURI
                         },
                     });
-                    let webhook = await createUninstallWebHook(shop, data.access_token)
+
+                    await createUninstallWebHook(shop, data.access_token, userData?._id)
                     await state.save();
                     return res.redirect(`${FRONTEND_URL}?userToken=${state?.unique_key}`)
                 }
@@ -1030,7 +1031,9 @@ exports.appUninstallation = async (req, res, next) => {
     }
 }
 
-const createUninstallWebHook = async (shop, accessToken) => {
+const createUninstallWebHook = async (shop, accessToken, userId) => {
+
+    console.log("userId", userId)
 
     const registerWebhookOptions = {
         method: 'POST',
