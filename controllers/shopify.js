@@ -1042,7 +1042,7 @@ const createUninstallWebHook = async (shop, accessToken) => {
       data: {
         webhook: {
           topic: 'app/uninstalled',
-          address: `${BACKEND_URL}/api/shopify/app-uninstall`,
+          address: `${BACKEND_URL}/v1/api/shopify/app-uninstall`,
           format: 'json',
         },
       },
