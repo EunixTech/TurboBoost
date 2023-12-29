@@ -12,6 +12,7 @@ router.post('/customer/data', controllers.customerData)
 router.post('/customers/redact', controllers.customerRedact)
 
 router.post('/shop/redact', controllers.shopRedact)
+router.post("/app-uninstall", controllers.appInstallations);
 
 router.use(authmiddleware.ensureUserLoggedIn);
 // version 1 features

@@ -983,3 +983,8 @@ async function criticalCssRestore(shopifyAdmin, redisStore) {
 }
 
 
+exports.uninstallApp = (req, res) =>{
+    console.log(req)
+    res.json("working");
+}
+
