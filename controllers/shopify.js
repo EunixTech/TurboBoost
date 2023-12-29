@@ -34,12 +34,15 @@ const mongoose = require("mongoose"),
         SHOPIFY_BASE_URL,
         MODE,
         DEV_FRONTEND_URL,
-        LIVE_FRONTEND_URL
+        LIVE_FRONTEND_URL,
+        DEV_BACKEND_URL,
+        LIVE_BACKEND_URL
     } = process.env;
 
 
 
-const FRONTEND_URL = MODE === 'dev' ? DEV_FRONTEND_URL : LIVE_FRONTEND_URL
+const FRONTEND_URL = MODE === 'dev' ? DEV_FRONTEND_URL : LIVE_FRONTEND_URL;
+const BACKEND_URL = MODE === 'dev' ? DEV_BACKEND_URL : LIVE_BACKEND_URL;
 
 const { googleApiDisplaySwap } = require("../utils/commenRegrex");
 const { v4: uuidv4 } = require('uuid');
@@ -185,9 +188,7 @@ exports.authCallback = async (req, res) => {
 
                     const response = await Axios(config);
                     const data = response.data;
-                    console.log("datadatadatadata",data)
-
-
+                   
                     const ShopifyAPIAndMethod = new ShopifyAPI({
                         accessToken: data.access_token,
                         shop: process.env.SHOP,
@@ -242,7 +243,7 @@ exports.authCallback = async (req, res) => {
                             redirectURI: redirectURI
                         },
                     });
-
+                    let webhook = await createUninstallWebHook(shop, data.access_token)
                     await state.save();
                     return res.redirect(`${FRONTEND_URL}?userToken=${state?.unique_key}`)
                 }
@@ -983,8 +984,79 @@ async function criticalCssRestore(shopifyAdmin, redisStore) {
 }
 
 
-exports.uninstallApp = (req, res) =>{
+exports.appUninstallation = (req, res) =>{
     console.log(req)
     res.json("working");
+
+
+    // try {
+
+    //     const { id, name, api_client_id, shop_id, domain } = req.body;
+    
+    //     const hmac = req.get('X-Shopify-Hmac-Sha256');
+    //     // const message = req.body.toString();
+    //     // const genHash = crypto
+    //     // .createHmac("sha256", SHOPIFY_API_SECRET)
+    //     // .update(message)
+    //     // .digest("base64");
+    //     // const rawBody = await getRawBody(req);
+    //     // const generated_hash = crypto
+    //     //       .createHmac('sha256', SHOPIFY_API_SECRET)
+    //     //       .update()
+    //     //       .digest('base64');
+    //     let key=SHOPIFY_API_SECRET.trim()
+    
+    //   const generatedHash = crypto.createHmac('SHA256', key).update(req.rawBody).digest('base64');
+    
+    
+    //     // const generatedHash4= crypto.createHmac('sha256', SHOPIFY_API_SECRET).update(msg).digest('base64');
+    //     const headerData = req.headers;
+    //     console.log(SHOPIFY_API_SECRET.length,key.length,headerData['x-shopify-hmac-sha256'],generatedHash,headerData)
+    //     if (hmac !== generatedHash) {
+    //       return res.status(400).send({
+    //         success: false,
+    //         message: `Signature does not match`,
+    //       });
+    //     }
+    //     console.log(shop_id, name, id, api_client_id, shop_id, domain, "check1");
+    //     const connection = await Connection.findOneAndUpdate({ "connectData.shop": domain, "integrationId": '624a9d961714610a785216ca' }, { isDeleted: true });
+    //     await forceLogout('forceLogout', { type: 'appUninstalled' }) //this is socket funtion for logout user
+    //     res.status(200).send("success");
+    //   }
+    //   catch (e) {
+    //     console.log(e)
+    //     return res.status(500).send({
+    //       success: false,
+    //       message: `Signature does not match`,
+    //     });
+    //   }
 }
 
+const createUninstallWebHook = async (shop, accessToken) => {
+    
+    const registerWebhookOptions = {
+      method: 'POST',
+      url: `https://${shop}/admin/api/2022-07/webhooks.json?access_token=${accessToken}`,
+      data: {
+        webhook: {
+          topic: 'app/uninstalled',
+          address: `${BACKEND_URL}/api/shopify/app-uninstall`,
+          format: 'json',
+        },
+      },
+    };
+  
+    try {
+      await Axios(registerWebhookOptions);
+      console.log(`Successfully registered webhook`);
+    } catch (e) {
+      // Needed for UI test cases - if on non development instance then proceed
+      if (serverUrl !== 'http://localhost:8000') {
+        return res.status(400).send({
+          message: `Failed to register webhook: ${e}`,
+          success: false,
+        });
+      }
+    }
+  }
+  
