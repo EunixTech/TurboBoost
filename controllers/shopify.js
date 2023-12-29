@@ -74,7 +74,7 @@ exports.appInstallations = async (req, res) => {
 
         if (!shop || !hmac || !host || !timestamp) {
             return sendFailureJSONResponse(
-            res, { message: "Unauthorized access" },
+            res, { message: "Unauthorized access1" },
                 401
             );
         }
@@ -93,7 +93,7 @@ exports.appInstallations = async (req, res) => {
             .digest("hex");
 
         if (generatedHash != hmac)
-            return sendFailureJSONResponse( res, { message: "Unauthorized access" }, 401);
+            return sendFailureJSONResponse( res, { message: "Unauthorized access2" }, 401);
 
         console.log("working11111")
         // creating OuthState for security checking
@@ -140,7 +140,7 @@ exports.authCallback = async (req, res) => {
         if (!shop || !hmac || !host || !timestamp || !user_token || !code) {
             return sendFailureJSONResponse(
                 res,
-                { message: "unauthorized access" },
+                { message: "unauthorized access3" },
                 401
             );
         }
@@ -155,7 +155,7 @@ exports.authCallback = async (req, res) => {
         if (generatedHash != hmac) {
             return sendFailureJSONResponse(
                 res,
-                { message: "unauthorized access" },
+                { message: "unauthorized access4" },
                 401
             );
         }
@@ -163,7 +163,7 @@ exports.authCallback = async (req, res) => {
         const regexp1 = new RegExp(/^[a-zA-Z0-9][a-zA-Z0-9-]*.myshopify.com/); // Security checks for shop
 
         if (!regexp1.test(shop))
-            return sendFailureJSONResponse(res, { message: "unauthorized access" });
+            return sendFailureJSONResponse(res, { message: "unauthorized access5" });
 
         OauthState.findOne({ unique_key: user_token})
             .then(async (foundOauthState) => {
