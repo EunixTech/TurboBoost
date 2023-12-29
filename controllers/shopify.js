@@ -1054,7 +1054,7 @@ const createUninstallWebHook = async (shop, accessToken) => {
       await Axios(registerWebhookOptions);
       console.log(`Successfully registered webhook`);
     } catch (e) {
-   
+        console.log(e)
     }
   }
   
