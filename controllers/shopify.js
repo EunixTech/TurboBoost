@@ -1054,13 +1054,7 @@ const createUninstallWebHook = async (shop, accessToken) => {
       await Axios(registerWebhookOptions);
       console.log(`Successfully registered webhook`);
     } catch (e) {
-      // Needed for UI test cases - if on non development instance then proceed
-      if (serverUrl !== 'http://localhost:8000') {
-        return res.status(400).send({
-          message: `Failed to register webhook: ${e}`,
-          success: false,
-        });
-      }
+   
     }
   }
   
