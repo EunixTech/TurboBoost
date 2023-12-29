@@ -986,9 +986,10 @@ async function criticalCssRestore(shopifyAdmin, redisStore) {
 
 exports.appUninstallation = (req, res) =>{
  
-        console.log()
+      
          const { id, name, api_client_id, shop_id, domain } = req.body;
-         console.log("uninstall hook working",api_client_id, name)
+         console.log("uninstall hook working",api_client_id, name);
+         console.log(req.body)
         res.json("working");
 
 
