@@ -73,7 +73,9 @@ console.log("working")
                 if (newOuthState) {
                     const redirect_url = `https://${shopName}/admin/oauth/authorize?client_id=${SHOPIFY_API_KEY}&scope=${SHOPIFY_API_SCOPES}&state=${newOuthState?.unique_key}&redirect_uri=${SHOPIFY_API_REDIRECT}`;
                     console.log("redirect_url",redirect_url)
-                    return res.redirect(redirect_url);
+                    return sendSuccessJSONResponse(res, {
+                       redirectURI: redirect_url
+                    });
                 } else {
                     return sendFailureJSONResponse(res, {
                         message: "Something went wrong",
