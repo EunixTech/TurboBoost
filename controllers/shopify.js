@@ -380,7 +380,7 @@ exports.minifyJavascriptCode = async (req, res, next) => {
     const ShopifyAPIAndMethod = new ShopifyAPI({
         accessToken: req.accessToken,
         shop: process.env.SHOP,
-        version: "2023-04",
+        version: "2023-01",
     });
     await ShopifyAPIAndMethod.init();
 
@@ -451,7 +451,7 @@ exports.eliminateRenderBlockingResources = async (req, res, next) => {
         const ShopifyAPIAndMethod = new ShopifyAPI({
             accessToken: req.accessToken,
             shop: process.env.SHOP,
-            version: "2023-04",
+            version: "2023-01",
         });
         await ShopifyAPIAndMethod.init();
 
