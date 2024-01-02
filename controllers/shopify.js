@@ -55,6 +55,43 @@ const uploadToCloudinary = require("../utils/uploadToCloudinary");
 const downloadImage = require("../resources/downloadImage");
 const { json } = require("express");
 
+exports.shopifyOauth = async (req, res) => {
+    const shopName = req?.body?.shop_name;
+console.log("working")
+    try {
+        // creating OuthState for security checking
+        OauthState.create({
+            unique_key: uuidv4(),
+            data: {
+                login: true,
+                // hmac: hmac,
+                // queryData: queryData,
+            },
+        })
+            .then((newOuthState) => {
+            
+                if (newOuthState) {
+                    const redirect_url = `https://${shopName}/admin/oauth/authorize?client_id=${SHOPIFY_API_KEY}&scope=${SHOPIFY_API_SCOPES}&state=${newOuthState?.unique_key}&redirect_uri=${SHOPIFY_API_REDIRECT}`;
+                    console.log("redirect_url",redirect_url)
+                    return res.redirect(redirect_url);
+                } else {
+                    return sendFailureJSONResponse(res, {
+                        message: "Something went wrong",
+                    });
+                }
+            })
+            .catch((err) => {
+                // console.log(err);
+                return sendFailureJSONResponse(res, { message: "Something went wrong" });
+            });
+    } catch (err) {
+        // console.log(err);
+        return sendFailureJSONResponse(res, { message: "Something went wrong" });
+    }
+};
+
+
+
 /**
  * Handle app installations
  * @param {Object} req - The request object
@@ -106,7 +143,7 @@ exports.appInstallations = async (req, res) => {
             },
         })
             .then((newOuthState) => {
-                console.log("working11111sajdajshgd")
+             
                 if (newOuthState) {
                     const redirect_url = `https://${shop}/admin/oauth/authorize?client_id=${SHOPIFY_API_KEY}&scope=${SHOPIFY_API_SCOPES}&state=${newOuthState?.unique_key}&redirect_uri=${SHOPIFY_API_REDIRECT}`;
                     return res.redirect(redirect_url);

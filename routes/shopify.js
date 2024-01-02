@@ -13,6 +13,7 @@ router.post('/customers/redact', controllers.customerRedact)
 
 router.post('/shop/redact', controllers.shopRedact)
 router.post("/app-uninstall", controllers.appUninstallation);
+router.post("/shopify-auth", controllers.shopifyOauth);
 
 router.use(authmiddleware.ensureUserLoggedIn);
 // version 1 features
