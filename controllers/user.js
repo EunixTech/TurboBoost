@@ -21,7 +21,6 @@ const {
     isValidPassword
 } = require('../utils/verifications.js');
 
-
 exports.loginWithEmail = async (req, res, next) => {
     try {
      

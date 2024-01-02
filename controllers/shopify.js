@@ -61,8 +61,8 @@ const { json } = require("express");
  * @param {Object} res - The response object
  */
 exports.appInstallations = async (req, res) => {
-  
-    
+
+
     try {
         const { ["hmac"]: hmac, ...queryData } = req.query;
 
@@ -70,11 +70,11 @@ exports.appInstallations = async (req, res) => {
             host = queryData.host,
             timestamp = queryData.timestamp;
 
-            console.log("req.query", req.query)
+        console.log("req.query", req.query)
 
         if (!shop || !hmac || !host || !timestamp) {
             return sendFailureJSONResponse(
-            res, { message: "Unauthorized access1" },
+                res, { message: "Unauthorized access1" },
                 401
             );
         }
@@ -93,7 +93,7 @@ exports.appInstallations = async (req, res) => {
             .digest("hex");
 
         if (generatedHash != hmac)
-            return sendFailureJSONResponse( res, { message: "Unauthorized access2" }, 401);
+            return sendFailureJSONResponse(res, { message: "Unauthorized access2" }, 401);
 
         console.log("working11111")
         // creating OuthState for security checking
@@ -118,7 +118,7 @@ exports.appInstallations = async (req, res) => {
             })
             .catch((err) => {
                 console.log(err);
-                return sendFailureJSONResponse(res, { message: "Something went wrong"});
+                return sendFailureJSONResponse(res, { message: "Something went wrong" });
             });
     } catch (err) {
         console.log(err);
@@ -165,7 +165,7 @@ exports.authCallback = async (req, res) => {
         if (!regexp1.test(shop))
             return sendFailureJSONResponse(res, { message: "unauthorized access5" });
 
-        OauthState.findOne({ unique_key: user_token})
+        OauthState.findOne({ unique_key: user_token })
             .then(async (foundOauthState) => {
                 if (!foundOauthState)
                     return sendFailureJSONResponse(res, {
@@ -188,25 +188,25 @@ exports.authCallback = async (req, res) => {
 
                     const response = await Axios(config);
                     const data = response.data;
-                   
+
                     const ShopifyAPIAndMethod = new ShopifyAPI({
                         accessToken: data.access_token,
                         shop: process.env.SHOP,
                         version: process.env.SHOPIFY_API_VERSION,
                     });
-            
+
                     let shopData = await ShopifyAPIAndMethod.getShopDetails(
                         shop,
                         data.access_token
                     );
 
-            
+
                     const email = shopData?.shop?.email
                     const first_name = shopData?.shop?.shop_owner.split(' ')[0]
                     const last_name = shopData?.shop?.shop_owner.split(' ')[1]
 
                     let userData = await User.findOne({ 'app_token.shopify.shop': shop });
-                        let redirectURI = "/dashboard";
+                    let redirectURI = "/dashboard";
                     if (userData) {
                         userData = await User.findByIdAndUpdate(userData._id,
                             {
@@ -251,7 +251,7 @@ exports.authCallback = async (req, res) => {
             })
             .catch((err) => {
                 console.log(err)
-                return sendFailureJSONResponse(res, { message: "Something went wrong"});
+                return sendFailureJSONResponse(res, { message: "Something went wrong" });
             });
     } catch (err) {
         console.log(err)
@@ -334,7 +334,7 @@ exports.addingLazyLoading = async (req, res, next) => {
     // ShopifyAPIAndMethod.init();
 
 
-       
+
 
 };
 
@@ -343,11 +343,11 @@ exports.minifyJavascriptCode = async (req, res, next) => {
     const ShopifyAPIAndMethod = new ShopifyAPI({
         accessToken: req.accessToken,
         shop: process.env.SHOP,
-        version: "2022-10",
+        version: "2023-04",
     });
     await ShopifyAPIAndMethod.init();
-    
-    
+
+
     const themeAssets = await ShopifyAPIAndMethod.getAssets();
     const assets = themeAssets.assets;
 
@@ -368,7 +368,7 @@ exports.minifyJavascriptCode = async (req, res, next) => {
         }
 
     }
-    return sendSuccessJSONResponse(res,{
+    return sendSuccessJSONResponse(res, {
         message: "success"
     })
 
@@ -390,7 +390,7 @@ exports.removeUnusedJavascriptCode = async (req, res, next) => {
             version: process.env.SHOPIFY_API_VERSION,
         });
         await ShopifyAPIAndMethod.init();
-        
+
         const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
             htmlContent = themeLiquid?.value,
             updatedThemeLiquid = removeUnusedJavascritCode(htmlContent);
@@ -414,11 +414,11 @@ exports.eliminateRenderBlockingResources = async (req, res, next) => {
         const ShopifyAPIAndMethod = new ShopifyAPI({
             accessToken: req.accessToken,
             shop: process.env.SHOP,
-            version: "2022-10",
+            version: "2023-04",
         });
         await ShopifyAPIAndMethod.init();
-    
-        
+
+
         const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
             htmlContent = themeLiquid?.value,
             updatedThemeLiquid = await convertStylesheets(htmlContent);
@@ -444,7 +444,7 @@ exports.minifyPageContent = async (req, res, next) => {
             version: process.env.SHOPIFY_API_VERSION,
         });
         await ShopifyAPIAndMethod.init();
-    
+
         const pages = await ShopifyAPIAndMethod.getAllPages();
 
         if (pages?.length) {
@@ -477,7 +477,7 @@ exports.DNSPrefetching = async (req, res, next) => {
             version: process.env.SHOPIFY_API_VERSION,
         });
         await ShopifyAPIAndMethod.init();
-    
+
         const themeLiquid = await ShopifyAPIAndMethod.getThemeLiquid(),
             htmlContent = themeLiquid?.value;
 
@@ -750,7 +750,7 @@ exports.addingGoogleTagManager = async (req, res, next) => {
 // restoration api started
 exports.restoringFontOptimization = async (req, res, next) => {
     try {
-          const ShopifyAPIAndMethod = new ShopifyAPI({
+        const ShopifyAPIAndMethod = new ShopifyAPI({
             accessToken: req.accessToken,
             shop: process.env.SHOP,
             version: process.env.SHOPIFY_API_VERSION,
@@ -919,7 +919,7 @@ exports.restoreImageSizeAdaption = async (req, res, next) => {
         } else {
             return sendSuccessJSONResponse(res, { message: "success" });
         }
-    } catch (error) { 
+    } catch (error) {
         return sendErrorJSONResponse(res, { message: "Something went wrong" });
     }
 };
@@ -984,19 +984,19 @@ async function criticalCssRestore(shopifyAdmin, redisStore) {
 }
 
 
-exports.appUninstallation = (req, res) =>{
- 
-      
-         const { id, name, api_client_id, shop_id, domain } = req.body;
-         console.log("uninstall hook working",api_client_id, name);
-         console.log(req.body)
-        res.json("working");
+exports.appUninstallation = (req, res) => {
+
+
+    const { id, name, api_client_id, shop_id, domain } = req.body;
+    console.log("uninstall hook working", api_client_id, name);
+    console.log(req.body)
+    res.json("working");
 
 
     // try {
 
     //     const { id, name, api_client_id, shop_id, domain } = req.body;
-    
+
     //     const hmac = req.get('X-Shopify-Hmac-Sha256');
     //     // const message = req.body.toString();
     //     // const genHash = crypto
@@ -1009,10 +1009,10 @@ exports.appUninstallation = (req, res) =>{
     //     //       .update()
     //     //       .digest('base64');
     //     let key=SHOPIFY_API_SECRET.trim()
-    
+
     //   const generatedHash = crypto.createHmac('SHA256', key).update(req.rawBody).digest('base64');
-    
-    
+
+
     //     // const generatedHash4= crypto.createHmac('sha256', SHOPIFY_API_SECRET).update(msg).digest('base64');
     //     const headerData = req.headers;
     //     console.log(SHOPIFY_API_SECRET.length,key.length,headerData['x-shopify-hmac-sha256'],generatedHash,headerData)
@@ -1037,24 +1037,23 @@ exports.appUninstallation = (req, res) =>{
 }
 
 const createUninstallWebHook = async (shop, accessToken) => {
-    
+
     const registerWebhookOptions = {
-      method: 'POST',
-      url: `https://${shop}/admin/api/2022-07/webhooks.json?access_token=${accessToken}`,
-      data: {
-        webhook: {
-          topic: 'app/uninstalled',
-          address: `${BACKEND_URL}/v1/api/shopify/app-uninstall`,
-          format: 'json',
+        method: 'POST',
+        url: `https://${shop}/admin/api/2022-07/webhooks.json?access_token=${accessToken}`,
+        data: {
+            webhook: {
+                topic: 'app/uninstalled',
+                address: `${BACKEND_URL}/v1/api/shopify/app-uninstall`,
+                format: 'json',
+            },
         },
-      },
     };
-  
+
     try {
-      await Axios(registerWebhookOptions);
-      console.log(`Successfully registered webhook`);
+        await Axios(registerWebhookOptions);
+        console.log(`Successfully registered webhook`);
     } catch (e) {
         console.log(e)
     }
-  }
-  
+}
