@@ -158,6 +158,9 @@ exports.createSubscription = async (req, res, next) => {
         400)
     }
 
+    console.log("shopifyResponse?.data.data", shopifyResponse?.data.data)
+    console.log("shopifyResponse?.data", shopifyResponse?.data)
+    console.log("shopifyResponse", shopifyResponse)
     const confirmationUrl =
       shopifyResponse?.data.data.appSubscriptionCreate.confirmationUrl;
 
