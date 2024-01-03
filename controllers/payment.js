@@ -159,7 +159,7 @@ variables: {
     },
   ],
   trialDays: 7,
-  test: shopifyTest,
+  test: false,
   returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
 },
     };
