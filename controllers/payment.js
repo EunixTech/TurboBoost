@@ -183,13 +183,20 @@ variables: {
           //   },
           //   "terms": ""
           // }
+           "appUsagePricingDetails": {
+          "cappedAmount": {
+            "amount": 100,
+            "currencyCode": "USD"
+          },
+          "terms": "TESTING"
+        }
         }
       }
     ],
     "name": "TurboBoost Plan",
     "returnUrl": `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
     "test": true,
-    "trialDays": 1
+    "trialDays": 7
   
 },
     };
