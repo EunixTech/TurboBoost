@@ -101,8 +101,8 @@ exports.createSubscription = async (req, res, next) => {
     await state.save();
     const body = {
       query: `
-          mutation appSubscriptionCreate($trialDays: Int!,$name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!,$test: Boolean) {
-            appSubscriptionCreate(name: $name, lineItems: $lineItems, returnUrl: $returnUrl,test:$test) {
+      mutation appSubscriptionCreate($trialDays: Int!, $lineItems: [AppSubscriptionLineItemInput!]!) {
+        appSubscriptionCreate(trialDays: $trialDays, lineItems: $lineItems) {
               appSubscription {
                 id
               }
