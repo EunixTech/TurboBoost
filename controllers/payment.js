@@ -28,7 +28,7 @@ const { v4: uuidv4 } = require('uuid');
 exports.createSubscription = async (req, res, next) => {
   try {
     //   const { id: userId } = auth_body;
-console.log("workingaccess_token")
+
     const userId = req.userId;
 
     const { planType, planName } = req.body;
@@ -75,8 +75,6 @@ console.log("workingaccess_token")
 
     const { shop, access_token } = connection;
 
-    console.log("access_token", access_token)
-
     let planInterval = "EVERY_30_DAYS";
     if (planType === "annual") {
       planInterval = "ANNUAL";
@@ -102,35 +100,68 @@ console.log("workingaccess_token")
 
     await state.save();
     const body = {
+      // query: `
+      //     mutation appSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!,$test: Boolean) {
+      //       appSubscriptionCreate(name: $name, lineItems: $lineItems, returnUrl: $returnUrl,test:$test) {
+      //         appSubscription {
+      //           id
+      //         }
+      //         confirmationUrl
+      //         userErrors {
+      //           field
+      //           message
+      //         }
+      //       }
+      //     }
+      //     `,
+      // variables: {
+      //   name: `TurboBoost Plan`,
+      //   lineItems: [
+      //     {
+      //       plan: {
+      //         appRecurringPricingDetails: {
+      //           price: { amount: priceToCharge, currencyCode: "USD" },
+      //           interval: planInterval,
+      //         },
+      //       },
+      //     },
+      //   ],
+      //   test: shopifyTest,
+      //   returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
+      // },
       query: `
-          mutation appSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!,$test: Boolean) {
-            appSubscriptionCreate(name: $name, lineItems: $lineItems, returnUrl: $returnUrl,test:$test) {
-              appSubscription {
-                id
-              }
-              confirmationUrl
-              userErrors {
-                field
-                message
-              }
-            }
-          }
-          `,
-      variables: {
-        name: `TurboBoost Plan`,
-        lineItems: [
-          {
-            plan: {
-              appRecurringPricingDetails: {
-                price: { amount: priceToCharge, currencyCode: "USD" },
-                interval: planInterval,
-              },
-            },
-          },
-        ],
-        test: shopifyTest,
-        returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
+  mutation appSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!, $test: Boolean) {
+    appSubscriptionCreate(name: $name, lineItems: $lineItems, returnUrl: $returnUrl, test: $test) {
+      appSubscription {
+        id
+      }
+      confirmationUrl
+      userErrors {
+        field
+        message
+      }
+    }
+  }
+  
+`,
+variables: {
+  name: `TurboBoost Plan`,
+  lineItems: [
+    
+    {
+      plan: {
+        appRecurringPricingDetails: {
+          price: { amount: priceToCharge, currencyCode: "USD" },
+          interval: planInterval,
+      
+        },
       },
+    },
+  ],
+  trialDays: 7,
+  test: shopifyTest,
+  returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
+},
     };
 
     let shopifyResponse;
@@ -148,7 +179,7 @@ console.log("workingaccess_token")
       );
 
     } catch (err) {
-      console.log(err);
+      // console.log(err);
       console.error(err.response.status);
       const errorMessage =
         err.response.status === 401

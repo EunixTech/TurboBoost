@@ -12,6 +12,7 @@ exports.ensureUserLoggedIn = async (req, res, next) => {
         if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
             token = req.headers.authorization.split(' ')[1];
         }
+        console.log("token", token)
 
 
         if (!token) return res.json({
@@ -51,7 +52,7 @@ exports.ensureUserLoggedIn = async (req, res, next) => {
 
         return next();
     } catch (err) {
-       
+       console.log(err)
         res.json({
             status: 403,
             message: `InvalidToken`,
