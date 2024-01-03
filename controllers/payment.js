@@ -75,6 +75,8 @@ exports.createSubscription = async (req, res, next) => {
 
     const { shop, access_token } = connection;
 
+    console.log("access_token", access_token)
+
     let planInterval = "EVERY_30_DAYS";
     if (planType === "annual") {
       planInterval = "ANNUAL";
@@ -146,7 +148,7 @@ exports.createSubscription = async (req, res, next) => {
       );
 
     } catch (err) {
-      // console.log(err);
+      console.log(err);
       console.error(err.response.status);
       const errorMessage =
         err.response.status === 401
