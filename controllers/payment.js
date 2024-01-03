@@ -129,23 +129,41 @@ exports.createSubscription = async (req, res, next) => {
       //   test: shopifyTest,
       //   returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
       // },
-      query:`mutation AppSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!, $trialDays: Int) {
-        appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems, trialDays: $trialDays) {
+      query:`mutation AppSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!) {
+        appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems) {
           userErrors {
             field
             message
           }
           appSubscription {
             id
+            lineItems {
+              id
+              plan {
+                pricingDetails {
+                  __typename
+                }
+              }
+            }
           }
           confirmationUrl
         }
       }`,
       variables:{
-        "name": "Super Duper Recurring Plan with a Trial",
+        "name": "Super Duper Recurring and Usage Plan",
         "returnUrl": `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
-        "trialDays": 7,
         "lineItems": [
+          {
+            "plan": {
+              "appUsagePricingDetails": {
+                "terms": "$1 for 100 emails",
+                "cappedAmount": {
+                  "amount": 20,
+                  "currencyCode": "USD"
+                }
+              }
+            }
+          },
           {
             "plan": {
               "appRecurringPricingDetails": {
