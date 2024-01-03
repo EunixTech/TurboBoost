@@ -163,10 +163,10 @@ variables: {
   // returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
 
   
-    "lineItems": [
+    lineItems: [
       {
-        "plan": {
-          "appRecurringPricingDetails": {
+        plan: {
+          appRecurringPricingDetails: {
            
             // "interval": "",
             // "price": {
@@ -183,20 +183,18 @@ variables: {
           //   },
           //   "terms": ""
           // }
-           "appUsagePricingDetails": {
-          "cappedAmount": {
-            "amount": 100,
-            "currencyCode": "USD"
-          },
-          "terms": "TESTING"
+           appUsagePricingDetails: {
+          
+          cappedAmount: { amount: priceToCharge, currencyCode: "USD" },
+          terms: "TESTING"
         }
         }
       }
     ],
-    "name": "TurboBoost Plan",
-    "returnUrl": `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
-    "test": true,
-    "trialDays": 7
+    name: "TurboBoost Plan",
+    returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
+    test: true,
+    trialDays: 7
   
 },
     };
