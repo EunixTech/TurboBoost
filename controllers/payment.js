@@ -62,7 +62,7 @@ exports.createSubscription = async (req, res, next) => {
     }
 
     let price = mapPrice[planType]
-    console.log("price", price)
+    console.log("price",price)
     let connection = userData?.app_token?.shopify
     if (!connection?.shop) {
       return sendFailureJSONResponse(
@@ -100,50 +100,20 @@ exports.createSubscription = async (req, res, next) => {
 
     await state.save();
     const body = {
-      // query: `
-      //     mutation appSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!,$test: Boolean) {
-      //       appSubscriptionCreate(name: $name, lineItems: $lineItems, returnUrl: $returnUrl,test:$test) {
-      //         appSubscription {
-      //           id
-      //         }
-      //         confirmationUrl
-      //         userErrors {
-      //           field
-      //           message
-      //         }
-      //       }
-      //     }
-      //     `,
-      // variables: {
-      //   name: `TurboBoost Plan`,
-      //   lineItems: [
-      //     {
-      //       plan: {
-      //         appRecurringPricingDetails: {
-      //           price: { amount: priceToCharge, currencyCode: "USD" },
-      //           interval: planInterval,
-      //         },
-      //       },
-      //     },
-      //   ],
-      //   test: shopifyTest,
-      //   returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
-      // },
-
       query: `
-  mutation appSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!, $test: Boolean) {
-    appSubscriptionCreate(name: $name, lineItems: $lineItems, returnUrl: $returnUrl, test: $test) {
-      appSubscription {
-        id
-      }
-      confirmationUrl
-      userErrors {
-        field
-        message
-      }
-    }
-  }
-`,
+          mutation appSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!,$test: Boolean) {
+            appSubscriptionCreate(name: $name, lineItems: $lineItems, returnUrl: $returnUrl,test:$test) {
+              appSubscription {
+                id
+              }
+              confirmationUrl
+              userErrors {
+                field
+                message
+              }
+            }
+          }
+          `,
       variables: {
         name: `TurboBoost Plan`,
         lineItems: [
@@ -152,7 +122,6 @@ exports.createSubscription = async (req, res, next) => {
               appRecurringPricingDetails: {
                 price: { amount: priceToCharge, currencyCode: "USD" },
                 interval: planInterval,
-                trialDays: 7, // Add this line to specify the trial period
               },
             },
           },
@@ -261,13 +230,13 @@ exports.paymentCallback = async (req, res, next) => {
 
 exports.getCurrentPlan = (req, res, next) => {
   const userId = req.userId;
-
+  
   Subscription.findOne({ userId: userId })
     .then((foundSub) => {
-
+     
       if (!foundSub) return sendFailureJSONResponse(res, { message: "No Subscription found" });
       else {
-
+        
         const billingHistory = foundSub?.billingHistory;
 
         if (billingHistory && billingHistory.length) {
