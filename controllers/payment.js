@@ -100,68 +100,35 @@ exports.createSubscription = async (req, res, next) => {
 
     await state.save();
     const body = {
-      // query: `
-      //     mutation appSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!,$test: Boolean) {
-      //       appSubscriptionCreate(name: $name, lineItems: $lineItems, returnUrl: $returnUrl,test:$test) {
-      //         appSubscription {
-      //           id
-      //         }
-      //         confirmationUrl
-      //         userErrors {
-      //           field
-      //           message
-      //         }
-      //       }
-      //     }
-      //     `,
-      // variables: {
-      //   name: `TurboBoost Plan`,
-      //   lineItems: [
-      //     {
-      //       plan: {
-      //         appRecurringPricingDetails: {
-      //           price: { amount: priceToCharge, currencyCode: "USD" },
-      //           interval: planInterval,
-      //         },
-      //       },
-      //     },
-      //   ],
-      //   test: shopifyTest,
-      //   returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
-      // },
       query: `
-  mutation appSubscriptionCreate($name: String!,$trialDays: Int! $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!, $test: Boolean) {
-    appSubscriptionCreate(name: $name, lineItems: $lineItems, returnUrl: $returnUrl, test: $test) {
-      appSubscription {
-        id
-      }
-      confirmationUrl
-      userErrors {
-        field
-        message
-      }
-    }
-  }
-  
-`,
-variables: {
-  name: `TurboBoost Plan`,
-  lineItems: [
-    
-    {
-      plan: {
-        appRecurringPricingDetails: {
-          price: { amount: priceToCharge, currencyCode: "USD" },
-          interval: planInterval,
-      
-        },
+          mutation appSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!,$test: Boolean) {
+            appSubscriptionCreate(name: $name, lineItems: $lineItems, returnUrl: $returnUrl,test:$test) {
+              appSubscription {
+                id
+              }
+              confirmationUrl
+              userErrors {
+                field
+                message
+              }
+            }
+          }
+          `,
+      variables: {
+        name: `TurboBoost Plan`,
+        lineItems: [
+          {
+            plan: {
+              appRecurringPricingDetails: {
+                price: { amount: priceToCharge, currencyCode: "USD" },
+                interval: planInterval,
+              },
+            },
+          },
+        ],
+        test: shopifyTest,
+        returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
       },
-    },
-  ],
-  trialDays: 7,
-  test: shopifyTest,
-  returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
-},
     };
 
     let shopifyResponse;
