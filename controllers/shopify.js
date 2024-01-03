@@ -57,7 +57,9 @@ const { json } = require("express");
 
 exports.shopifyOauth = async (req, res) => {
     const shopName = req?.body?.shop_name;
-console.log("working")
+    if(!shopName) return sendFailureJSONResponse(res,{message: "Please provide shop name"});
+    else if(!googleApiDisplaySwap.test(shopName)) return sendFailureJSONResponse(res,{message: "Invalid shop name"});
+
     try {
         // creating OuthState for security checking
         OauthState.create({
@@ -109,7 +111,7 @@ exports.appInstallations = async (req, res) => {
             host = queryData.host,
             timestamp = queryData.timestamp;
 
-        console.log("req.query", req.query)
+        // console.log("req.query", req.query)
 
         if (!shop || !hmac || !host || !timestamp) {
             return sendFailureJSONResponse(
@@ -134,8 +136,9 @@ exports.appInstallations = async (req, res) => {
         if (generatedHash != hmac)
             return sendFailureJSONResponse(res, { message: "Unauthorized access2" }, 401);
 
-        console.log("working11111")
+        // console.log("working11111")
         // creating OuthState for security checking
+        
         OauthState.create({
             unique_key: uuidv4(),
             data: {
