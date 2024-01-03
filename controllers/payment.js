@@ -145,22 +145,52 @@ exports.createSubscription = async (req, res, next) => {
   
 `,
 variables: {
-  name: `TurboBoost Plan`,
-  lineItems: [
+  // name: `TurboBoost Plan`,
+  // lineItems: [
     
-    {
-      plan: {
-        appRecurringPricingDetails: {
-          price: { amount: priceToCharge, currencyCode: "USD" },
-          interval: planInterval,
+  //   {
+  //     plan: {
+  //       appRecurringPricingDetails: {
+  //         price: { amount: priceToCharge, currencyCode: "USD" },
+  //         interval: planInterval,
       
-        },
-      },
-    },
-  ],
-  trialDays: 7,
-  test: false,
-  returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
+  //       },
+  //     },
+  //   },
+  // ],
+  // trialDays: 7,
+  // test: false,
+  // returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
+
+  
+    "lineItems": [
+      {
+        "plan": {
+          "appRecurringPricingDetails": {
+           
+            // "interval": "",
+            // "price": {
+            //   "amount": "",
+            //   "currencyCode": ""
+            // }
+           price: { amount: priceToCharge, currencyCode: "USD" },
+           interval: planInterval,
+          },
+          // "appUsagePricingDetails": {
+          //   "cappedAmount": {
+          //     "amount": "",
+          //     "currencyCode": ""
+          //   },
+          //   "terms": ""
+          // }
+        }
+      }
+    ],
+    "name": "TurboBoost Plan",
+    "returnUrl": `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
+    "test": true,
+    "trialDays": 1
+  
 },
     };
 
