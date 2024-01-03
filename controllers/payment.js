@@ -130,7 +130,7 @@ exports.createSubscription = async (req, res, next) => {
       //   returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
       // },
       query: `
-  mutation appSubscriptionCreate($trialDays: Int!, $name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!, $test: Boolean) {
+  mutation appSubscriptionCreate($name: String!,$trialDays: Int! $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!, $test: Boolean) {
     appSubscriptionCreate(name: $name, lineItems: $lineItems, returnUrl: $returnUrl, test: $test) {
       appSubscription {
         id
@@ -145,53 +145,22 @@ exports.createSubscription = async (req, res, next) => {
   
 `,
 variables: {
-  // name: `TurboBoost Plan`,
-  // lineItems: [
+  name: `TurboBoost Plan`,
+  lineItems: [
     
-  //   {
-  //     plan: {
-  //       appRecurringPricingDetails: {
-  //         price: { amount: priceToCharge, currencyCode: "USD" },
-  //         interval: planInterval,
+    {
+      plan: {
+        appRecurringPricingDetails: {
+          price: { amount: priceToCharge, currencyCode: "USD" },
+          interval: planInterval,
       
-  //       },
-  //     },
-  //   },
-  // ],
-  // trialDays: 7,
-  // test: false,
-  // returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
-
-  
-    lineItems: [
-      {
-        plan: {
-          appRecurringPricingDetails: {
-           
-            // "interval": "",
-            // "price": {
-            //   "amount": "",
-            //   "currencyCode": ""
-            // }
-           price: { amount: priceToCharge, currencyCode: "USD" },
-           interval: planInterval,
-          },
-          // "appUsagePricingDetails": {
-          //   "cappedAmount": {
-          //     "amount": "",
-          //     "currencyCode": ""
-          //   },
-          //   "terms": ""
-          // }
-        
-        }
-      }
-    ],
-    name: "TurboBoost Plan",
-    returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
-    test: true,
-    trialDays: 7
-  
+        },
+      },
+    },
+  ],
+  trialDays: 7,
+  test: shopifyTest,
+  returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
 },
     };
 
