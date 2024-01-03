@@ -100,35 +100,64 @@ exports.createSubscription = async (req, res, next) => {
 
     await state.save();
     const body = {
-      query: `
-      mutation appSubscriptionCreate($trialDays: Int!, $lineItems: [AppSubscriptionLineItemInput!]!) {
-        appSubscriptionCreate(trialDays: $trialDays, lineItems: $lineItems) {
-              appSubscription {
-                id
-              }
-              confirmationUrl
-              userErrors {
-                field
-                message
+      // query: `
+      //     mutation appSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!,$test: Boolean) {
+      //       appSubscriptionCreate(name: $name, lineItems: $lineItems, returnUrl: $returnUrl,test:$test) {
+      //         appSubscription {
+      //           id
+      //         }
+      //         confirmationUrl
+      //         userErrors {
+      //           field
+      //           message
+      //         }
+      //       }
+      //     }
+      //     `,
+      // variables: {
+      //   name: `TurboBoost Plan`,
+      //   lineItems: [
+      //     {
+      //       plan: {
+      //         appRecurringPricingDetails: {
+      //           price: { amount: priceToCharge, currencyCode: "USD" },
+      //           interval: planInterval,
+      //         },
+      //       },
+      //     },
+      //   ],
+      //   test: shopifyTest,
+      //   returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
+      // },
+      query:`mutation AppSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!, $trialDays: Int) {
+        appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems, trialDays: $trialDays) {
+          userErrors {
+            field
+            message
+          }
+          appSubscription {
+            id
+          }
+          confirmationUrl
+        }
+      }`,
+      variables:{
+        "name": "Super Duper Recurring Plan with a Trial",
+        "returnUrl": `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
+        "trialDays": 7,
+        "lineItems": [
+          {
+            "plan": {
+              "appRecurringPricingDetails": {
+                "price": {
+                  "amount": 10,
+                  "currencyCode": "USD"
+                }
               }
             }
           }
-          `,
-      variables: {
-        name: `TurboBoost Plan`,
-        lineItems: [
-          {
-            plan: {
-              appRecurringPricingDetails: {
-                price: { amount: priceToCharge, currencyCode: "USD" },
-                interval: planInterval,
-              },
-            },
-          },
-        ],
-        test: shopifyTest,
-        returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
-      },
+        ]
+      }
     };
 
     let shopifyResponse;
@@ -158,9 +187,6 @@ exports.createSubscription = async (req, res, next) => {
         400)
     }
 
-    console.log("shopifyResponse?.data.data", shopifyResponse?.data.data)
-    console.log("shopifyResponse?.data", shopifyResponse?.data)
-    console.log("shopifyResponse", shopifyResponse)
     const confirmationUrl =
       shopifyResponse?.data.data.appSubscriptionCreate.confirmationUrl;
 
