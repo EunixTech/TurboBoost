@@ -28,7 +28,7 @@ const { v4: uuidv4 } = require('uuid');
 exports.createSubscription = async (req, res, next) => {
   try {
     //   const { id: userId } = auth_body;
-
+console.log("workingaccess_token")
     const userId = req.userId;
 
     const { planType, planName } = req.body;
