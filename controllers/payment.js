@@ -130,7 +130,7 @@ exports.createSubscription = async (req, res, next) => {
       //   returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
       // },
       query: `
-  mutation appSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!, $test: Boolean) {
+  mutation appSubscriptionCreate($trialDays: Int!, $name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!, $test: Boolean) {
     appSubscriptionCreate(name: $name, lineItems: $lineItems, returnUrl: $returnUrl, test: $test) {
       appSubscription {
         id
@@ -183,11 +183,7 @@ variables: {
           //   },
           //   "terms": ""
           // }
-           appUsagePricingDetails: {
-          
-          cappedAmount: { amount: priceToCharge, currencyCode: "USD" },
-          terms: "TESTING"
-        }
+        
         }
       }
     ],
