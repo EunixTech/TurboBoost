@@ -112,8 +112,8 @@ exports.createSubscription = async (req, res, next) => {
 
     if (mapPrice?.PlanName === "Basic" || Number(priceToCharge) === 0) {
       mutataionBody = {
-        query: `mutation AppSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!, $test: Boolean) {
-          appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems, test:$test) {
+        query: `mutation AppSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!) {
+          appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems) {
             userErrors {
               field
               message
@@ -133,7 +133,6 @@ exports.createSubscription = async (req, res, next) => {
         }`,
         variables: {
           "name": "TurboBoost Plan",
-          "test": shopifyTest,
           "returnUrl": `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
           "lineItems": [
             {
