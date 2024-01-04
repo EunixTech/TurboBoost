@@ -141,7 +141,7 @@ exports.createSubscription = async (req, res, next) => {
               "plan": {
                 "appUsagePricingDetails": {
                   "terms": "$1 for 100 emails",
-                  "cappedAmount": { amount: priceToCharge, currencyCode: "USD" },
+                  "cappedAmount": { amount: 30, currencyCode: "USD" },
                 }
               }
             }
