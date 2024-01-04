@@ -139,7 +139,7 @@ exports.createSubscription = async (req, res, next) => {
             {
               "plan": {
                 "appUsagePricingDetails": {
-                  "terms": "$1 for 100 emails",
+                  "terms": "Optimize your stores page speed, images and SEO in one click with our [PLAN NAME] Plan. Start your 7-day Free Trial and get free website page speed for 7 days. See our Pricing at https://turbo-boost.io/pricing/, TOS at https://turbo-boost.io/terms-of-service/, & Help Center at https://turbo-boost.io/privacy-policy/ for full details.",
                   "cappedAmount": {
                     "amount": 20,
                     "currencyCode": "USD"
