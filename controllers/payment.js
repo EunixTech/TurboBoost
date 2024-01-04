@@ -159,6 +159,7 @@ exports.createSubscription = async (req, res, next) => {
                 }
               }
             },
+            
             {
               plan: {
                 appUsagePricingDetails: {
