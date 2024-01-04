@@ -33,6 +33,9 @@ exports.createSubscription = async (req, res, next) => {
 
     const { planType, planName } = req.body;
 
+    console.log("planType",planType)
+    console.log("planName",planName)
+
     let userData = await User.findById(userId)
 
     if (typeof userData?.app_token?.shopify?.isDeleted === 'undefined' || userData?.app_token?.shopify?.isDeleted) {
@@ -62,7 +65,7 @@ exports.createSubscription = async (req, res, next) => {
     }
 
     let price = mapPrice[planType]
-    console.log("price",price)
+    console.log("price", price)
     let connection = userData?.app_token?.shopify
     if (!connection?.shop) {
       return sendFailureJSONResponse(
@@ -129,41 +132,24 @@ exports.createSubscription = async (req, res, next) => {
       //   test: shopifyTest,
       //   returnUrl: `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
       // },
-      query:`mutation AppSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!) {
-        appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems) {
-          userErrors {
-            field
-            message
-          }
-          appSubscription {
-            id
-            lineItems {
-              id
-              plan {
-                pricingDetails {
-                  __typename
-                }
-              }
-            }
-          }
-          confirmationUrl
-        }
-      }`,
-      variables:{
-        "name": "Super Duper Recurring and Usage Plan",
+      query: `mutation AppSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!, $trialDays: Int) {
+  appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems, trialDays: $trialDays) {
+    userErrors {
+      field
+      message
+    }
+    appSubscription {
+      id
+    }
+    confirmationUrl
+  }
+}`,
+      variables:
+      {
+        "name": "Super Duper Recurring Plan with a Trial",
         "returnUrl": `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
+        "trialDays": 7,
         "lineItems": [
-          {
-            "plan": {
-              "appUsagePricingDetails": {
-                "terms": "$1 for 100 emails",
-                "cappedAmount": {
-                  "amount": 20,
-                  "currencyCode": "USD"
-                }
-              }
-            }
-          },
           {
             "plan": {
               "appRecurringPricingDetails": {
@@ -277,13 +263,13 @@ exports.paymentCallback = async (req, res, next) => {
 
 exports.getCurrentPlan = (req, res, next) => {
   const userId = req.userId;
-  
+
   Subscription.findOne({ userId: userId })
     .then((foundSub) => {
-     
+
       if (!foundSub) return sendFailureJSONResponse(res, { message: "No Subscription found" });
       else {
-        
+
         const billingHistory = foundSub?.billingHistory;
 
         if (billingHistory && billingHistory.length) {
