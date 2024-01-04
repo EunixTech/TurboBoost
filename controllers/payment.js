@@ -183,7 +183,7 @@ exports.createSubscription = async (req, res, next) => {
         variables:
         {
           "name": "TurboBoost Plan",
-          "test": shopifyTest,
+          "test": true,
           "returnUrl": `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
           "trialDays": 7,
           "lineItems": [
