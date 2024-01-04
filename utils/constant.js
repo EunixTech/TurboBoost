@@ -1,6 +1,6 @@
 const planData={
-    free:{
-        PlanName:'Free',
+    basic:{
+        PlanName:'Basic',
         monthly:0,
         annually:0
     },
