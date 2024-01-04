@@ -56,6 +56,10 @@ exports.createSubscription = async (req, res, next) => {
 
     let mapPrice = planData[planName.toLowerCase()]
 
+    console.log("planType",planType)
+    console.log("planName",planName)
+    console.log("mapPrice",mapPrice)
+
     if (Object.keys(mapPrice) < 0) {
       return sendFailureJSONResponse(
         res,
