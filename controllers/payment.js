@@ -169,7 +169,7 @@ exports.createSubscription = async (req, res, next) => {
     } else {
       mutataionBody = {
         query: `mutation AppSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!, $test: Boolean, $trialDays: Int) {
-            appSubscriptionCreate(name: $name, returnUrl: $returnUrl, $test: Boolean, lineItems: $lineItems, trialDays: $trialDays) {
+            appSubscriptionCreate(name: $name, returnUrl: $returnUrl, test:$test, lineItems: $lineItems, trialDays: $trialDays) {
               userErrors {
                 field
                 message
