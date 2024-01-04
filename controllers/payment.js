@@ -134,7 +134,7 @@ exports.createSubscription = async (req, res, next) => {
         }`,
         variables: {
           "name": "TurboBoost Plan",
-          "test": shopifyTest,
+          "test": true,
           "pageViews": 1500,
           "activeUsers": 50,  // Add the number of active users here
           "returnUrl": `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
@@ -183,7 +183,7 @@ exports.createSubscription = async (req, res, next) => {
         variables:
         {
           "name": "TurboBoost Plan",
-          "test": true,
+          test: shopifyTest,
           "returnUrl": `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
           "trialDays": 7,
           "lineItems": [
