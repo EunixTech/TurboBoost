@@ -111,47 +111,38 @@ exports.createSubscription = async (req, res, next) => {
     let mutataionBody = {};
 
     if (mapPrice?.PlanName === "Basic" || Number(priceToCharge) === 0) {
-      mutataionBody = {
-        query: `mutation AppSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!, $pageViews: Int!) {
-          appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems, pageViews: $pageViews) {
-         userErrors {
-           field
-           message
-         }
-         appSubscription {
-           id
-           lineItems {
-             id
-             plan {
-               pricingDetails {
-                 __typename
-               }
-             }
-           }
-         }
-         confirmationUrl
-       }
-     }`,
+      mutationBody = {
+        query: `mutation AppSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!, $pageViews: Int!, $activeUsers: Int!) {
+          appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems, pageViews: $pageViews, activeUsers: $activeUsers) {
+            userErrors {
+              field
+              message
+            }
+            appSubscription {
+              id
+              lineItems {
+                id
+                plan {
+                  pricingDetails {
+                    __typename
+                  }
+                }
+              }
+            }
+            confirmationUrl
+          }
+        }`,
         variables: {
           "name": "TurboBoost Plan",
           "test": shopifyTest,
           "pageViews": 1500,
+          "activeUsers": 50,  // Add the number of active users here
           "returnUrl": `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
-          // "lineItems": [
-          //   {
-          //     "plan": {
-          //       "appUsagePricingDetails": {
-          //         "terms": "$1 for 100 emails",
-          //         "cappedAmount": { amount: 30, currencyCode: "USD" },
-          //       }
-          //     }
-          //   }
-          // ]
           lineItems: [
             {
               plan: {
                 appUsagePricingDetails: {
-                  terms: "$15 for under 1000 page views",
+                  terms: "$15 for under 1000 page views and up to 50 active users",  // Adjust terms for active users
                   cappedAmount: {
                     amount: 15,
                     currencyCode: "USD"
@@ -159,11 +150,11 @@ exports.createSubscription = async (req, res, next) => {
                 }
               }
             },
-            
+      
             {
               plan: {
                 appUsagePricingDetails: {
-                  terms: "$30 for 1001 to 2000 page views",
+                  terms: "$30 for 1001 to 2000 page views and 51 to 100 active users",  // Adjust terms for active users
                   cappedAmount: {
                     amount: 30,
                     currencyCode: "USD"
@@ -174,6 +165,7 @@ exports.createSubscription = async (req, res, next) => {
           ]
         }
       }
+      
     } else {
       mutataionBody = {
         query: `mutation AppSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!, $trialDays: Int) {
