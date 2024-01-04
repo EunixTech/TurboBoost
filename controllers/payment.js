@@ -112,8 +112,8 @@ exports.createSubscription = async (req, res, next) => {
 
     if (mapPrice?.PlanName === "Basic" || Number(priceToCharge) === 0) {
       mutataionBody = {
-        query: `mutation AppSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!) {
-          appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems) {
+        query: `mutation AppSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!, $pageViews: Int!) {
+          appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems, pageViews: $pageViews) {
          userErrors {
            field
            message
@@ -135,13 +135,38 @@ exports.createSubscription = async (req, res, next) => {
         variables: {
           "name": "TurboBoost Plan",
           "test": shopifyTest,
+          "pageViews": 1500,
           "returnUrl": `${BACKEND_URL}/v1/user/paymentCallback?state=${state.unique_key}`,
-          "lineItems": [
+          // "lineItems": [
+          //   {
+          //     "plan": {
+          //       "appUsagePricingDetails": {
+          //         "terms": "$1 for 100 emails",
+          //         "cappedAmount": { amount: 30, currencyCode: "USD" },
+          //       }
+          //     }
+          //   }
+          // ]
+          lineItems: [
             {
-              "plan": {
-                "appUsagePricingDetails": {
-                  "terms": "$1 for 100 emails",
-                  "cappedAmount": { amount: 30, currencyCode: "USD" },
+              plan: {
+                appUsagePricingDetails: {
+                  terms: "$15 for under 1000 page views",
+                  cappedAmount: {
+                    amount: 15,
+                    currencyCode: "USD"
+                  }
+                }
+              }
+            },
+            {
+              plan: {
+                appUsagePricingDetails: {
+                  terms: "$30 for 1001 to 2000 page views",
+                  cappedAmount: {
+                    amount: 30,
+                    currencyCode: "USD"
+                  }
                 }
               }
             }
