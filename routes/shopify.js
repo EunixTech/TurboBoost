@@ -1,7 +1,7 @@
 const router = require(`express`).Router(),
   controllers = require("../controllers/shopify"),
   shopifyMiddleware = require('../middleware/shopifyMiddleware')
-  const authmiddleware = require("../middleware/ensureUserLoggedIn")
+  const authMiddleware = require("../middleware/ensureUserLoggedIn")
 
 router.get("/app-installations", shopifyMiddleware.shopifyAuth, controllers.appInstallations);
 
@@ -15,7 +15,7 @@ router.post('/shop/redact', controllers.shopRedact)
 router.post("/app-uninstall", controllers.appUninstallation);
 router.post("/shopify-auth", controllers.shopifyOauth);
 
-router.use(authmiddleware.ensureUserLoggedIn);
+router.use(authMiddleware.ensureUserLoggedIn);
 // version 1 features
 router.get("/remove-unused-javascript-code", controllers.removeUnusedJavascriptCode);
 router.get("/minify-javascript-code", controllers.minifyJavascriptCode);
