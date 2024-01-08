@@ -8,7 +8,10 @@ exports.fetchPageSpeedAPIdata = async(websiteURL = "") =>{
         const response = await axios.get('https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=https://menehariya.netscapelabs.com/&category=best-practices&category=seo&category=performance&category=accessibility');
         const data = response.data;
         console.log("wroking2");
+        console.log("wroking2", data);
         const lighthouseData = data.lighthouseResult;
+        console.log("lighthouseData", lighthouseData);
+        
         const metrics = {
             "First Contentful Paint": lighthouseData.audits['first-contentful-paint'].displayValue,
             "Speed Index": lighthouseData.audits['speed-index'].displayValue,
@@ -19,7 +22,7 @@ exports.fetchPageSpeedAPIdata = async(websiteURL = "") =>{
             "Best Practices": lighthouseData.categories['best-practices'].score * 100,
             "SEO": lighthouseData.categories.seo.score * 100,
         };
-        console.log(`metrics`, metrics);
+        // console.log(`metrics`, metrics);
         return metrics;
     } catch (error) {
         console.error('Error fetching data:', error);
